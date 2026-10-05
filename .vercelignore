@@ -1,0 +1,10 @@
+# never upload personal data, secrets or local artefacts
+*.xlsx
+sample_UI.png
+.env*
+!.env.example
+test-results
+playwright-report
+supabase/.temp
+node_modules
+.next

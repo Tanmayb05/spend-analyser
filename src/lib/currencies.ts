@@ -1,0 +1,28 @@
+// Static ISO 4217 list (same on server and client, no ICU differences). Popular first.
+export const CURRENCIES: [code: string, name: string][] = [
+  ["USD", "US Dollar"], ["INR", "Indian Rupee"], ["EUR", "Euro"], ["GBP", "British Pound"], ["CAD", "Canadian Dollar"],
+  ["AUD", "Australian Dollar"], ["SGD", "Singapore Dollar"], ["AED", "UAE Dirham"], ["JPY", "Japanese Yen"], ["CNY", "Chinese Yuan"],
+  ["CHF", "Swiss Franc"], ["AFN", "Afghan Afghani"], ["ALL", "Albanian Lek"], ["AMD", "Armenian Dram"], ["ARS", "Argentine Peso"],
+  ["AZN", "Azerbaijani Manat"], ["BAM", "Bosnia-Herzegovina Mark"], ["BBD", "Barbadian Dollar"], ["BDT", "Bangladeshi Taka"],
+  ["BGN", "Bulgarian Lev"], ["BHD", "Bahraini Dinar"], ["BMD", "Bermudan Dollar"], ["BND", "Brunei Dollar"], ["BOB", "Bolivian Boliviano"],
+  ["BRL", "Brazilian Real"], ["BSD", "Bahamian Dollar"], ["BTN", "Bhutanese Ngultrum"], ["BWP", "Botswanan Pula"], ["BYN", "Belarusian Ruble"],
+  ["BZD", "Belize Dollar"], ["CLP", "Chilean Peso"], ["COP", "Colombian Peso"], ["CRC", "Costa Rican Colón"], ["CZK", "Czech Koruna"],
+  ["DKK", "Danish Krone"], ["DOP", "Dominican Peso"], ["DZD", "Algerian Dinar"], ["EGP", "Egyptian Pound"], ["ETB", "Ethiopian Birr"],
+  ["FJD", "Fijian Dollar"], ["GEL", "Georgian Lari"], ["GHS", "Ghanaian Cedi"], ["GTQ", "Guatemalan Quetzal"], ["HKD", "Hong Kong Dollar"],
+  ["HNL", "Honduran Lempira"], ["HUF", "Hungarian Forint"], ["IDR", "Indonesian Rupiah"], ["ILS", "Israeli New Shekel"], ["IQD", "Iraqi Dinar"],
+  ["IRR", "Iranian Rial"], ["ISK", "Icelandic Króna"], ["JMD", "Jamaican Dollar"], ["JOD", "Jordanian Dinar"], ["KES", "Kenyan Shilling"],
+  ["KGS", "Kyrgystani Som"], ["KHR", "Cambodian Riel"], ["KRW", "South Korean Won"], ["KWD", "Kuwaiti Dinar"], ["KZT", "Kazakhstani Tenge"],
+  ["LAK", "Laotian Kip"], ["LBP", "Lebanese Pound"], ["LKR", "Sri Lankan Rupee"], ["MAD", "Moroccan Dirham"], ["MDL", "Moldovan Leu"],
+  ["MGA", "Malagasy Ariary"], ["MKD", "Macedonian Denar"], ["MMK", "Myanmar Kyat"], ["MNT", "Mongolian Tugrik"], ["MOP", "Macanese Pataca"],
+  ["MUR", "Mauritian Rupee"], ["MVR", "Maldivian Rufiyaa"], ["MXN", "Mexican Peso"], ["MYR", "Malaysian Ringgit"], ["MZN", "Mozambican Metical"],
+  ["NAD", "Namibian Dollar"], ["NGN", "Nigerian Naira"], ["NIO", "Nicaraguan Córdoba"], ["NOK", "Norwegian Krone"], ["NPR", "Nepalese Rupee"],
+  ["NZD", "New Zealand Dollar"], ["OMR", "Omani Rial"], ["PAB", "Panamanian Balboa"], ["PEN", "Peruvian Sol"], ["PGK", "Papua New Guinean Kina"],
+  ["PHP", "Philippine Peso"], ["PKR", "Pakistani Rupee"], ["PLN", "Polish Zloty"], ["PYG", "Paraguayan Guarani"], ["QAR", "Qatari Riyal"],
+  ["RON", "Romanian Leu"], ["RSD", "Serbian Dinar"], ["RUB", "Russian Ruble"], ["RWF", "Rwandan Franc"], ["SAR", "Saudi Riyal"],
+  ["SCR", "Seychellois Rupee"], ["SEK", "Swedish Krona"], ["THB", "Thai Baht"], ["TND", "Tunisian Dinar"], ["TRY", "Turkish Lira"],
+  ["TTD", "Trinidad & Tobago Dollar"], ["TWD", "New Taiwan Dollar"], ["TZS", "Tanzanian Shilling"], ["UAH", "Ukrainian Hryvnia"],
+  ["UGX", "Ugandan Shilling"], ["UYU", "Uruguayan Peso"], ["UZS", "Uzbekistani Som"], ["VES", "Venezuelan Bolívar"], ["VND", "Vietnamese Dong"],
+  ["XAF", "Central African CFA Franc"], ["XCD", "East Caribbean Dollar"], ["XOF", "West African CFA Franc"], ["ZAR", "South African Rand"],
+  ["ZMW", "Zambian Kwacha"],
+];
+export const CURRENCY_CODES = CURRENCIES.map(([c]) => c);
