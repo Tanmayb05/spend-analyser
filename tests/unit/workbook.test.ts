@@ -18,9 +18,10 @@ describe("workbook helpers", () => {
 });
 
 describe.skipIf(!existsSync(FILE))("real Expense_Tracker.xlsx", () => {
-  const wb = XLSX.read(readFileSync(FILE), { type: "buffer" });
-  const rows = (name: string) => XLSX.utils.sheet_to_json<(string | number | null)[]>(wb.Sheets[name], { header: 1, raw: true, defval: null });
-  const report = buildBundle({ settings: rows("Settings"), expenses: rows("Expenses") });
+  // The suite body still runs during collection when skipped, so only read the (git-ignored) file if it exists.
+  const wb = existsSync(FILE) ? XLSX.read(readFileSync(FILE), { type: "buffer" }) : null;
+  const rows = (name: string) => (wb ? XLSX.utils.sheet_to_json<(string | number | null)[]>(wb.Sheets[name], { header: 1, raw: true, defval: null }) : []);
+  const report = wb ? buildBundle({ settings: rows("Settings"), expenses: rows("Expenses") }) : (null as never);
 
   it("reads every row", () => {
     expect(report.stats.rows).toBe(419);
