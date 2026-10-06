@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { CalendarDays } from "lucide-react";
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { InfoTitle } from "@/components/ui/info-title";
 import { LedgerItem } from "@/components/transactions/ledger-item";
 import { daysInMonth, formatDay, formatMonth } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
@@ -10,7 +12,7 @@ import { cn } from "@/lib/utils";
 import type { LedgerRow } from "@/lib/data/types";
 
 /** Month grid; days with spending get a dot. Tap a day to see its total and entries. */
-export function CalendarCard({ month, today, rows, currency, weekStart }: { month: string; today: string; rows: LedgerRow[]; currency: string; weekStart: number }) {
+export function CalendarCard({ month, today, rows, currency, weekStart, info }: { month: string; today: string; rows: LedgerRow[]; currency: string; weekStart: number; info?: ReactNode }) {
   const days = daysInMonth(month);
   const byDay = useMemo(() => {
     const m = new Map<string, LedgerRow[]>();
@@ -36,7 +38,9 @@ export function CalendarCard({ month, today, rows, currency, weekStart }: { mont
 
   return (
     <Card className="flex flex-col">
-      <p className="mb-3 text-center font-medium">{formatMonth(month)}</p>
+      <div className="mb-3 text-center [&_summary]:mx-auto">
+        <InfoTitle as="p" info={info} className="font-medium" panelClassName="text-left">{formatMonth(month)}</InfoTitle>
+      </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs text-faint">
         {labels.map((l, i) => (
           <span key={i} className="py-1">{l}</span>

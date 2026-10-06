@@ -3,7 +3,7 @@ import { clearMail, deleteUserByEmail, latestLink, signIn } from "./helpers";
 import { TEST_USER } from "./test-user";
 
 test.describe("account management", () => {
-  test("signup → confirm email → sign out → forgot password → reset → sign in", async ({ page }, info) => {
+  test("signup → confirm email → sign out → forgot password → reset → sign in", async ({ page, browser }, info) => {
     const email = TEST_USER.email.replace("@", `+auth-${info.project.name}@`);
     await deleteUserByEmail(email);
     await clearMail();
@@ -52,13 +52,23 @@ test.describe("account management", () => {
     await page.getByRole("button", { name: "Send reset link" }).click();
     await expect(page.getByText(/reset link is on its way/)).toBeVisible();
 
-    await page.goto(await latestLink(email));
-    await expect(page).toHaveURL(/\/reset-password/);
+    // open the link in a fresh browser (like tapping it in a phone's mail app)
+    const resetLink = await latestLink(email);
+    const other = await browser.newContext({ baseURL: info.project.use.baseURL });
+    const phone = await other.newPage();
+    await phone.goto(resetLink);
+    await expect(phone).toHaveURL(/\/reset-password/);
     const newPassword = `${TEST_USER.password}9`;
-    await page.getByLabel("New password").fill(newPassword);
-    await page.getByLabel("Confirm password").fill(newPassword);
-    await page.getByRole("button", { name: "Update password" }).click();
-    await expect(page.getByText("Password updated.")).toBeVisible();
+    await phone.getByLabel("New password").fill(newPassword);
+    await phone.getByLabel("Confirm password").fill(newPassword);
+    await phone.getByRole("button", { name: "Update password" }).click();
+    await expect(phone.getByText("Password updated.")).toBeVisible();
+    await other.close();
+
+    // a used link can't be replayed
+    await page.goto(resetLink);
+    await expect(page).toHaveURL(/\/forgot-password\?error=link/);
+    await expect(page.getByText(/already used or expired/)).toBeVisible();
 
     await page.context().clearCookies();
     await signIn(page, email, newPassword);

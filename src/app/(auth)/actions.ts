@@ -56,9 +56,14 @@ export async function requestPasswordReset(_: FormState, form: FormData): Promis
   if (!parsed.success) return { errors: { email: "Enter a valid email" }, values: { email: String(form.get("email") ?? "") } };
 
   const supabase = await createClient();
-  await supabase.auth.resetPasswordForEmail(parsed.data, {
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
     redirectTo: `${siteUrl()}/auth/confirm?next=/reset-password`,
   });
+  // Rate limits are per project/IP, not per account, so surfacing them reveals nothing.
+  if (error?.status === 429 || error?.code === "over_email_send_rate_limit") {
+    return { message: "Too many emails sent recently. Wait a few minutes and try again.", values: { email: parsed.data } };
+  }
+  if (error) console.error("resetPasswordForEmail", error.code, error.message);
   // Same response whether or not the account exists (no account enumeration).
   return { ok: true, message: "If an account exists for that email, a reset link is on its way." };
 }

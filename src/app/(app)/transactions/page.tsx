@@ -13,6 +13,8 @@ import { activeFilterCount, applyFilters, breakdown, metric, parseFilters } from
 import { lastMonths } from "@/lib/analytics/summary";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { InfoTitle } from "@/components/ui/info-title";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Transactions" };
 
@@ -56,12 +58,14 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
 
   return (
     <>
-      <h1 className="mb-5 text-3xl font-medium sm:text-4xl">Transactions</h1>
+      <div className="mb-5">
+        <InfoTitle as="h1" info={HELP.transactions} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Transactions</InfoTitle>
+      </div>
       <FilterBar month={month} mode={mode} filters={filters} />
 
       <section className="mt-4 grid items-start gap-4 xl:grid-cols-[380px_1fr]">
           <Card className="order-1 xl:col-start-1 xl:row-start-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted">{label} · {formatMonth(month)}</p>
+            <InfoTitle as="p" info={HELP.filteredTotal} className="text-xs font-medium uppercase tracking-wide text-muted">{label} · {formatMonth(month)}</InfoTitle>
             <p className="num mt-2 text-5xl font-medium">{formatMoney(total, currency, { whole: true })}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <Delta label="vs last month" value={vsPrev} goodWhenUp={incomeView} />

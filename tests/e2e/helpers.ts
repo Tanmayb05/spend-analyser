@@ -44,13 +44,13 @@ export async function clearMail() {
   await fetch(`${MAILPIT}/api/v1/messages`, { method: "DELETE" });
 }
 
-/** Latest email link sent to `email` that points at Supabase verify. */
+/** Latest email link sent to `email` (app /auth/confirm or Supabase verify). */
 export async function latestLink(email: string): Promise<string> {
   for (let i = 0; i < 20; i++) {
     const list = (await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)).json()) as { messages: { ID: string }[] };
     if (list.messages?.length) {
       const msg = (await (await fetch(`${MAILPIT}/api/v1/message/${list.messages[0].ID}`)).json()) as { HTML: string; Text: string };
-      const m = (msg.HTML || msg.Text).match(/href="([^"]+verify[^"]+)"/) ?? msg.Text.match(/(http\S+verify\S+)/);
+      const m = (msg.HTML || msg.Text).match(/href="([^"]+(?:verify|auth\/confirm)[^"]+)"/) ?? msg.Text.match(/(http\S+(?:verify|auth\/confirm)\S+)/);
       if (m) return m[1].replace(/&amp;/g, "&");
     }
     await new Promise((r) => setTimeout(r, 500));

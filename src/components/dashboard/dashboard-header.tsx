@@ -7,6 +7,8 @@ import { Segmented } from "@/components/ui/segmented";
 import { addMonths, formatMonth } from "@/lib/dates";
 import type { LedgerMode } from "@/lib/data/types";
 import type { Scope } from "@/lib/analytics/summary";
+import type { ReactNode } from "react";
+import { InfoTitle } from "@/components/ui/info-title";
 
 export function useParamHref() {
   const sp = useSearchParams();
@@ -21,7 +23,7 @@ export function useParamHref() {
   };
 }
 
-export function DashboardHeader({ month, mode, scope, title = "Overview" }: { month: string; mode: LedgerMode; scope: Scope; title?: string }) {
+export function DashboardHeader({ month, mode, scope, title = "Overview", info }: { month: string; mode: LedgerMode; scope: Scope; title?: string; info?: ReactNode }) {
   const router = useRouter();
   const href = useParamHref();
   const prev = addMonths(month, -1).slice(0, 7);
@@ -29,7 +31,9 @@ export function DashboardHeader({ month, mode, scope, title = "Overview" }: { mo
 
   return (
     <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <h1 className="text-3xl font-medium sm:text-4xl">{title}</h1>
+      <div className="min-w-0">
+        <InfoTitle as="h1" info={info} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">{title}</InfoTitle>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center rounded-full border border-border bg-surface-2 p-1">
           <Link href={href({ m: prev })} scroll={false} aria-label="Previous month" className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3">

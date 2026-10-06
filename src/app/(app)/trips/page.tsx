@@ -9,6 +9,8 @@ import { getReferenceData } from "@/lib/data/reference";
 import { getTripStats, tripDays } from "@/lib/data/trips";
 import { formatDay } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
+import { InfoTitle } from "@/components/ui/info-title";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Trips" };
 
@@ -24,7 +26,7 @@ export default async function TripsPage() {
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-medium sm:text-4xl">Trips</h1>
+          <InfoTitle as="h1" info={HELP.trips} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Trips</InfoTitle>
           <p className="mt-1 text-sm text-muted">
             {formatMoney(total, currency, { whole: true })} across {trips.length} trips · {formatMoney(excluded, currency, { whole: true })} kept out of monthly spending
           </p>

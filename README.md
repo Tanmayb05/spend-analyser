@@ -55,6 +55,7 @@ Optional: set `GEMINI_API_KEY` in `.env.local` to enable AI features.
    ```
    In **Authentication → URL Configuration**, set *Site URL* to your Vercel URL and add `https://<your-domain>/**` to *Redirect URLs*.
    In **Authentication → Providers → Email**, keep *Confirm email* on. For real use, set up custom SMTP: the built-in mailer only sends a few emails per hour.
+   Install the email templates from `supabase/templates/` (**Authentication → Emails**, or `npx supabase config push` with a `[remotes.<name>]` block for your project). They link to `/auth/confirm?token_hash=…`, so confirmation and password-reset links work on any device, not only in the browser that asked for them.
 2. **Gemini** (optional): create an API key in Google AI Studio from a GCP project with billing enabled (GCP credits apply).
 3. **Vercel**: import the repo and add the environment variables from `.env.example`:
 

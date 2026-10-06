@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPercent } from "@/lib/money";
+import { InfoTitle } from "@/components/ui/info-title";
 
 /** Big-number tile. `goodWhenUp` decides whether an increase is good (income) or bad (spend). */
 export function KpiTile({
@@ -12,6 +13,7 @@ export function KpiTile({
   sub,
   progress,
   tone,
+  info,
 }: {
   label: string;
   value: string;
@@ -20,12 +22,21 @@ export function KpiTile({
   sub?: ReactNode;
   progress?: { ratio: number; status: "ok" | "near" | "over" | "none" };
   tone?: "good" | "bad";
+  info?: ReactNode;
 }) {
   const up = (delta ?? 0) > 0;
   const good = delta == null || delta === 0 ? null : up === goodWhenUp;
   return (
-    <div className="flex min-w-0 flex-col rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+    <div role="group" aria-label={label} className="relative flex min-w-0 flex-col rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5">
+      <InfoTitle
+        as="p"
+        info={info}
+        overlay
+        className="text-xs font-medium uppercase tracking-wide text-muted"
+        panelClassName="absolute inset-x-2 top-11 z-20 border border-border bg-surface-3 shadow-xl sm:inset-x-3"
+      >
+        {label}
+      </InfoTitle>
       <p className={cn("num mt-2 truncate text-[28px] font-medium leading-none sm:text-4xl", tone === "good" && "text-good", tone === "bad" && "text-bad")}>{value}</p>
       <div className="mt-3 flex min-h-5 flex-wrap items-center gap-2 text-xs text-muted">
         {delta != null && Number.isFinite(delta) ? (

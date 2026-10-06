@@ -12,6 +12,8 @@ import { lastMonths, monthlySeries } from "@/lib/analytics/summary";
 import { ruleInsights } from "@/lib/analytics/insights";
 import { cn } from "@/lib/utils";
 import type { Analysis } from "@/lib/ai/schemas";
+import { InfoTitle } from "@/components/ui/info-title";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Insights" };
 const TONE = { good: "bg-good", warn: "bg-warn", bad: "bg-bad", neutral: "bg-faint" } as const;
@@ -56,7 +58,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
 
   return (
     <>
-      <h1 className="text-3xl font-medium sm:text-4xl">Insights</h1>
+      <InfoTitle as="h1" info={HELP.insights} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Insights</InfoTitle>
       <p className="mb-5 mt-1 text-sm text-muted">What stands out in your money, in plain words.</p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -76,7 +78,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
 
       <div className="space-y-4">
         <Card>
-          <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" />
+          <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" info={HELP.quickInsights} />
           <ul className="space-y-3">
             {rules.map((i) => (
               <li key={i.id} className="flex gap-3 text-sm leading-relaxed">

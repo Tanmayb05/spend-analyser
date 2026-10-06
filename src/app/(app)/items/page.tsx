@@ -9,6 +9,8 @@ import { requireUser } from "@/lib/supabase/server";
 import { formatDay } from "@/lib/dates";
 import { formatMoney, formatPercent } from "@/lib/money";
 import { cn, round2 } from "@/lib/utils";
+import { InfoTitle } from "@/components/ui/info-title";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Items" };
 
@@ -60,7 +62,7 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
     <>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-medium sm:text-4xl">Items</h1>
+          <InfoTitle as="h1" info={HELP.items} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Items</InfoTitle>
           <p className="mt-1 text-sm text-muted">Everything you bought, from your receipts: what, when, where and for how much.</p>
         </div>
         <ReadReceiptButton />

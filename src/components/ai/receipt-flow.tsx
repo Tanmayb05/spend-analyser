@@ -61,6 +61,9 @@ export function ReceiptFlow({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm leading-relaxed text-muted">
+        AI reads the shop, date, total and every line item. You check everything before it&apos;s saved, and the items are kept on the Items page so you can track prices over time.
+      </p>
       <input
         ref={fileInput}
         type="file"

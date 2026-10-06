@@ -63,6 +63,9 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
           {pending ? "…" : "Fill"}
         </button>
       </form>
+      <p className="mt-1.5 px-1 text-xs leading-relaxed text-muted">
+        Type{speech.supported ? " or say" : ""} what you spent (amount, place, when) and tap Fill. AI fills the form below for you to check before saving. Several at once works too. The receipt icon reads a bill.
+      </p>
     </div>
   );
 }

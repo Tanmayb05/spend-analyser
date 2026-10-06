@@ -8,6 +8,7 @@ import { Donut } from "@/components/charts/donut";
 import { SERIES, categoryColor } from "@/components/charts/colors";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { KpiTile } from "@/components/dashboard/kpi-tile";
+import { HELP } from "@/lib/help";
 import { BudgetBars, type BudgetRow } from "@/components/dashboard/budget-bars";
 import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { AddFirst } from "@/components/dashboard/add-first";
@@ -130,7 +131,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   if (!hasData) {
     return (
       <>
-        <DashboardHeader month={month} mode={mode} scope={scope} />
+        <DashboardHeader month={month} mode={mode} scope={scope} info={HELP.overview} />
         <EmptyState
           title="No transactions yet"
           body="Add your first expense, or import your existing Excel tracker to see your dashboard come alive."
@@ -142,12 +143,13 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
 
   return (
     <>
-      <DashboardHeader month={month} mode={mode} scope={scope} />
+      <DashboardHeader month={month} mode={mode} scope={scope} info={HELP.overview} />
 
       {/* Row 1: KPIs */}
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-5" aria-label="Key numbers">
         <KpiTile
           label={scope === "core" ? "Core spent" : "Spent"}
+          info={HELP.kpiSpent}
           value={money(spentShown)}
           delta={pctChange(spentShown, prevShown)}
           sub={budgetShown > 0 ? `${formatPercent(spentShown / budgetShown)} of ${money(budgetShown)}` : "No budget set"}
@@ -155,6 +157,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         />
         <KpiTile
           label="Income"
+          info={HELP.kpiIncome}
           value={money(cur.income)}
           delta={pctChange(cur.income, prev.income)}
           goodWhenUp
@@ -162,12 +165,14 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         />
         <KpiTile
           label="Net saved"
+          info={HELP.kpiNet}
           value={formatMoney(cur.net, currency, { whole: true, signed: true })}
           tone={cur.net >= 0 ? "good" : "bad"}
           sub={cur.net < 0 ? `spent ${money(-cur.net)} more than earned` : cur.savingsRate != null ? `${formatPercent(cur.savingsRate)} of income saved` : undefined}
         />
         <KpiTile
           label="Core spend"
+          info={HELP.kpiCore}
           value={money(cur.core)}
           delta={pctChange(cur.core, prev.core)}
           sub={bTotals.core > 0 ? `of ${money(bTotals.core)} core budget` : "everyday, controllable"}
@@ -177,6 +182,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           {isCurrent ? (
             <KpiTile
               label="Left per day"
+              info={HELP.kpiLeftPerDay}
               value={budgetShown > 0 ? money(Math.max(0, remaining) / Math.max(left, 1)) : "–"}
               tone={budgetShown > 0 && remaining < 0 ? "bad" : undefined}
               sub={budgetShown > 0 ? (remaining >= 0 ? `${money(remaining)} left · ${left} days` : `${money(-remaining)} over budget`) : "Set budgets in Settings"}
@@ -184,6 +190,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           ) : (
             <KpiTile
               label={isFuture ? "Committed" : "Avg per day"}
+              info={isFuture ? HELP.kpiCommitted : HELP.kpiAvgPerDay}
               value={isFuture ? money(spentShown) : money(spentShown / daysInMonth(month))}
               sub={isFuture ? "already scheduled" : `${cur.count} entries`}
             />
@@ -196,6 +203,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         <Card>
           <CardHeader
             title={scope === "core" ? "Is my core spending steady?" : "Am I spending more than I earn?"}
+            info={HELP.trend}
             subtitle={`Last 12 months · ${mode === "normalized" ? "big costs spread over months" : "actual cash out"}`}
           />
           <TrendBars
@@ -218,13 +226,13 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
                 : "Not enough history yet."}
           </Insight>
         </Card>
-        <CalendarCard month={month} today={today} rows={monthRows} currency={currency} weekStart={profile.week_start} />
+        <CalendarCard info={HELP.calendar} month={month} today={today} rows={monthRows} currency={currency} weekStart={profile.week_start} />
       </section>
 
       {/* Row 3: where / budgets / upcoming */}
       <section className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <Card>
-          <CardHeader title="Where did it go?" subtitle={formatMonth(month)} />
+          <CardHeader title="Where did it go?" subtitle={formatMonth(month)} info={HELP.donut} />
           {slices.length ? <Donut slices={slices} currency={currency} /> : <p className="py-10 text-center text-sm text-muted">No spending this month.</p>}
           {topCore && cur.spent > 0 ? (
             <Insight>
@@ -237,6 +245,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         <Card>
           <CardHeader
             title="Which budgets need attention?"
+            info={HELP.budgetBars}
             action={<Link href="/settings/budgets" className="text-sm text-muted hover:text-text">Edit</Link>}
           />
           {budgetRows.length ? (
@@ -253,7 +262,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         </Card>
 
         <Card className="lg:col-span-2 xl:col-span-1">
-          <CardHeader title="What's coming up?" subtitle="Next 30 days" action={<CalendarClock size={18} className="text-muted" />} />
+          <CardHeader title="What's coming up?" subtitle="Next 30 days" info={HELP.upcoming} action={<CalendarClock size={18} className="text-muted" />} />
           {soon.length ? (
             <ul className="divide-y divide-border">
               {soon.slice(0, 5).map((r, i) => (
@@ -279,7 +288,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
       {/* Row 4: outlook / trips / insights / recent */}
       <section className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Can I afford the next few months?" subtitle="Committed installments & scheduled payments vs budget" />
+          <CardHeader title="Can I afford the next few months?" subtitle="Committed installments & scheduled payments vs budget" info={HELP.outlook} />
           <ul className="space-y-4">
             {outlook.map((o) => {
               const ratio = o.budget > 0 ? o.committed / o.budget : 0;
@@ -314,6 +323,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
                   <Sparkles size={18} className="text-accent" /> Insights
                 </span>
               }
+              info={HELP.quickInsights}
               action={
                 <Link href="/insights" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
                   Deep analysis <ArrowUpRight size={14} />
@@ -333,7 +343,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
 
           {trips.length ? (
             <Card>
-              <CardHeader title="Trips this month" />
+              <CardHeader title="Trips this month" info={HELP.tripsThisMonth} />
               <ul className="space-y-2">
                 {trips.map(({ trip, total }) => (
                   <li key={trip.id}>
@@ -357,7 +367,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
 
       <section className="mt-4">
         <Card>
-          <CardHeader title="Recent transactions" action={<Link href={qs({})} className="text-sm text-muted hover:text-text">View all</Link>} />
+          <CardHeader title="Recent transactions" info={HELP.recent} action={<Link href={qs({})} className="text-sm text-muted hover:text-text">View all</Link>} />
           <LedgerList rows={recent} />
         </Card>
       </section>

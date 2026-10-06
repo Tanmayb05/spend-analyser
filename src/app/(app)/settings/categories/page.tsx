@@ -2,6 +2,7 @@ import { SettingsPage } from "@/components/settings/section";
 import { CategoriesEditor } from "@/components/settings/categories-editor";
 import { getReferenceData } from "@/lib/data/reference";
 import { requireUser } from "@/lib/supabase/server";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Categories" };
 
@@ -15,7 +16,7 @@ export default async function CategoriesPage() {
     if (!data || data.length < 1000) break;
   }
   return (
-    <SettingsPage title="Categories" description="Tap a category to rename it, change its colour or core flag, or edit subcategories.">
+    <SettingsPage title="Categories" info={HELP.categories} description="Tap a category to rename it, change its colour or core flag, or edit subcategories.">
       <CategoriesEditor categories={ref.categories} subcategories={ref.subcategories} uses={uses} />
     </SettingsPage>
   );

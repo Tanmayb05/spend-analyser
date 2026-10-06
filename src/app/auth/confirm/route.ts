@@ -19,6 +19,10 @@ export async function GET(request: NextRequest) {
     ok = !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error;
   }
 
-  if (!ok) return NextResponse.redirect(`${origin}/login?error=link`);
+  if (!ok) {
+    // Expired/used reset link → straight back to "request a new one".
+    const back = type === "recovery" || next === "/reset-password" ? "/forgot-password" : "/login";
+    return NextResponse.redirect(`${origin}${back}?error=link`);
+  }
   return NextResponse.redirect(`${origin}${type === "recovery" ? "/reset-password" : next}`);
 }

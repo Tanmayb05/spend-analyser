@@ -1,6 +1,7 @@
 import { SettingsPage } from "@/components/settings/section";
 import { MerchantsEditor } from "@/components/settings/merchants-editor";
 import { requireUser } from "@/lib/supabase/server";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Merchants" };
 
@@ -17,7 +18,7 @@ export default async function MerchantsPage() {
     if (!data || data.length < 1000) break;
   }
   return (
-    <SettingsPage title="Merchants" description="Merchants are learned as you add transactions. Each remembers the last category you used.">
+    <SettingsPage title="Merchants" info={HELP.merchants} description="Merchants are learned as you add transactions. Each remembers the last category you used.">
       <MerchantsEditor stats={stats} />
     </SettingsPage>
   );

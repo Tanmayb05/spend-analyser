@@ -5,11 +5,15 @@ import { requestPasswordReset } from "../actions";
 
 export const metadata: Metadata = { title: "Reset password" };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({ searchParams }: PageProps<"/forgot-password">) {
+  const sp = await searchParams;
   return (
     <>
       <h1 className="text-2xl font-medium">Forgot your password?</h1>
-      <p className="mb-6 mt-1 text-sm text-muted">We&apos;ll email you a link to set a new one.</p>
+      <p className="mb-6 mt-1 text-sm text-muted">We&apos;ll email you a link to set a new one. Open it on any device; it works once, for 1 hour.</p>
+      {sp.error === "link" ? (
+        <p className="mb-4 rounded-2xl bg-warn/10 px-4 py-3 text-sm text-warn">That reset link is invalid, already used or expired. Request a new one below.</p>
+      ) : null}
       <AuthForm
         action={requestPasswordReset}
         submitLabel="Send reset link"

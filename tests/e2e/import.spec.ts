@@ -26,7 +26,7 @@ test.describe("workbook import", () => {
 
     await page.goto("/settings/data");
     await page.getByLabel("Choose file to import").setInputFiles("Expense_Tracker.xlsx");
-    await expect(page.getByText("EMI plans")).toBeVisible();
+    await expect(page.getByText("EMI plans", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Import \d+ transactions/ })).toBeVisible();
     await page.getByRole("button", { name: /Import \d+ transactions/ }).click();
     await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });

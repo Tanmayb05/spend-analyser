@@ -10,6 +10,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { formatMoney } from "@/lib/money";
 import { buildBundle, type ImportReport, type Rows } from "@/lib/import/workbook";
 import { importBundle } from "@/app/(app)/settings/data/actions";
+import { HELP } from "@/lib/help";
 
 export function ImportCard({ hasTransactions, currency }: { hasTransactions: boolean; currency: string }) {
   const router = useRouter();
@@ -61,7 +62,7 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
 
   return (
     <Card>
-      <CardHeader title="Import" subtitle="Your Expense Tracker workbook, or any .xlsx / .csv with Date, Type, Category, Amount columns." />
+      <CardHeader title="Import" info={HELP.importer} subtitle="Your Expense Tracker workbook, or any .xlsx / .csv with Date, Type, Category, Amount columns." />
       <input
         ref={input}
         type="file"

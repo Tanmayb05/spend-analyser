@@ -3,12 +3,13 @@ import { SettingsPage } from "@/components/settings/section";
 import { PasswordForm, SignOutAll } from "@/components/settings/profile-forms";
 import { TypeToConfirm } from "@/components/settings/danger-delete";
 import { deleteAccount } from "../actions";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Security" };
 
 export default function SecurityPage() {
   return (
-    <SettingsPage title="Security">
+    <SettingsPage title="Security" info={HELP.security}>
       <PasswordForm />
       <SignOutAll />
       <Card className="border-bad/30">

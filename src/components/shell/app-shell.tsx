@@ -10,8 +10,10 @@ import { useAppData } from "@/components/app-data";
 import { signOut } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 import { MOBILE_PRIMARY, NAV, isActive } from "./nav";
+import { useCloseOverlays } from "@/hooks/use-close-overlays";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  useCloseOverlays();
   const pathname = usePathname();
   const { openTxnSheet, profile, email } = useAppData();
   const [moreOpen, setMoreOpen] = useState(false);

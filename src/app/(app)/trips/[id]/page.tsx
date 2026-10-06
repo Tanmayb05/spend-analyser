@@ -11,6 +11,7 @@ import { getTripStats, tripDays } from "@/lib/data/trips";
 import { getLedger } from "@/lib/data/ledger";
 import { formatDay } from "@/lib/dates";
 import { formatMoney, formatPercent } from "@/lib/money";
+import { HELP } from "@/lib/help";
 
 export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
   const { id } = await params;
@@ -70,7 +71,7 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
       <section className="mt-4 grid gap-4 xl:grid-cols-[380px_1fr]">
         <div className="space-y-4">
           <Card>
-            <CardHeader title="Counted in monthly spending?" action={<Badge tone={trip.include_mode === "excluded" ? "neutral" : "accent"}>{MODE_COPY[trip.include_mode].title}</Badge>} />
+            <CardHeader title="Counted in monthly spending?" info={HELP.tripMode} action={<Badge tone={trip.include_mode === "excluded" ? "neutral" : "accent"}>{MODE_COPY[trip.include_mode].title}</Badge>} />
             <p className="text-sm text-muted">{MODE_COPY[trip.include_mode].body}</p>
             {trip.include_mode === "lump_sum" ? (
               <p className="mt-2 text-sm text-muted">
@@ -81,7 +82,7 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
             <p className="mt-3 text-xs text-faint">Change it with Edit.</p>
           </Card>
           <Card>
-            <CardHeader title="Where did the trip money go?" />
+            <CardHeader title="Where did the trip money go?" info={HELP.tripBreakdown} />
             {merged.length ? (
               <>
                 <div className="flex h-3 gap-[2px] overflow-hidden rounded-full">

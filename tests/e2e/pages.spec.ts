@@ -40,12 +40,24 @@ test("every page renders with real data", async ({ page }, info) => {
     const res = await page.goto(path);
     expect(res?.status(), path).toBeLessThan(400);
     await expect(page.getByRole("heading", { level: 1, name: heading }), path).toBeVisible();
+    // every page explains itself behind the ⓘ next to its title
+    if (path !== "/settings") await expect(page.locator("details:has(h1) > summary"), path).toHaveCount(1);
     await page.screenshot({ path: `test-results/pages/${info.project.name}${path.replace(/[/?=&]/g, "_") || "_root"}.png`, fullPage: true });
   }
   // a trip detail page
   await page.goto("/trips");
   await page.getByText("SF Bay Trip 2026-07").click();
   await expect(page.getByRole("heading", { level: 1, name: "SF Bay Trip 2026-07" })).toBeVisible();
+
+  // info panels: open on tap; KPI overlays close on a tap elsewhere
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1, name: "Overview" }).click();
+  await expect(page.getByText(/Normalized spreads big costs/)).toBeVisible();
+  const spent = page.getByRole("group", { name: "Spent", exact: true });
+  await spent.locator("summary").click();
+  await expect(spent.getByText(/Expenses minus refunds/)).toBeVisible();
+  await page.getByRole("heading", { level: 1, name: "Overview" }).click();
+  await expect(spent.getByText(/Expenses minus refunds/)).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -163,6 +175,6 @@ test("changing default currency converts everything", async ({ page }, info) => 
   await expect(page.getByText(/Switched to INR/)).toBeVisible({ timeout: 30_000 });
   await page.goto("/");
   // KPI is in rupees; the original USD amount is kept as the secondary label on the transaction
-  await expect(page.getByText("Spent", { exact: true }).locator("..").getByText(/^₹[\d,]+$/)).toBeVisible();
+  await expect(page.getByRole("group", { name: "Spent", exact: true }).getByText(/^₹[\d,]+$/)).toBeVisible();
   await expect(page.getByText("$100.00").first()).toBeVisible();
 });

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { SettingsPage } from "@/components/settings/section";
 import { getAiUsage } from "@/lib/ai/usage";
 import { aiConfigured, GEMINI } from "@/lib/ai/config";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "AI" };
 
@@ -14,7 +15,7 @@ export default async function AiSettingsPage() {
     { label: "Smart entry", ...usage.parse, desc: "Typed sentences, receipts (PDF/photo) and Drive links turned into transactions." },
   ];
   return (
-    <SettingsPage title="AI" description="Gemini features are limited per month to keep costs predictable. Limits reset on the 1st.">
+    <SettingsPage title="AI" info={HELP.ai} description="Gemini features are limited per month to keep costs predictable. Limits reset on the 1st.">
       <Card>
         <CardHeader title="Status" action={<Badge tone={configured ? "good" : "warn"}>{configured ? "Connected" : "Not configured"}</Badge>} />
         <p className="text-sm text-muted">

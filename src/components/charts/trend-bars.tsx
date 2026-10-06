@@ -66,11 +66,11 @@ export function TrendBars({
             {data.map((d, i) => {
               const emphasized = i === active;
               const Group = d.href ? Link : "div";
+              const linkProps = d.href ? { href: d.href, scroll: false } : {};
               return (
                 <Group
                   key={d.month}
-                  href={d.href ?? ""}
-                  scroll={false}
+                  {...(linkProps as { href: string })}
                   onMouseEnter={() => setHover(i)}
                   onFocus={() => setHover(i)}
                   aria-label={`${formatMonth(d.month)}: ${aLabel} ${formatMoney(d.a, currency)}${pair ? `, ${bLabel} ${formatMoney(d.b ?? 0, currency)}` : ""}`}

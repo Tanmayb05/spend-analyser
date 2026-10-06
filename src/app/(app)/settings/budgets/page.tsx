@@ -4,6 +4,7 @@ import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
 import { addMonths, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
 import { byCategory } from "@/lib/analytics/summary";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Budgets" };
 
@@ -22,7 +23,7 @@ export default async function BudgetsPage({ searchParams }: PageProps<"/settings
   };
 
   return (
-    <SettingsPage title="Budgets" description="Set how much you plan to spend per category each month. Income categories take an income target.">
+    <SettingsPage title="Budgets" info={HELP.budgets} description="Set how much you plan to spend per category each month. Income categories take an income target.">
       <BudgetsEditor
         key={month}
         month={month}

@@ -8,6 +8,8 @@ import { requireUser } from "@/lib/supabase/server";
 import { addMonths, formatMonth, monthStart } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { round2 } from "@/lib/utils";
+import { InfoTitle } from "@/components/ui/info-title";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Plans & EMIs" };
 
@@ -65,7 +67,9 @@ export default async function PlansPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-3xl font-medium sm:text-4xl">Plans & EMIs</h1>
+      <div className="mb-1">
+        <InfoTitle as="h1" info={HELP.plans} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Plans & EMIs</InfoTitle>
+      </div>
       <p className="mb-5 text-sm text-muted">Big costs split into monthly amounts. Add one from any expense with “Spread this cost”.</p>
 
       {plans.length ? (
@@ -86,7 +90,7 @@ export default async function PlansPage() {
 
           <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_1fr]">
             <Card>
-              <CardHeader title="How much is already committed?" subtitle="Installments due in the next 12 months" />
+              <CardHeader title="How much is already committed?" subtitle="Installments due in the next 12 months" info={HELP.plansCommitted} />
               <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel="Committed" aColor={SERIES.spent} height={180} />
               <Insight>
                 {peak && peak.a > 0

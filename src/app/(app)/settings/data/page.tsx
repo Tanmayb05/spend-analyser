@@ -6,6 +6,7 @@ import { TypeToConfirm } from "@/components/settings/danger-delete";
 import { requireUser } from "@/lib/supabase/server";
 import { getReferenceData } from "@/lib/data/reference";
 import { deleteAllTransactions } from "./actions";
+import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Import & export" };
 
@@ -21,10 +22,10 @@ export default async function DataPage() {
   ];
 
   return (
-    <SettingsPage title="Import & export" description={`${count ?? 0} transactions in your account.`}>
+    <SettingsPage title="Import & export" info={HELP.data} description={`${count ?? 0} transactions in your account.`}>
       <ImportCard hasTransactions={(count ?? 0) > 0} currency={ref.profile.base_currency} />
       <Card>
-        <CardHeader title="Export" subtitle="Download your data any time." />
+        <CardHeader title="Export" subtitle="Download your data any time." info={HELP.exporter} />
         <ul className="grid gap-2 sm:grid-cols-3">
           {exports.map((e) => (
             <li key={e.href}>
