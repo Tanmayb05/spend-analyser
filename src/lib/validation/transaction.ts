@@ -3,6 +3,15 @@ import { z } from "zod";
 const uuid = z.string().uuid();
 const optUuid = z.union([uuid, z.literal(""), z.null()]).optional().transform((v) => v || null);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date");
+const externalUrl = z.string().trim().max(2048, "Link is too long").refine((value) => {
+  if (!value) return true;
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && Boolean(url.hostname);
+  } catch {
+    return false;
+  }
+}, "Enter a full http:// or https:// link").transform((value) => value || null);
 
 export const planSchema = z.union([
   z.object({ unchanged: z.literal(true) }),
@@ -23,6 +32,7 @@ export const transactionSchema = z.object({
   subcategory_id: optUuid,
   merchant_name: z.string().trim().max(120).optional().default(""),
   description: z.string().trim().max(500).optional().default(""),
+  external_url: externalUrl.optional().default(""),
   amount: z.coerce.number({ message: "Enter an amount" }).positive("Amount must be more than 0").max(1e11),
   currency: z.string().regex(/^[A-Z]{3}$/),
   fx_rate: z.coerce.number().positive().nullable().optional(),

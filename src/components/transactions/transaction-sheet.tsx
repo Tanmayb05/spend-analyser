@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, Copy, Trash2 } from "lucide-react";
+import { ChevronDown, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -30,6 +30,7 @@ type FormValues = {
   subcategory_id: string;
   merchant_name: string;
   description: string;
+  external_url: string;
   payment_method_id: string;
   paid_by_id: string;
   trip_id: string;
@@ -79,6 +80,7 @@ function blank(app: ReturnType<typeof useAppData>, preset?: Record<string, strin
     subcategory_id: "",
     merchant_name: "",
     description: "",
+    external_url: "",
     payment_method_id: "",
     paid_by_id: self?.id ?? "",
     trip_id: "",
@@ -145,6 +147,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         subcategory_id: t.subcategory_id ?? "",
         merchant_name: (t.merchants as { name: string } | null)?.name ?? "",
         description: t.description ?? "",
+        external_url: t.external_url ?? "",
         payment_method_id: t.payment_method_id ?? "",
         paid_by_id: t.paid_by_id ?? "",
         trip_id: t.trip_id ?? "",
@@ -157,7 +160,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         plan_start: (plan?.start_month ?? t.date).slice(0, 7),
         plan_touched: false,
       });
-      setMore(Boolean(t.payment_method_id || t.trip_id || t.notes || t.description));
+      setMore(Boolean(t.payment_method_id || t.trip_id || t.notes || t.description || t.external_url));
       setLoading(false);
     })();
   }, [editId, app]);
@@ -175,6 +178,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
   const amount = Number(v.amount) || 0;
   const foreign = v.currency !== app.currency;
   const baseTotal = foreign && Number(v.fx_rate) > 0 ? amount * Number(v.fx_rate) : amount;
+  const linkHref = safeHttpUrl(v.external_url);
 
   const schedule = useMemo(() => {
     if (!v.spread) return [];
@@ -218,6 +222,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         subcategory_id: v.subcategory_id,
         merchant_name: v.merchant_name,
         description: v.description,
+        external_url: v.external_url,
         amount: v.amount,
         currency: v.currency,
         fx_rate: foreign && v.fx_rate ? Number(v.fx_rate) : null,
@@ -278,6 +283,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         subcategory_id: v.subcategory_id,
         merchant_name: v.merchant_name,
         description: v.description,
+        external_url: v.external_url,
         payment_method_id: v.payment_method_id,
         paid_by_id: v.paid_by_id,
         trip_id: v.trip_id,
@@ -451,13 +457,39 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
 
       {/* More details */}
       <button type="button" onClick={() => setMore((m) => !m)} className="flex w-full items-center justify-between text-sm text-muted">
-        More details (payment, trip, notes)
+        More details (link, payment, trip, notes)
         <ChevronDown size={18} className={cn("transition", more && "rotate-180")} />
       </button>
       {more ? (
         <div className="space-y-3">
           <Field label="Description" htmlFor="desc">
             <Input id="desc" value={v.description} onChange={(e) => set("description", e.target.value)} placeholder="What was it for?" />
+          </Field>
+          <Field label="Link" htmlFor="external-url" error={errors.external_url} hint="Add a receipt, order, booking, or other related webpage.">
+            <div className="flex gap-2">
+              <Input
+                id="external-url"
+                type="url"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                value={v.external_url}
+                onChange={(e) => set("external_url", e.target.value)}
+                placeholder="https://example.com/order"
+              />
+              {linkHref ? (
+                <a
+                  href={linkHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open link"
+                  title="Open link"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-text transition hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <ExternalLink size={18} />
+                </a>
+              ) : null}
+            </div>
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Payment" htmlFor="pay">
@@ -515,4 +547,13 @@ function tripHint(mode?: string) {
   if (mode === "excluded") return "This trip isn't counted in your monthly spending (change on the Trips page).";
   if (mode === "lump_sum") return "This trip counts as one lump sum.";
   return "Counts in your monthly spending.";
+}
+
+function safeHttpUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname ? url.href : null;
+  } catch {
+    return null;
+  }
 }
