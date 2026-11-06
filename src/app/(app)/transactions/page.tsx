@@ -6,7 +6,7 @@ import { FilterBar } from "@/components/transactions/filter-bar";
 import { TxnList } from "@/components/transactions/txn-list";
 import { AddFirst } from "@/components/dashboard/add-first";
 import { getReferenceData } from "@/lib/data/reference";
-import { getLedger, parseMode } from "@/lib/data/ledger";
+import { getLedger, getTransactionLinks, parseMode } from "@/lib/data/ledger";
 import { addMonths, formatMonth, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
 import { formatMoney, formatPercent, pctChange } from "@/lib/money";
 import { activeFilterCount, applyFilters, breakdown, metric, parseFilters } from "@/lib/analytics/filters";
@@ -33,6 +33,8 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   const filtered = applyFilters(all, filters, (r) => `${catName(r.category_id)} ${subName(r.subcategory_id)}`);
 
   const monthRows = filtered.filter((r) => r.month === month);
+  const transactionLinks = await getTransactionLinks(monthRows.map((r) => r.txn_id));
+  const displayRows = monthRows.map((r) => ({ ...r, external_url: r.txn_id ? transactionLinks.get(r.txn_id) ?? null : null }));
   const total = metric(monthRows, filters);
   const series = months.map((m) => ({ month: m, a: metric(filtered.filter((r) => r.month === m), filters) }));
   const prev = series.find((s) => s.month === addMonths(month, -1))?.a ?? 0;
@@ -117,7 +119,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
 
         <Card className="order-2 min-w-0 xl:col-start-2 xl:row-span-2 xl:row-start-1">
           {monthRows.length ? (
-            <TxnList rows={monthRows} />
+            <TxnList rows={displayRows} />
           ) : all.length === 0 && !activeFilterCount(filters) ? (
             <EmptyState title="No transactions yet" body="Add one, or import your spreadsheet." action={<AddFirst />} />
           ) : (

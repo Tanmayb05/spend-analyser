@@ -17,6 +17,26 @@ export async function getLedger(mode: LedgerMode, from: string, to: string, incl
   return all.map((r) => ({ ...r, amount: Number(r.amount), spend: Number(r.spend), income: Number(r.income) }));
 }
 
+export async function getTransactionLinks(ids: (string | null)[]): Promise<Map<string, string>> {
+  const unique = [...new Set(ids.filter((id): id is string => Boolean(id)))];
+  const links = new Map<string, string>();
+  if (!unique.length) return links;
+
+  const { supabase } = await requireUser();
+  for (let offset = 0; offset < unique.length; offset += 200) {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("id,external_url")
+      .in("id", unique.slice(offset, offset + 200))
+      .not("external_url", "is", null);
+    if (error) throw new Error(error.message);
+    for (const row of data ?? []) {
+      if (row.external_url) links.set(row.id, row.external_url);
+    }
+  }
+  return links;
+}
+
 export function parseMode(v: unknown, fallback: LedgerMode): LedgerMode {
   return v === "cash" || v === "normalized" ? v : fallback;
 }

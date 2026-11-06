@@ -386,6 +386,24 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         </Field>
       </div>
 
+      {editId && linkHref ? (
+        <a
+          href={linkHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-2xl border border-border bg-surface-2 px-4 py-3 transition hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
+            <ExternalLink size={18} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">Related link</span>
+            <span className="block truncate text-xs text-muted">{linkHref}</span>
+          </span>
+          <span className="shrink-0 text-sm font-medium text-accent">Open</span>
+        </a>
+      ) : null}
+
       {/* Spread / EMI */}
       {v.type === "expense" ? (
         <div className="rounded-3xl border border-border bg-surface-2 p-4">

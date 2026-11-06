@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, Plane, Repeat } from "lucide-react";
+import { CalendarClock, ExternalLink, Plane, Repeat } from "lucide-react";
 import { useAppData } from "@/components/app-data";
 import { categoryColor } from "@/components/charts/colors";
 import { formatMoney } from "@/lib/money";
@@ -8,8 +8,10 @@ import { formatDay } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { LedgerRow } from "@/lib/data/types";
 
+type LedgerRowWithLink = LedgerRow & { external_url?: string | null };
+
 /** One ledger row. Tapping opens the parent transaction for editing. */
-export function LedgerItem({ row, showDate = true, right }: { row: LedgerRow; showDate?: boolean; right?: React.ReactNode }) {
+export function LedgerItem({ row, showDate = true, right }: { row: LedgerRowWithLink; showDate?: boolean; right?: React.ReactNode }) {
   const app = useAppData();
   const cat = app.maps.category.get(row.category_id);
   const sub = row.subcategory_id ? app.maps.subcategory.get(row.subcategory_id) : null;
@@ -18,23 +20,39 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRow; sh
   const income = row.type === "income";
   const refund = row.type === "refund";
   const foreign = row.orig_currency && row.orig_currency !== app.currency;
+  const linkHref = safeHttpUrl(row.external_url);
 
   return (
-    <button
-      type="button"
-      disabled={!row.txn_id}
-      onClick={() => row.txn_id && app.openTxnSheet({ id: row.txn_id })}
-      className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
-    >
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-3">
+    <div className="relative flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-surface-2">
+      <button
+        type="button"
+        disabled={!row.txn_id}
+        onClick={() => row.txn_id && app.openTxnSheet({ id: row.txn_id })}
+        className="absolute inset-0 z-0 rounded-2xl disabled:cursor-default"
+        aria-label={row.txn_id ? `Edit ${title}` : undefined}
+      />
+      <span className="pointer-events-none relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-3">
         <span className="h-3 w-3 rounded-[4px]" style={{ background: categoryColor(cat) }} />
       </span>
-      <span className="min-w-0 flex-1">
+      <span className="pointer-events-none relative z-10 min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{title}</span>
-        <span className="flex items-center gap-1.5 truncate text-xs text-muted">
+        <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
           {showDate ? <span>{formatDay(row.entry_date)}</span> : null}
           {showDate ? <span aria-hidden>·</span> : null}
           <span className="truncate">{sub ? `${cat?.name} › ${sub.name}` : cat?.name}</span>
+          {linkHref ? (
+            <a
+              href={linkHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open link for ${title}`}
+              title="Open related link"
+              className="pointer-events-auto inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 py-0.5 font-medium text-accent transition hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <ExternalLink size={11} />
+              <span className="hidden sm:inline">Link</span>
+            </a>
+          ) : null}
           {row.installment_seq ? (
             <span className="inline-flex shrink-0 items-center gap-0.5 text-accent">
               <Repeat size={11} />
@@ -56,7 +74,7 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRow; sh
         </span>
       </span>
       {right ?? (
-        <span className="shrink-0 text-right">
+        <span className="pointer-events-none relative z-10 shrink-0 text-right">
           <span className={cn("num block text-sm font-medium", income && "text-good", refund && "text-good")}>
             {income || refund ? "+" : ""}
             {formatMoney(Number(row.amount), app.currency)}
@@ -64,6 +82,16 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRow; sh
           {foreign && !row.installment_seq ? <span className="num block text-xs text-faint">{formatMoney(Number(row.orig_amount), row.orig_currency!)}</span> : null}
         </span>
       )}
-    </button>
+    </div>
   );
+}
+
+function safeHttpUrl(value?: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname ? url.href : null;
+  } catch {
+    return null;
+  }
 }
