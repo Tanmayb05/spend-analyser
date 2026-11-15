@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 export type SummaryMetric = {
   label: string;
+  /** Small lowercase note after the label, e.g. "for this month". */
+  qualifier?: string;
   value: string;
   tone?: "good" | "bad";
   info?: ReactNode;
@@ -22,7 +24,7 @@ export type SummaryMetric = {
  * change vs last month, a one-line note and (for spending) a budget bar.
  * The ⓘ panels float over the whole card.
  */
-export function SummaryCard({ metrics, header }: { metrics: SummaryMetric[]; header?: ReactNode }) {
+export function SummaryCard({ metrics, header, footer }: { metrics: SummaryMetric[]; header?: ReactNode; footer?: ReactNode }) {
   return (
     <section aria-label="Financial summary" className="rounded-[var(--radius-card)] border border-border bg-surface">
       {header ? <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-border p-4 sm:px-5">{header}</div> : null}
@@ -50,6 +52,7 @@ export function SummaryCard({ metrics, header }: { metrics: SummaryMetric[]; hea
               panelClassName="absolute inset-x-2 top-14 z-20 border border-border bg-surface-3 shadow-xl sm:inset-x-4"
             >
               {m.label}
+              {m.qualifier ? <span className="ml-1 text-[10px] font-normal normal-case tracking-normal text-faint">{m.qualifier}</span> : null}
             </InfoTitle>
             <p className={cn("num mt-2 truncate text-2xl font-medium leading-none sm:text-3xl xl:text-4xl", m.tone === "good" && "text-good", m.tone === "bad" && "text-bad")}>{m.value}</p>
             <div className="mt-3 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
@@ -83,6 +86,7 @@ export function SummaryCard({ metrics, header }: { metrics: SummaryMetric[]; hea
         );
       })}
       </div>
+      {footer ? <div className="border-t border-border px-4 py-3 text-xs text-muted sm:px-5">{footer}</div> : null}
     </section>
   );
 }

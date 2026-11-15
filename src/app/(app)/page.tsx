@@ -158,14 +158,15 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           <>
             <div className="min-w-0">
               <h2 className="text-base font-medium">Financial summary</h2>
-              <p className="mt-0.5 text-xs text-muted">{formatMonth(month)}</p>
             </div>
             <ModeControl mode={mode} />
           </>
         }
+        footer={<span className="font-medium text-text">{formatMonth(month)}</span>}
         metrics={[
           {
             label: "Income",
+            qualifier: "for this month",
             info: HELP.kpiIncome,
             value: money(cur.income),
             delta: pctChange(cur.income, prev.income),
@@ -175,6 +176,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           },
           {
             label: "Total spend",
+            qualifier: "for this month",
             info: HELP.kpiSpent,
             value: money(cur.spent),
             delta: pctChange(cur.spent, prev.spent),
@@ -193,7 +195,8 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
             progress: bTotals.core > 0 ? { ratio: cur.core / bTotals.core, status: budgetStatus(cur.core, bTotals.core) } : undefined,
           },
           {
-            label: "Net",
+            label: "Net savings",
+            qualifier: "for this month",
             info: HELP.kpiNet,
             value: formatMoney(cur.net, currency, { whole: true, signed: true }),
             tone: cur.net > 0 ? "good" : cur.net < 0 ? "bad" : undefined,

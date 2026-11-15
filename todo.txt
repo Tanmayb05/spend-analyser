@@ -1,0 +1,11 @@
+Remove Smoothed and cash flow. Only have smoothed by default
+
+
+Add expense/income location change
+
+By weekly income option for add expense
+
+
+
+
+Pay for credit Card visualisation
