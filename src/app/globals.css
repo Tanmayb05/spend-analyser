@@ -108,6 +108,30 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Anything clickable shows the pointing hand (Tailwind's reset sets buttons back to the default arrow) */
+@layer base {
+  button:not(:disabled),
+  select:not(:disabled),
+  summary,
+  a[href],
+  label[for],
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="radio"],
+  [role="option"],
+  [role="tab"],
+  [role="menuitem"],
+  input:is([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="month"], [type="date"], [type="submit"]):not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
 /* Big numbers line up */
 .num {
   font-variant-numeric: tabular-nums;

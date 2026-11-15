@@ -54,6 +54,34 @@ export function isValidMonthParam(s: string | undefined | null): s is string {
   return !!s && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
 }
 
+export function isValidYearParam(s: string | undefined | null): s is string {
+  return !!s && /^\d{4}$/.test(s) && Number(s) >= 1970 && Number(s) <= 2200;
+}
+
+export function yearStart(year: number | string): ISODate {
+  return `${year}-01-01`;
+}
+
+export function yearEnd(year: number | string): ISODate {
+  return `${year}-12-31`;
+}
+
+/** The 12 month starts (Jan..Dec) of a calendar year. */
+export function monthsOfYear(year: number | string): ISODate[] {
+  return Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}-01`);
+}
+
+/**
+ * Month to land on when switching from Year view to Month view: keep the current month if it is in that year,
+ * otherwise this month when `year` is the current year, otherwise December.
+ */
+export function monthForYear(year: number | string, current: ISODate, today: ISODate): ISODate {
+  const y = String(year);
+  if (current.slice(0, 4) === y) return monthStart(current);
+  if (today.slice(0, 4) === y) return monthStart(today);
+  return `${y}-12-01`;
+}
+
 export function formatMonth(month: ISODate, style: "long" | "short" = "long"): string {
   const d = parseISO(month);
   return d.toLocaleDateString("en-US", style === "long" ? { month: "long", year: "numeric" } : { month: "short" });

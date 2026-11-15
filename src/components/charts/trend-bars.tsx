@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/money";
 import { formatMonth } from "@/lib/dates";
 import { compactNumber, niceTicks } from "./scale";
 
-export type TrendPoint = { month: string; a: number; b?: number; href?: string };
+export type TrendPoint = { month: string; a: number; b?: number; href?: string; /** planned/committed amount for a month that has not started: drawn lighter */ future?: boolean };
 
 /**
  * Paired monthly bars (one shared y-axis). Selected month is emphasized; others recede.
@@ -22,6 +22,7 @@ export function TrendBars({
   aColor,
   bColor,
   height = 200,
+  confirmSelect = false,
 }: {
   data: TrendPoint[];
   selected: string;
@@ -31,18 +32,38 @@ export function TrendBars({
   aColor: string;
   bColor?: string;
   height?: number;
+  /** Bars pin a preview on click; only the "View <month>" button (using the point's href) navigates. */
+  confirmSelect?: boolean;
 }) {
+  const root = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<number | null>(null);
+  const [pinned, setPinned] = useState<number | null>(null);
   const max = Math.max(0, ...data.flatMap((d) => [d.a, d.b ?? 0]));
   const ticks = niceTicks(max);
   const top = ticks[ticks.length - 1] || 1;
   const selectedIdx = data.findIndex((d) => d.month === selected);
-  const active = hover ?? selectedIdx;
+  const active = hover ?? pinned ?? selectedIdx;
   const pair = bLabel !== undefined;
+  const pinnedPoint = confirmSelect && pinned !== null ? data[pinned] : undefined;
+
+  // a pinned preview is dropped on Escape or a tap outside the chart
+  useEffect(() => {
+    if (pinned === null) return;
+    const onDown = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setPinned(null);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setPinned(null);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [pinned]);
 
   return (
     // `height` is the minimum plot height; inside a taller flex parent the plot grows to fill it
-    <div className="flex h-full flex-col">
+    <div ref={root} className="flex h-full flex-col">
       <div className="mb-6 flex flex-wrap items-center gap-4 text-xs text-muted">
         <LegendDot color={aColor} label={aLabel} />
         {pair ? <LegendDot color={bColor!} label={bLabel!} /> : null}
@@ -70,20 +91,41 @@ export function TrendBars({
           <div className="absolute inset-0 flex items-end" onMouseLeave={() => setHover(null)}>
             {data.map((d, i) => {
               const emphasized = i === active;
-              const Group = d.href ? Link : "div";
-              const linkProps = d.href ? { href: d.href, scroll: false } : {};
+              const label = `${formatMonth(d.month)}${d.future ? " (planned)" : ""}: ${aLabel} ${formatMoney(d.a, currency)}${pair ? `, ${bLabel} ${formatMoney(d.b ?? 0, currency)}` : ""}`;
+              const groupClass = "flex h-full min-w-0 flex-1 items-end justify-center gap-[2px] px-[3px] outline-none";
+              const bars = (
+                <>
+                  <Bar value={d.a} top={top} color={aColor} dim={active !== -1 && !emphasized} future={d.future} />
+                  {pair ? <Bar value={d.b ?? 0} top={top} color={bColor!} dim={active !== -1 && !emphasized} future={d.future} /> : null}
+                </>
+              );
+              const hoverProps = { onMouseEnter: () => setHover(i), onFocus: () => setHover(i) };
+              if (confirmSelect) {
+                return (
+                  <button
+                    key={d.month}
+                    type="button"
+                    aria-pressed={pinned === i}
+                    aria-label={label}
+                    onClick={() => setPinned((p) => (p === i ? null : i))}
+                    {...hoverProps}
+                    className={groupClass}
+                  >
+                    {bars}
+                  </button>
+                );
+              }
+              if (d.href) {
+                return (
+                  <Link key={d.month} href={d.href} scroll={false} aria-label={label} {...hoverProps} className={groupClass}>
+                    {bars}
+                  </Link>
+                );
+              }
               return (
-                <Group
-                  key={d.month}
-                  {...(linkProps as { href: string })}
-                  onMouseEnter={() => setHover(i)}
-                  onFocus={() => setHover(i)}
-                  aria-label={`${formatMonth(d.month)}: ${aLabel} ${formatMoney(d.a, currency)}${pair ? `, ${bLabel} ${formatMoney(d.b ?? 0, currency)}` : ""}`}
-                  className="flex h-full min-w-0 flex-1 items-end justify-center gap-[2px] px-[3px] outline-none"
-                >
-                  <Bar value={d.a} top={top} color={aColor} dim={!emphasized} />
-                  {pair ? <Bar value={d.b ?? 0} top={top} color={bColor!} dim={!emphasized} /> : null}
-                </Group>
+                <div key={d.month} aria-label={label} {...hoverProps} className={groupClass}>
+                  {bars}
+                </div>
               );
             })}
           </div>
@@ -91,7 +133,7 @@ export function TrendBars({
           {/* x labels */}
           <div className="mt-2 flex">
             {data.map((d, i) => (
-              <span key={d.month} className={cn("flex-1 text-center text-[11px]", i === active ? "text-text" : "text-faint", data.length > 8 && i % 2 === 1 && "max-sm:invisible")}>
+              <span key={d.month} className={cn("flex-1 text-center text-[11px]", active === -1 || i === active ? "text-text" : "text-faint", data.length > 12 && i % 2 === 1 && "max-sm:invisible")}>
                 {formatMonth(d.month, "short")}
               </span>
             ))}
@@ -102,7 +144,7 @@ export function TrendBars({
               className="pointer-events-none absolute top-2 z-10 rounded-xl border border-border bg-surface-3 px-3 py-2 text-xs shadow-xl"
               style={{ left: `${Math.min(85, Math.max(15, ((hover + 0.5) / data.length) * 100))}%`, transform: "translate(-50%, -100%)" }}
             >
-              <p className="mb-1 font-medium text-text">{formatMonth(data[hover].month)}</p>
+              <p className="mb-1 font-medium text-text">{formatMonth(data[hover].month)}{data[hover].future ? " · planned" : ""}</p>
               <p className="num text-muted">
                 {aLabel}: <span className="text-text">{formatMoney(data[hover].a, currency, { whole: true })}</span>
               </p>
@@ -115,16 +157,40 @@ export function TrendBars({
           ) : null}
         </div>
       </div>
+      {pinnedPoint && pinnedPoint.href && pinnedPoint.month !== selected ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-2 px-4 py-3">
+          <div className="min-w-0 text-sm">
+            <p className="font-medium text-text">{formatMonth(pinnedPoint.month)}{pinnedPoint.future ? " · planned" : ""}</p>
+            <p className="num text-xs text-muted">
+              {aLabel}: <span className="text-text">{formatMoney(pinnedPoint.a, currency, { whole: true })}</span>
+              {pair ? (
+                <>
+                  {" · "}
+                  {bLabel}: <span className="text-text">{formatMoney(pinnedPoint.b ?? 0, currency, { whole: true })}</span>
+                </>
+              ) : null}
+            </p>
+          </div>
+          <Link
+            href={pinnedPoint.href}
+            scroll={false}
+            onClick={() => setPinned(null)}
+            className="inline-flex h-9 items-center rounded-full bg-text px-4 text-sm font-medium text-bg hover:opacity-90"
+          >
+            View {formatMonth(pinnedPoint.month, "short")}
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function Bar({ value, top, color, dim }: { value: number; top: number; color: string; dim: boolean }) {
+function Bar({ value, top, color, dim, future }: { value: number; top: number; color: string; dim: boolean; future?: boolean }) {
   const h = Math.max(0, (value / top) * 100);
   return (
     <div
       className="w-full max-w-4 rounded-t-[4px] transition-opacity"
-      style={{ height: `${h}%`, minHeight: value > 0 ? 2 : 0, background: color, opacity: dim ? 0.35 : 1 }}
+      style={{ height: `${h}%`, minHeight: value > 0 ? 2 : 0, background: color, opacity: (dim ? 0.35 : 1) * (future ? 0.55 : 1) }}
     />
   );
 }

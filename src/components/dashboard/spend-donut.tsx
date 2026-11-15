@@ -22,6 +22,9 @@ const BAR = {
   none: "bg-faint",
 } as const;
 
+const COLS_WITH_BUDGET = "grid-cols-[minmax(0,1fr)_auto_4.25rem_4.25rem] @max-[17rem]:grid-cols-[minmax(0,1fr)_4.25rem_4.25rem]";
+const COLS_NO_BUDGET = "grid-cols-[minmax(0,1fr)_auto_4.25rem] @max-[17rem]:grid-cols-[minmax(0,1fr)_4.25rem]";
+
 export type SpendSlice = {
   key: string;
   label: string;
@@ -44,11 +47,14 @@ export function SpendDonut({
   attention = [],
   currency,
   totalLabel = "Total spent",
+  showBudget = true,
 }: {
   slices: SpendSlice[];
   attention?: AttentionItem[];
   currency: string;
   totalLabel?: string;
+  /** Hide the Budget column (e.g. when browsing a whole year, where monthly budgets don't apply). */
+  showBudget?: boolean;
 }) {
   const [hover, setHover] = useState<string | null>(null);
   const total = slices.reduce((a, s) => a + s.value, 0);
@@ -125,7 +131,10 @@ export function SpendDonut({
       >
         <div
           role="row"
-          className="grid grid-cols-[minmax(0,1fr)_auto_4.25rem_4.25rem] items-center gap-x-2 px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint @max-[17rem]:grid-cols-[minmax(0,1fr)_4.25rem_4.25rem]"
+          className={cn(
+            "grid items-center gap-x-2 px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint",
+            showBudget ? COLS_WITH_BUDGET : COLS_NO_BUDGET,
+          )}
         >
           <span role="columnheader">Category</span>
           <span
@@ -138,9 +147,11 @@ export function SpendDonut({
           <span role="columnheader" className="text-right">
             Spent
           </span>
-          <span role="columnheader" className="text-right">
-            Budget
-          </span>
+          {showBudget ? (
+            <span role="columnheader" className="text-right">
+              Budget
+            </span>
+          ) : null}
         </div>
         <ul className="space-y-0.5">
           {slices.map((s) => {
@@ -148,7 +159,7 @@ export function SpendDonut({
             const row = (
               <div
                 role="row"
-                className="grid grid-cols-[minmax(0,1fr)_auto_4.25rem_4.25rem] items-center gap-x-2 @max-[17rem]:grid-cols-[minmax(0,1fr)_4.25rem_4.25rem]"
+                className={cn("grid items-center gap-x-2", showBudget ? COLS_WITH_BUDGET : COLS_NO_BUDGET)}
               >
                 <span role="cell" className="flex min-w-0 items-center gap-2">
                   <span
@@ -190,17 +201,19 @@ export function SpendDonut({
                 >
                   {money(s.value)}
                 </span>
-                <span
-                  role="cell"
-                  className="num text-right text-muted"
-                  title={s.budgetNote}
-                >
-                  {s.budget && s.budget > 0 ? (
-                    money(s.budget)
-                  ) : (
-                    <span aria-label="No budget set">–</span>
-                  )}
-                </span>
+                {showBudget ? (
+                  <span
+                    role="cell"
+                    className="num text-right text-muted"
+                    title={s.budgetNote}
+                  >
+                    {s.budget && s.budget > 0 ? (
+                      money(s.budget)
+                    ) : (
+                      <span aria-label="No budget set">–</span>
+                    )}
+                  </span>
+                ) : null}
               </div>
             );
             const ratio = s.budget && s.budget > 0 ? s.value / s.budget : null;

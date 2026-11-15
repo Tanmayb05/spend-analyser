@@ -23,10 +23,14 @@ export const HELP = {
   ),
   transactions: (
     <>
-      <p>Every entry for the selected month. Tap any row to edit, duplicate or delete it.</p>
       <p>
-        Filters (category, core only, trip, merchant, payment, search…) apply to everything on the page: the big total, the
-        12-month chart and the list. Use it to compare any slice month on month, e.g. “Eating out, last 12 months”.
+        <b>Month</b> shows every entry for the selected month: tap any row to edit, duplicate or delete it. <b>Year</b> drops
+        the list and shows the whole calendar year: totals, categories and merchants.
+      </p>
+      <p>
+        Filters (category, everyday only, trip, merchant, payment, search…) apply to everything on the page: the totals, the
+        Jan–Dec chart, the breakdowns and the list. Use it to compare any slice month on month, e.g. “Eating out, this year”.
+        Months that haven&apos;t started show lighter bars: those are planned amounts (EMIs, spread costs).
       </p>
       <p>
         In <b>Smoothed</b> view a spread purchase shows as its monthly part (“3 of 12”); in <b>Cash flow</b> view it shows as
@@ -148,8 +152,8 @@ export const HELP = {
   // ---- Transactions ------------------------------------------------------------------------
   filteredTotal: (
     <p>
-      The total for your current filters in this month, compared with last month and the 3 months before. The bars show the
-      same filters over 12 months; tap one to jump to that month.
+      The total for your current filters in this period, compared with the previous one. The bars show the same filters for
+      January to December; tap one to preview it, then choose “View” to open that month.
     </p>
   ),
 
