@@ -16,6 +16,32 @@ import { PeriodPicker, type PeriodView } from "@/components/transactions/period-
 
 const FILTER_KEYS = ["type", "cat", "sub", "core", "trip", "merchant", "pay", "by", "receipt", "plan", "q", "sched"] as const;
 
+type Draft = {
+  type: string;
+  cat: string;
+  sub: string;
+  trip: string;
+  merchant: string;
+  pay: string;
+  by: string;
+  receipt: boolean;
+  plan: boolean;
+  sched: boolean;
+};
+
+const draftOf = (f: TxnFilters): Draft => ({
+  type: f.type ?? "",
+  cat: f.categories[0] ?? "",
+  sub: f.subcategory ?? "",
+  trip: f.trip ?? "",
+  merchant: f.merchant ?? "",
+  pay: f.payment ?? "",
+  by: f.paidBy ?? "",
+  receipt: f.receipt,
+  plan: f.plan,
+  sched: f.sched,
+});
+
 export function FilterBar({
   view,
   month,
@@ -37,6 +63,28 @@ export function FilterBar({
   const router = useRouter();
   const href = useParamHref();
   const [more, setMore] = useState(false);
+  // The sheet edits a draft; nothing is applied (or fetched) until Done. Closing the sheet discards it.
+  const [draft, setDraft] = useState<Draft>(() => draftOf(filters));
+  const setD = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
+  const openMore = () => {
+    setDraft(draftOf(filters));
+    setMore(true);
+  };
+  const applyDraft = () => {
+    setMore(false);
+    go({
+      type: draft.type || null,
+      cat: draft.cat || null,
+      sub: draft.cat ? draft.sub || null : null,
+      trip: draft.trip || null,
+      merchant: draft.merchant || null,
+      pay: draft.pay || null,
+      by: draft.by || null,
+      receipt: draft.receipt ? "1" : null,
+      plan: draft.plan ? "1" : null,
+      sched: draft.sched ? "1" : null,
+    });
+  };
   const go = (patch: Record<string, string | null>) => router.push(href(patch), { scroll: false });
 
   const chip = (label: string, clear: Record<string, null>) => (
@@ -61,7 +109,7 @@ export function FilterBar({
   ].filter(Boolean);
   const filterCount = chips.length;
 
-  const kind = filters.type === "income" ? "income" : "expense";
+  const kind = draft.type === "income" ? "income" : "expense";
 
   return (
     <div className="space-y-3">
@@ -86,7 +134,7 @@ export function FilterBar({
           </div>
         ) : null}
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <button type="button" onClick={() => setMore(true)} aria-label={filterCount ? `Filters, ${filterCount} active` : "Filters"} className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-surface-2 text-sm hover:text-text sm:w-auto sm:px-4">
+          <button type="button" onClick={openMore} aria-label={filterCount ? `Filters, ${filterCount} active` : "Filters"} className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-surface-2 text-sm hover:text-text sm:w-auto sm:px-4">
             <SlidersHorizontal size={16} />
             <span className="max-sm:sr-only">Filters</span>
             {filterCount ? (
@@ -105,7 +153,7 @@ export function FilterBar({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Type">
-              <Select value={filters.type ?? ""} onChange={(e) => go({ type: e.target.value || null, cat: null, sub: null })}>
+              <Select value={draft.type} onChange={(e) => setD({ type: e.target.value, cat: "", sub: "" })}>
                 <option value="">All types</option>
                 <option value="expense">Expenses</option>
                 <option value="income">Income</option>
@@ -113,26 +161,26 @@ export function FilterBar({
               </Select>
             </Field>
             <Field label="Category">
-              <Select value={filters.categories[0] ?? ""} onChange={(e) => go({ cat: e.target.value || null, sub: null })}>
+              <Select value={draft.cat} onChange={(e) => setD({ cat: e.target.value, sub: "" })}>
                 <option value="">All categories</option>
-                {app.categories.filter((c) => !filters.type || c.kind === kind).map((c) => (
+                {app.categories.filter((c) => !draft.type || c.kind === kind).map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </Select>
             </Field>
           </div>
-          {filters.categories[0] ? (
+          {draft.cat ? (
             <Field label="Subcategory">
-              <Select value={filters.subcategory ?? ""} onChange={(e) => go({ sub: e.target.value || null })}>
+              <Select value={draft.sub} onChange={(e) => setD({ sub: e.target.value })}>
                 <option value="">Any</option>
-                {app.subcategories.filter((s) => s.category_id === filters.categories[0]).map((s) => (
+                {app.subcategories.filter((s) => s.category_id === draft.cat).map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </Select>
             </Field>
           ) : null}
           <Field label="Trip" hint="Filtering by a trip shows its expenses even when the trip isn't counted in spending.">
-            <Select value={filters.trip ?? ""} onChange={(e) => go({ trip: e.target.value || null })}>
+            <Select value={draft.trip} onChange={(e) => setD({ trip: e.target.value })}>
               <option value="">Any</option>
               {app.trips.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
@@ -140,7 +188,7 @@ export function FilterBar({
             </Select>
           </Field>
           <Field label="Merchant">
-            <Select value={filters.merchant ?? ""} onChange={(e) => go({ merchant: e.target.value || null })}>
+            <Select value={draft.merchant} onChange={(e) => setD({ merchant: e.target.value })}>
               <option value="">Any</option>
               {app.merchants.map((m) => (
                 <option key={m.id} value={m.id}>{m.name}</option>
@@ -149,7 +197,7 @@ export function FilterBar({
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Payment">
-              <Select value={filters.payment ?? ""} onChange={(e) => go({ pay: e.target.value || null })}>
+              <Select value={draft.pay} onChange={(e) => setD({ pay: e.target.value })}>
                 <option value="">Any</option>
                 {app.paymentMethods.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
@@ -157,7 +205,7 @@ export function FilterBar({
               </Select>
             </Field>
             <Field label="Paid by">
-              <Select value={filters.paidBy ?? ""} onChange={(e) => go({ by: e.target.value || null })}>
+              <Select value={draft.by} onChange={(e) => setD({ by: e.target.value })}>
                 <option value="">Anyone</option>
                 {app.people.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
@@ -166,21 +214,21 @@ export function FilterBar({
             </Field>
           </div>
           <label className="flex items-center gap-3 text-sm">
-            <input type="checkbox" checked={filters.receipt} onChange={(e) => go({ receipt: e.target.checked ? "1" : null })} className="h-5 w-5 accent-[var(--accent)]" />
+            <input type="checkbox" checked={draft.receipt} onChange={(e) => setD({ receipt: e.target.checked })} className="h-5 w-5 accent-[var(--accent)]" />
             Has a receipt
           </label>
           <label className="flex items-center gap-3 text-sm">
-            <input type="checkbox" checked={filters.plan} onChange={(e) => go({ plan: e.target.checked ? "1" : null })} className="h-5 w-5 accent-[var(--accent)]" />
+            <input type="checkbox" checked={draft.plan} onChange={(e) => setD({ plan: e.target.checked })} className="h-5 w-5 accent-[var(--accent)]" />
             Spread / EMI only
           </label>
           <label className="flex items-start gap-3 text-sm">
-            <input type="checkbox" checked={filters.sched} onChange={(e) => go({ sched: e.target.checked ? "1" : null })} className="mt-0.5 h-5 w-5 accent-[var(--accent)]" />
+            <input type="checkbox" checked={draft.sched} onChange={(e) => setD({ sched: e.target.checked })} className="mt-0.5 h-5 w-5 accent-[var(--accent)]" />
             <span>
               Include scheduled in totals
               <span className="block text-xs text-muted">Future-dated entries are left out of totals until they happen. Turn on to see projected totals.</span>
             </span>
           </label>
-          <Button className="w-full" onClick={() => setMore(false)}>Done</Button>
+          <Button className="w-full" onClick={applyDraft}>Done</Button>
         </div>
       </Sheet>
     </div>

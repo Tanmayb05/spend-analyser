@@ -85,6 +85,7 @@ const prefsSchema = z.object({
   week_start: z.coerce.number().int().min(0).max(1),
   theme: z.enum(["dark", "light", "system"]),
   default_spread_months: z.coerce.number().int().min(1).max(120),
+  default_payment_method_id: uuid.nullable(),
   convert_budgets: z.boolean().optional(),
 });
 

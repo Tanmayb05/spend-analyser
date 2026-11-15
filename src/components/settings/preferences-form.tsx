@@ -7,6 +7,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
 import { useAction } from "@/hooks/use-action";
 import { allCurrencies, currencyName, formatMoney } from "@/lib/money";
+import { useAppData } from "@/components/app-data";
 import { updatePreferences } from "@/app/(app)/settings/actions";
 import type { Profile } from "@/lib/data/types";
 
@@ -20,7 +21,9 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
     week_start: profile.week_start,
     theme: profile.theme as "dark" | "light" | "system",
     default_spread_months: profile.default_spread_months,
+    default_payment_method_id: profile.default_payment_method_id,
   });
+  const { paymentMethods } = useAppData();
   const [convertBudgets, setConvertBudgets] = useState(true);
   const a = useAction();
   const currencies = useMemo(() => allCurrencies().map((c) => ({ code: c, name: currencyName(c) })), []);
@@ -63,6 +66,14 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
           ) : null}
           <Field label="Spread new purchases over (months, default)" htmlFor="dsm">
             <Input id="dsm" type="number" min={1} max={120} value={v.default_spread_months} onChange={(e) => set("default_spread_months", Number(e.target.value))} />
+          </Field>
+          <Field label="Default payment method" htmlFor="dpm" hint="Pre-selected on new transactions. Manage the list under Payment methods.">
+            <Select id="dpm" value={v.default_payment_method_id ?? ""} onChange={(e) => set("default_payment_method_id", e.target.value || null)}>
+              <option value="">None</option>
+              {paymentMethods.filter((p) => !p.archived || p.id === v.default_payment_method_id).map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </Select>
           </Field>
         </div>
       </Card>

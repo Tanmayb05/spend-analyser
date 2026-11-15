@@ -5,7 +5,7 @@ import { SERIES, categoryColor } from "@/components/charts/colors";
 import { FilterBar } from "@/components/transactions/filter-bar";
 import { TxnList } from "@/components/transactions/txn-list";
 import { Breakdown } from "@/components/transactions/breakdown";
-import { PeriodKpiStrip } from "@/components/transactions/period-kpis";
+import { IncomeKpiStrip, PeriodKpiStrip } from "@/components/transactions/period-kpis";
 import { SpendDonut } from "@/components/dashboard/spend-donut";
 import { TxnTabs } from "@/components/transactions/txn-tabs";
 import { PlansView } from "@/components/plans/plans-view";
@@ -155,11 +155,26 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   );
 
   // Year view keeps the chart inside the totals card; Month view puts the entries first and the chart in the side column.
-  const kpiStrip = (withChart: boolean) => (
+  // Income filter: income-focused totals instead of spend / income / saved
+  const kpiStrip = (withChart: boolean) =>
+    incomeView ? (
+      <IncomeKpiStrip
+        income={kpis.income}
+        delta={deltas.income}
+        currency={currency}
+        period={periodLabel}
+        avgMonth={avgMonth}
+        monthsCounted={active.length}
+        peak={peak ? { label: formatMonth(peak.month, "long"), value: peak.a } : null}
+        basis={basis}
+      >
+        {withChart ? trendChart : null}
+      </IncomeKpiStrip>
+    ) : (
     <PeriodKpiStrip kpis={kpis} currency={currency} period={periodLabel} deltas={deltas} everyday={filters.core} basis={basis}>
       {withChart ? trendChart : null}
     </PeriodKpiStrip>
-  );
+    );
 
   const categoriesCard = slices.length ? (
     <Card>
@@ -170,7 +185,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
 
   const merchantsCard = byMerchant.length ? (
     <Card>
-      <p className="card-title mb-3">Top merchants</p>
+      <p className="card-title mb-3">{incomeView ? "Top income sources" : "Top merchants"}</p>
       <Breakdown
         items={byMerchant.map((b) => ({ label: ref.merchants.find((m) => m.id === b.key)?.name ?? "—", value: b.value, color: "var(--c1)", href: qsFor({ merchant: b.key }) }))}
         total={total}

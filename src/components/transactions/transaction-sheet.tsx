@@ -72,6 +72,7 @@ export function TransactionSheet() {
 
 function blank(app: ReturnType<typeof useAppData>, preset?: Record<string, string>): FormValues {
   const self = app.people.find((p) => p.is_self);
+  const defaultPm = app.paymentMethods.find((p) => p.id === app.profile.default_payment_method_id && !p.archived);
   return {
     id: null,
     date: app.today,
@@ -84,7 +85,7 @@ function blank(app: ReturnType<typeof useAppData>, preset?: Record<string, strin
     merchant_name: "",
     description: "",
     external_url: "",
-    payment_method_id: "",
+    payment_method_id: defaultPm?.id ?? "",
     paid_by_id: self?.id ?? "",
     trip_id: "",
     receipt_id: "",

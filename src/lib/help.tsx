@@ -131,7 +131,7 @@ export const HELP = {
         Use ‹ › or tap the month to move around; the whole page follows the month shown here. Tap a day to see its total and every transaction.
       </p>
       <p>
-        A blue bar under a date means regular spending, a purple bar means an EMI or a spread (paid-upfront) purchase, an orange bar means a trip, and a split bar means a mix. Trips set to “not counted” are listed for reference but left out of totals.
+        Each day is tinted by what happened on it, darker for bigger amounts. Pink to red is regular spending, purple is an EMI or a spread (paid-upfront) purchase, orange is a trip, and green is income or a refund. A day with spending and money coming in is tinted by the spending; the bar under the date shows every kind. Trips set to “not counted” are listed for reference but left out of totals.
       </p>
     </>
   ),

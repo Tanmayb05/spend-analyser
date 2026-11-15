@@ -67,6 +67,9 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
               <PlanBadge row={row} />
             )
           ) : null}
+          {showKind && (income || refund) ? (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-income/15 px-2 py-0.5 font-medium text-income">{income ? "Income" : "Refund"}</span>
+          ) : null}
           {showKind ? (
             trip ? (
               <span className="inline-flex min-w-0 shrink-0 items-center gap-1 rounded-full bg-trip/15 px-2 py-0.5 font-medium text-trip">
@@ -78,8 +81,8 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
                 <span className="inline-flex shrink-0 items-center rounded-full bg-plan/15 px-2 py-0.5 font-medium text-plan">
                   {row.plan_kind === "emi" ? "EMI" : row.installment_seq ? "Spread" : "Paid upfront"}
                 </span>
-              ) : (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-accent/15 px-2 py-0.5 font-medium text-accent">Regular</span>
+              ) : income || refund ? null : (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-expense/15 px-2 py-0.5 font-medium text-expense">Regular</span>
               )
             )
           ) : trip ? (

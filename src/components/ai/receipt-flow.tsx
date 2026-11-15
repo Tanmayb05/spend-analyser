@@ -115,7 +115,9 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
   const firstCat = draft.items.find((i) => i.category_id)?.category_id ?? "";
   const [single, setSingle] = useState({ category_id: firstCat, subcategory_id: draft.items.find((i) => i.category_id === firstCat)?.subcategory_id ?? "" });
   const [tripId, setTripId] = useState("");
-  const [paymentId, setPaymentId] = useState("");
+  const [paymentId, setPaymentId] = useState(
+    () => app.paymentMethods.find((p) => p.id === app.profile.default_payment_method_id && !p.archived)?.id ?? "",
+  );
   const [pending, start] = useTransition();
 
   const itemsSum = round2(draft.items.reduce((a, i) => a + (Number(i.total_price) || 0), 0));

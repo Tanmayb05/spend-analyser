@@ -18,6 +18,10 @@
   --bad: #d03b3b;
   --trip: #ff8a3d;
   --plan: #b794f6;
+  /* calendar heat ramps: pink -> red (expenses), lavender -> purple (EMI), mint -> green (income and refunds) */
+  --expense: #f0425a; --expense-lo: #ff9ec4;
+  --plan-lo: #dccbff; --plan-hi: #8b5cf6;
+  --income: #22c55e; --income-lo: #a7f0b5;
   --chart-muted: #2c2c31;
   --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500;
   --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767;
@@ -42,6 +46,9 @@
   --bad: #d03b3b;
   --trip: #e8590c;
   --plan: #7c3aed;
+  --expense: #d62839; --expense-lo: #f27aa6;
+  --plan-lo: #b9a0f7; --plan-hi: #6d28d9;
+  --income: #15803d; --income-lo: #5fcf7c;
   --chart-muted: #e2e2e8;
   --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100;
   --c5: #e87ba4; --c6: #008300; --c7: #4a3aa7; --c8: #e34948;
@@ -67,6 +74,9 @@
     --bad: #d03b3b;
     --trip: #e8590c;
     --plan: #7c3aed;
+  --expense: #d62839; --expense-lo: #f27aa6;
+  --plan-lo: #b9a0f7; --plan-hi: #6d28d9;
+  --income: #15803d; --income-lo: #5fcf7c;
     --chart-muted: #e2e2e8;
     --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100;
     --c5: #e87ba4; --c6: #008300; --c7: #4a3aa7; --c8: #e34948;
@@ -92,6 +102,8 @@
   --color-bad: var(--bad);
   --color-trip: var(--trip);
   --color-plan: var(--plan);
+  --color-expense: var(--expense);
+  --color-income: var(--income);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-display), var(--font-geist-sans);
