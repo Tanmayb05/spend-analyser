@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(kill 87716 87717 87722)"
+    ]
+  }
+}
