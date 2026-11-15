@@ -8,14 +8,16 @@ export const HELP = {
   // ---- Pages -------------------------------------------------------------------------------
   overview: (
     <>
-      <p>Your month at a glance. Use ‹ › or tap the month to move around.</p>
+      <p>Your month at a glance. Move between months in the calendar.</p>
       <p>
-        <b>Normalized</b> spreads big costs (EMIs, spread purchases, lump-sum trips) evenly over their months, so one big
-        purchase doesn&apos;t make a month look terrible. <b>Cash</b> shows money on the day it actually left your account.
+        <b>Smoothed</b> spreads big costs (EMIs, spread purchases, lump-sum trips) evenly over their months, so one big
+        purchase doesn&apos;t make a month look terrible. <b>Cash flow</b> shows money on the day it actually left your account.
+        It&apos;s set in the summary card and changes every number.
       </p>
       <p>
-        <b>Core</b> shows only everyday, controllable spending and hides fixed or one-off costs like rent. Choose which
-        categories are core in Settings → Categories.
+        <b>Everyday</b> (in the calendar header) shows only everyday, controllable spending in the calendar and the donut,
+        and hides fixed or one-off costs like rent. It never changes the four summary numbers. Choose which categories
+        are everyday in Settings → Categories.
       </p>
     </>
   ),
@@ -27,7 +29,7 @@ export const HELP = {
         12-month chart and the list. Use it to compare any slice month on month, e.g. “Eating out, last 12 months”.
       </p>
       <p>
-        In <b>Normalized</b> view a spread purchase shows as its monthly part (“3 of 12”); in <b>Cash</b> view it shows as
+        In <b>Smoothed</b> view a spread purchase shows as its monthly part (“3 of 12”); in <b>Cash flow</b> view it shows as
         the full payment.
       </p>
     </>
@@ -61,7 +63,7 @@ export const HELP = {
         $100 a month for 12 months. <b>EMI</b>: you really are paying it off month by month.
       </p>
       <p>
-        Normalized view counts both monthly. Cash view counts a paid-upfront purchase on the day you bought it, and an EMI as
+        Smoothed view counts both monthly. Cash flow view counts a paid-upfront purchase on the day you bought it, and an EMI as
         each installment is due.
       </p>
     </>
@@ -98,45 +100,44 @@ export const HELP = {
   // ---- Overview cards ---------------------------------------------------------------------
   kpiSpent: (
     <p>
-      Expenses minus refunds for the month (core only when Core is on). The bar shows how much of the month&apos;s budget is
-      used: blue on track, amber from 80%, red when over. The % chip compares with last month.
+      Everything you spent this month: expenses minus refunds, for all categories. The bar shows how much of the month&apos;s budget is
+      used (blue on track, amber from 80%, red when over) and the % chip compares with last month. The All spending / Everyday switch never changes this number.
     </p>
   ),
-  kpiIncome: <p>Money received in income categories this month, compared with your income target if you set one in Budgets.</p>,
-  kpiNet: <p>Income minus spending. Green means you saved money this month, red means you spent more than you earned.</p>,
+  kpiIncome: <p>Money received in income categories this month.</p>,
+  kpiNet: <p>Income minus total spend. Green means you saved money this month, red means you spent more than you earned.</p>,
   kpiCore: (
     <p>
-      Spending in categories marked Core: everyday costs you can control, like groceries, eating out and shopping. Rent and
+      Spending in categories marked Everyday: costs you can control, like groceries, eating out and shopping. Rent and
       other fixed costs are left out. Change which categories count in Settings → Categories.
     </p>
   ),
-  kpiLeftPerDay: <p>What&apos;s left of this month&apos;s budget divided by the days remaining. Spend less than this per day to finish on budget.</p>,
-  kpiAvgPerDay: <p>Total spending for the month divided by its number of days.</p>,
-  kpiCommitted: <p>Installments and future-dated expenses already scheduled for this month.</p>,
   trend: (
     <p>
       Spent vs income for the last 12 months; the highlighted bars are the month you&apos;re viewing. Tap a bar to jump to
-      that month, or hover it for exact amounts.
+      that month, or hover it for exact amounts. On the Overview it is shown as a small net-saved chart: green bars are months you saved, red bars months you spent more than you earned.
     </p>
-  ),
-  calendar: <p>Dots mark days with spending. Tap a day to see its total and entries; tap it again to go back to the month.</p>,
-  donut: <p>This month&apos;s spending by category: the top 5, with everything else grouped as Other. Tap a category to see its transactions.</p>,
-  budgetBars: (
-    <>
-      <p>Each category&apos;s spending against its monthly budget, worst first. Near limit = 80% or more, Over = above 100%. Tap a row to see its transactions.</p>
-      <p>Budgets carry forward each month until you change them in Settings → Budgets.</p>
-    </>
   ),
   upcoming: (
     <p>
-      Installments and future-dated expenses due in the next 30 days, plus what&apos;s already locked in for next month.
+      Installments and future-dated expenses due in the next 30 days, plus what&apos;s already locked in for next month against that month&apos;s budget. Long-range commitments are on the Plans &amp; EMIs page.
     </p>
   ),
-  outlook: (
-    <p>
-      For each of the next 3 months: what installments and scheduled payments already take, against that month&apos;s total
-      budget. The rest is room for everything else.
-    </p>
+  calendar: (
+    <>
+      <p>
+        Use ‹ › or tap the month to move around; the whole page follows the month shown here. Tap a day to see its total and every transaction.
+      </p>
+      <p>
+        A blue bar under a date means regular spending, a purple bar means an EMI or a spread (paid-upfront) purchase, an orange bar means a trip, and a split bar means a mix. Trips set to “not counted” are listed for reference but left out of totals.
+      </p>
+    </>
+  ),
+  donut: (
+    <>
+      <p>This month&apos;s spending by category: the top 5, with everything else grouped as Other. <b>Share</b> is each category&apos;s part of total spending, not how much of its budget is used. Tap a category to see its transactions.</p>
+      <p>The thin bar under a category shows how much of its budget is used. Spent turns amber from 80% and red when over; a dash means no budget is set. Other categories near or over their limit appear under “Also watch”. With Core on, only core categories are shown. Budgets carry forward until you change them in Settings → Budgets.</p>
+    </>
   ),
   quickInsights: (
     <p>
@@ -144,9 +145,6 @@ export const HELP = {
       budget pace, EMIs finishing. Free and always up to date. “Deep analysis” uses Gemini for a fuller review.
     </p>
   ),
-  tripsThisMonth: <p>Trips with spending this month. “Not counted” trips are left out of every number on this page.</p>,
-  recent: <p>The latest entries for this month. Tap one to edit it.</p>,
-
   // ---- Transactions ------------------------------------------------------------------------
   filteredTotal: (
     <p>
@@ -165,7 +163,7 @@ export const HELP = {
         exchange rate from each transaction&apos;s own date.
       </p>
       <p>
-        <b>Default view</b>: whether pages open in Normalized or Cash. <b>Spread months</b>: pre-filled when you turn on
+        <b>Default view</b>: whether pages open in Smoothed or Cash flow. <b>Spread months</b>: pre-filled when you turn on
         “Spread this cost”.
       </p>
     </>
@@ -174,7 +172,7 @@ export const HELP = {
     <>
       <p>Categories group your spending and income. Each has an optional list of subcategories.</p>
       <p>
-        <b>Core</b> marks everyday, controllable spending; the Core switch on the dashboard shows only these. Colour is used
+        <b>Everyday</b> marks everyday, controllable spending; the Everyday switch on the dashboard shows only these. Colour is used
         in charts. Archive hides a category from pickers but keeps its history. Deleting one that&apos;s in use asks where to
         move its transactions.
       </p>

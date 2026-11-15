@@ -14,6 +14,7 @@ import { addMonths, formatMonth } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { TxnFilters } from "@/lib/analytics/filters";
 import type { LedgerMode } from "@/lib/data/types";
+import { MODE_OPTIONS } from "@/lib/labels";
 
 export function FilterBar({ month, mode, filters }: { month: string; mode: LedgerMode; filters: TxnFilters }) {
   const app = useAppData();
@@ -41,7 +42,7 @@ export function FilterBar({ month, mode, filters }: { month: string; mode: Ledge
       chip(app.maps.category.get(id)?.name ?? "Category", { cat: null }),
     ),
     filters.subcategory && chip(app.maps.subcategory.get(filters.subcategory)?.name ?? "Subcategory", { sub: null }),
-    filters.core && chip("Core only", { core: null }),
+    filters.core && chip("Everyday only", { core: null }),
     filters.trip && chip(app.maps.trip.get(filters.trip)?.name ?? "Trip", { trip: null }),
     filters.merchant && chip(app.merchants.find((m) => m.id === filters.merchant)?.name ?? "Merchant", { merchant: null }),
     filters.payment && chip(app.maps.payment.get(filters.payment)?.name ?? "Payment", { pay: null }),
@@ -71,10 +72,7 @@ export function FilterBar({ month, mode, filters }: { month: string; mode: Ledge
           ariaLabel="View"
           value={mode}
           onChange={(v) => go({ mode: v })}
-          options={[
-            { value: "normalized", label: "Normalized" },
-            { value: "cash", label: "Cash" },
-          ]}
+          options={MODE_OPTIONS}
         />
         <div className="relative min-w-48 flex-1">
           <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
@@ -112,7 +110,7 @@ export function FilterBar({ month, mode, filters }: { month: string; mode: Ledge
           onClick={() => go({ core: filters.core ? null : "1" })}
           className={cn("h-9 shrink-0 rounded-full border px-4 text-sm", filters.core ? "border-text bg-text text-bg" : "border-border bg-surface-2 text-muted")}
         >
-          Core only
+          Everyday only
         </button>
         <button type="button" onClick={() => setMore(true)} className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-surface-2 px-4 text-sm text-muted">
           <SlidersHorizontal size={14} /> More filters

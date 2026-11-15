@@ -48,7 +48,7 @@ export function BudgetsEditor({
       <div className="grid grid-cols-3 gap-3">
         {[
           ["Total budget", totals.total],
-          ["Core budget", totals.core],
+          ["Everyday budget", totals.core],
           ["Income target", totals.incomeTarget],
         ].map(([k, v]) => (
           <Card key={k as string} className="p-4">

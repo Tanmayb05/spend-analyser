@@ -11,7 +11,7 @@ import type { LedgerRow } from "@/lib/data/types";
 type LedgerRowWithLink = LedgerRow & { external_url?: string | null };
 
 /** One ledger row. Tapping opens the parent transaction for editing. */
-export function LedgerItem({ row, showDate = true, right }: { row: LedgerRowWithLink; showDate?: boolean; right?: React.ReactNode }) {
+export function LedgerItem({ row, showDate = true, right, showKind = false }: { row: LedgerRowWithLink; showDate?: boolean; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
   const app = useAppData();
   const cat = app.maps.category.get(row.category_id);
   const sub = row.subcategory_id ? app.maps.subcategory.get(row.subcategory_id) : null;
@@ -21,6 +21,8 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRowWith
   const refund = row.type === "refund";
   const foreign = row.orig_currency && row.orig_currency !== app.currency;
   const linkHref = safeHttpUrl(row.external_url);
+  // trips set to "not counted" are shown for context but left out of every total
+  const uncounted = showKind && trip?.include_mode === "excluded";
 
   return (
     <div className="relative flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-surface-2">
@@ -36,10 +38,10 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRowWith
       </span>
       <span className="pointer-events-none relative z-10 min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{title}</span>
-        <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+        <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
           {showDate ? <span>{formatDay(row.entry_date)}</span> : null}
           {showDate ? <span aria-hidden>·</span> : null}
-          <span className="truncate">{sub ? `${cat?.name} › ${sub.name}` : cat?.name}</span>
+          <span className="max-w-full truncate">{sub ? `${cat?.name} › ${sub.name}` : cat?.name}</span>
           {linkHref ? (
             <a
               href={linkHref}
@@ -54,17 +56,33 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRowWith
             </a>
           ) : null}
           {row.installment_seq ? (
-            <span className="inline-flex shrink-0 items-center gap-0.5 text-accent">
+            <span className={cn("inline-flex shrink-0 items-center gap-0.5", showKind ? "text-plan" : "text-accent")}>
               <Repeat size={11} />
               {row.installment_seq}/{row.installment_count}
             </span>
           ) : null}
-          {trip ? (
+          {showKind ? (
+            trip ? (
+              <span className="inline-flex min-w-0 shrink-0 items-center gap-1 rounded-full bg-trip/15 px-2 py-0.5 font-medium text-trip">
+                <Plane size={11} className="shrink-0" />
+                <span className="max-w-32 truncate">Trip: {trip.name}</span>
+              </span>
+            ) : (
+              row.plan_kind ? (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-plan/15 px-2 py-0.5 font-medium text-plan">
+                  {row.plan_kind === "emi" ? "EMI" : row.installment_seq ? "Spread" : "Paid upfront"}
+                </span>
+              ) : (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-accent/15 px-2 py-0.5 font-medium text-accent">Regular</span>
+              )
+            )
+          ) : trip ? (
             <span className="inline-flex shrink-0 items-center gap-0.5">
               <Plane size={11} />
               {trip.name}
             </span>
           ) : null}
+          {uncounted ? <span className="shrink-0 text-faint">not counted</span> : null}
           {row.is_scheduled ? (
             <span className="inline-flex shrink-0 items-center gap-0.5 text-warn">
               <CalendarClock size={11} />
@@ -75,7 +93,7 @@ export function LedgerItem({ row, showDate = true, right }: { row: LedgerRowWith
       </span>
       {right ?? (
         <span className="pointer-events-none relative z-10 shrink-0 text-right">
-          <span className={cn("num block text-sm font-medium", income && "text-good", refund && "text-good")}>
+          <span className={cn("num block text-sm font-medium", income && "text-good", refund && "text-good", uncounted && "text-muted line-through decoration-faint")}>
             {income || refund ? "+" : ""}
             {formatMoney(Number(row.amount), app.currency)}
           </span>

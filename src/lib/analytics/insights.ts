@@ -86,10 +86,10 @@ export function ruleInsights(input: Input, limit = 3): Insight[] {
         id: "core-pace",
         tone: "bad",
         priority: 80,
-        text: `At this pace, core spending ends the month near ${money(projected)}, over the ${money(totals.core)} core budget.`,
+        text: `At this pace, everyday spending ends the month near ${money(projected)}, over the ${money(totals.core)} everyday budget.`,
       });
     } else if (day >= 10 && projected <= totals.core) {
-      out.push({ id: "core-pace-ok", tone: "good", priority: 30, text: `Core spending is on pace to stay within its ${money(totals.core)} budget.` });
+      out.push({ id: "core-pace-ok", tone: "good", priority: 30, text: `Everyday spending is on pace to stay within its ${money(totals.core)} budget.` });
     }
   }
 

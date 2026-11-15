@@ -41,28 +41,33 @@ export function TrendBars({
   const pair = bLabel !== undefined;
 
   return (
-    <div>
+    // `height` is the minimum plot height; inside a taller flex parent the plot grows to fill it
+    <div className="flex h-full flex-col">
       <div className="mb-6 flex flex-wrap items-center gap-4 text-xs text-muted">
         <LegendDot color={aColor} label={aLabel} />
         {pair ? <LegendDot color={bColor!} label={bLabel!} /> : null}
       </div>
-      <div className="flex gap-2">
-        {/* y axis */}
-        <div className="relative w-9 shrink-0 text-right text-[11px] text-faint" style={{ height }}>
-          {ticks.map((t) => (
-            <span key={t} className="num absolute right-0 -translate-y-1/2" style={{ bottom: `${(t / top) * 100}%` }}>
-              {compactNumber(t)}
-            </span>
-          ))}
+      <div className="flex min-h-0 flex-1 gap-2">
+        {/* y axis: a plot-height column plus an invisible twin of the x-label row so ticks line up with the bars */}
+        <div className="flex w-9 shrink-0 flex-col text-right text-[11px] text-faint">
+          <div className="relative flex-1" style={{ minHeight: height }}>
+            {ticks.map((t) => (
+              <span key={t} className="num absolute right-0 -translate-y-1/2" style={{ bottom: `${(t / top) * 100}%` }}>
+                {compactNumber(t)}
+              </span>
+            ))}
+          </div>
+          <div className="mt-2 text-[11px]" aria-hidden>&nbsp;</div>
         </div>
-        <div className="relative min-w-0 flex-1">
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          <div className="relative flex-1" style={{ minHeight: height }}>
           {/* grid */}
-          <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height }}>
+          <div className="pointer-events-none absolute inset-0">
             {ticks.map((t) => (
               <div key={t} className="absolute inset-x-0 h-px bg-[var(--grid)]" style={{ bottom: `${(t / top) * 100}%` }} />
             ))}
           </div>
-          <div className="relative flex items-end" style={{ height }} onMouseLeave={() => setHover(null)}>
+          <div className="absolute inset-0 flex items-end" onMouseLeave={() => setHover(null)}>
             {data.map((d, i) => {
               const emphasized = i === active;
               const Group = d.href ? Link : "div";
@@ -81,6 +86,7 @@ export function TrendBars({
                 </Group>
               );
             })}
+          </div>
           </div>
           {/* x labels */}
           <div className="mt-2 flex">

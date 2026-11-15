@@ -15,13 +15,13 @@ import { useCloseOverlays } from "@/hooks/use-close-overlays";
 export function AppShell({ children }: { children: ReactNode }) {
   useCloseOverlays();
   const pathname = usePathname();
-  const { openTxnSheet, profile, email } = useAppData();
+  const { openTxnSheet } = useAppData();
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
     <div className="min-h-dvh lg:flex lg:gap-4 lg:p-4">
       {/* Desktop sidebar */}
-      <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] w-20 shrink-0 flex-col items-center rounded-[28px] border border-border bg-surface py-5 lg:flex">
+      <aside className="sticky top-4 z-40 hidden h-[calc(100dvh-2rem)] w-20 shrink-0 flex-col items-center rounded-[28px] border border-border bg-surface py-5 lg:flex">
         <Link href="/" aria-label="Overview">
           <Logo size={44} />
         </Link>
@@ -30,53 +30,44 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={href}
               href={href}
-              title={label}
               aria-label={label}
               aria-current={isActive(pathname, href) ? "page" : undefined}
               className={cn(
-                "grid h-12 w-12 place-items-center rounded-2xl transition",
+                "group relative grid h-12 w-12 place-items-center rounded-2xl transition",
                 isActive(pathname, href) ? "bg-text text-bg" : "text-muted hover:bg-surface-3 hover:text-text",
               )}
             >
               <Icon size={20} />
+              <SideTip>{label}</SideTip>
             </Link>
           ))}
         </nav>
         <button
           type="button"
           onClick={() => openTxnSheet()}
-          className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-accent-fg"
+          className="group relative mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-accent-fg"
           aria-label="Add transaction"
-          title="Add transaction"
         >
           <Plus size={22} />
+          <SideTip>Add transaction</SideTip>
         </button>
         <form action={signOut}>
-          <button type="submit" className="grid h-12 w-12 place-items-center rounded-2xl text-muted hover:bg-surface-3 hover:text-text" aria-label="Sign out" title="Sign out">
+          <button type="submit" className="group relative grid h-12 w-12 place-items-center rounded-2xl text-muted hover:bg-surface-3 hover:text-text" aria-label="Sign out">
             <LogOut size={20} />
+            <SideTip>Sign out</SideTip>
           </button>
         </form>
       </aside>
 
       <div className="min-w-0 flex-1">
-        {/* Top bar */}
-        <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 lg:px-2 lg:pt-2">
-          <Link href="/" className="flex items-center gap-2 lg:hidden">
+        {/* Mobile top bar: logo only (account lives under Settings) */}
+        <header className="px-4 pb-2 pt-4 lg:hidden">
+          <Link href="/" aria-label="Overview" className="inline-flex">
             <Logo size={32} />
-          </Link>
-          <div className="hidden lg:block" />
-          <Link href="/settings" className="flex items-center gap-3 rounded-full border border-border bg-surface py-1.5 pl-1.5 pr-4 hover:bg-surface-2">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-surface-3 text-sm font-medium uppercase">
-              {(profile.display_name || email || "?").slice(0, 1)}
-            </span>
-            <span className="hidden text-left text-sm leading-tight sm:block">
-              <span className="block">{profile.display_name || "You"}</span>
-              <span className="block text-xs text-muted">{email}</span>
-            </span>
           </Link>
         </header>
 
-        <main className="px-4 pb-28 pt-2 lg:px-2 lg:pb-6">{children}</main>
+        <main className="px-4 pb-28 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
       </div>
 
       {/* Mobile bottom nav */}
@@ -131,5 +122,17 @@ function MobileTab({ href, label, icon: Icon, active }: { href: string; label: s
       <Icon size={22} />
       {label === "Transactions" ? "Activity" : label}
     </Link>
+  );
+}
+
+/** Hover/focus label that slides out to the right of a sidebar icon. Decorative: the control already has an aria-label. */
+function SideTip({ children }: { children: ReactNode }) {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute left-full top-1/2 ml-3 -translate-x-1 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface-3 px-2.5 py-1.5 text-xs font-medium text-text opacity-0 shadow-xl transition duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none"
+    >
+      {children}
+    </span>
   );
 }

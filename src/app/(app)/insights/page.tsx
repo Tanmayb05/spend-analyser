@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader, Insight } from "@/components/ui/card";
+import { TrendBars } from "@/components/charts/trend-bars";
+import { SERIES } from "@/components/charts/colors";
 import { AnalysisPanel } from "@/components/insights/analysis-panel";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger, parseMode } from "@/lib/data/ledger";
 import { requireUser } from "@/lib/supabase/server";
 import { getAiUsage } from "@/lib/ai/usage";
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
+import { formatMoney } from "@/lib/money";
 import { addMonths, formatMonth, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
 import { budgetTotals, budgetsForMonth } from "@/lib/analytics/budgets";
 import { lastMonths, monthlySeries } from "@/lib/analytics/summary";
@@ -40,16 +43,26 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   }
 
   const resolved = budgetsForMonth(ref.budgets, ref.categories, month);
+  const series = monthlySeries(rows, lastMonths(month, 13), ref.today);
+  const currency = ref.profile.base_currency;
+  const thisMonth = monthStart(ref.today);
+  const trend = lastMonths(month, 12).map((m) => {
+    const t = series.find((x) => x.month === m)!;
+    return { month: m, a: t.spent, b: t.income, href: `?${new URLSearchParams({ m: m.slice(0, 7), mode, scope: scopeName })}` };
+  });
+  const activeMonths = trend.filter((t) => t.month <= thisMonth && (t.a > 0 || t.b > 0));
+  const overMonths = activeMonths.filter((t) => t.a > t.b).length;
+  const avgSpend = activeMonths.length ? activeMonths.reduce((a, t) => a + t.a, 0) / activeMonths.length : 0;
   const rules = ruleInsights(
     {
       rows,
-      series: monthlySeries(rows, lastMonths(month, 13), ref.today),
+      series,
       month,
       today: ref.today,
       budgets: resolved,
       totals: budgetTotals(resolved, ref.categories),
       categoryName: (id) => ref.categories.find((c) => c.id === id)?.name ?? "Other",
-      currency: ref.profile.base_currency,
+      currency,
     },
     6,
   );
@@ -77,6 +90,17 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
       </div>
 
       <div className="space-y-4">
+        <Card>
+          <CardHeader title="Am I spending more than I earn?" subtitle="Last 12 months · spent vs income" info={HELP.trend} />
+          <TrendBars data={trend} selected={month} currency={currency} aLabel="Spent" bLabel="Income" aColor={SERIES.spent} bColor={SERIES.income} height={200} />
+          <Insight>
+            {activeMonths.length > 1
+              ? `You spent more than you earned in ${overMonths} of the last ${activeMonths.length} months. Average spend: ${formatMoney(avgSpend, currency, { whole: true })}/month.`
+              : activeMonths.length
+                ? `${overMonths ? "You spent more than you earned" : "You earned more than you spent"} this month.`
+                : "Not enough history yet."}
+          </Insight>
+        </Card>
         <Card>
           <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" info={HELP.quickInsights} />
           <ul className="space-y-3">

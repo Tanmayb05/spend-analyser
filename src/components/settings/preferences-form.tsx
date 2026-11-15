@@ -9,6 +9,7 @@ import { useAction } from "@/hooks/use-action";
 import { allCurrencies, currencyName, formatMoney } from "@/lib/money";
 import { updatePreferences } from "@/app/(app)/settings/actions";
 import type { Profile } from "@/lib/data/types";
+import { MODE_OPTIONS } from "@/lib/labels";
 
 const noop = () => () => {};
 
@@ -76,12 +77,9 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
             <Segmented
               value={v.dashboard_mode}
               onChange={(m) => set("dashboard_mode", m)}
-              options={[
-                { value: "normalized", label: "Normalized" },
-                { value: "cash", label: "Cash" },
-              ]}
+              options={MODE_OPTIONS}
             />
-            <p className="mt-2 text-xs text-faint">Normalized spreads EMIs and big purchases across months. Cash shows money on the day it left.</p>
+            <p className="mt-2 text-xs text-faint">Smoothed spreads EMIs and big purchases across months. Cash flow shows money on the day it left.</p>
           </div>
           <div>
             <p className="mb-2 text-sm text-muted">Week starts on</p>

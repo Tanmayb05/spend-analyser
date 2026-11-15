@@ -42,7 +42,7 @@ export function CategoriesEditor({ categories, subcategories, uses }: { categori
       <Card>
         <CardHeader
           title={kind === "expense" ? "Expense categories" : "Income categories"}
-          subtitle={kind === "expense" ? "Core = everyday, controllable spending. Turn it off for fixed costs like rent or tuition." : undefined}
+          subtitle={kind === "expense" ? "Everyday = controllable day-to-day spending. Turn it off for fixed costs like rent or tuition." : undefined}
           action={
             <Button size="sm" variant="outline" onClick={() => setEditing(kind === "expense" ? "new-expense" : "new-income")}>
               <Plus size={14} /> Add
@@ -64,7 +64,7 @@ export function CategoriesEditor({ categories, subcategories, uses }: { categori
                     {subcategories.filter((s) => s.category_id === c.id).map((s) => s.name).join(", ") || "No subcategories"}
                   </span>
                 </span>
-                {kind === "expense" ? <Badge tone={c.is_core ? "accent" : "neutral"}>{c.is_core ? "Core" : "Fixed"}</Badge> : null}
+                {kind === "expense" ? <Badge tone={c.is_core ? "accent" : "neutral"}>{c.is_core ? "Everyday" : "Fixed"}</Badge> : null}
                 <span className="hidden text-xs text-muted sm:inline">{uses[c.id] ?? 0} uses</span>
                 <ChevronRight size={16} className="text-faint" />
               </button>
@@ -149,7 +149,7 @@ function CategoryForm({
         {v.kind === "expense" ? (
           <label className="flex items-start justify-between gap-3 rounded-2xl bg-surface-2 p-4">
             <span>
-              <span className="block font-medium">Core spending</span>
+              <span className="block font-medium">Everyday spending</span>
               <span className="block text-sm text-muted">Everyday costs you control (groceries, dining). Turn off for fixed costs (rent, tuition, travel).</span>
             </span>
             <input type="checkbox" checked={v.is_core} onChange={(e) => setV({ ...v, is_core: e.target.checked })} className="mt-1 h-6 w-6 accent-[var(--accent)]" />

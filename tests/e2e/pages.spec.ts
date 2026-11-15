@@ -52,12 +52,12 @@ test("every page renders with real data", async ({ page }, info) => {
   // info panels: open on tap; KPI overlays close on a tap elsewhere
   await page.goto("/");
   await page.getByRole("heading", { level: 1, name: "Overview" }).click();
-  await expect(page.getByText(/Normalized spreads big costs/)).toBeVisible();
-  const spent = page.getByRole("group", { name: "Spent", exact: true });
+  await expect(page.getByText(/Smoothed spreads big costs/)).toBeVisible();
+  const spent = page.getByRole("group", { name: "Total spend", exact: true });
   await spent.locator("summary").click();
-  await expect(spent.getByText(/Expenses minus refunds/)).toBeVisible();
+  await expect(spent.getByText(/expenses minus refunds/)).toBeVisible();
   await page.getByRole("heading", { level: 1, name: "Overview" }).click();
-  await expect(spent.getByText(/Expenses minus refunds/)).toBeHidden();
+  await expect(spent.getByText(/expenses minus refunds/)).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -175,6 +175,6 @@ test("changing default currency converts everything", async ({ page }, info) => 
   await expect(page.getByText(/Switched to INR/)).toBeVisible({ timeout: 30_000 });
   await page.goto("/");
   // KPI is in rupees; the original USD amount is kept as the secondary label on the transaction
-  await expect(page.getByRole("group", { name: "Spent", exact: true }).getByText(/^₹[\d,]+$/)).toBeVisible();
+  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByText(/^₹[\d,]+$/)).toBeVisible();
   await expect(page.getByText("$100.00").first()).toBeVisible();
 });
