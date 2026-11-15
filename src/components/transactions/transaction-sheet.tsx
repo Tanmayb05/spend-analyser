@@ -108,7 +108,8 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
   const [v, setV] = useState<FormValues>(() => blank(app, preset));
   const [loading, setLoading] = useState(Boolean(editId));
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [more, setMore] = useState(false);
+  // "More details" starts open when a payment method is pre-filled (the default one), so it is visible
+  const [more, setMore] = useState(() => Boolean(v.payment_method_id));
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   const [queue, setQueue] = useState<Record<string, string>[]>([]);
@@ -116,11 +117,12 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
 
   function applyPresets(list: Record<string, string>[], note: string | null) {
     const [first, ...rest] = list;
-    setV(blank(app, first));
+    const next = blank(app, first);
+    setV(next);
     setSource(first.source ?? "text");
     setQueue(rest);
     setErrors({});
-    setMore(Boolean(first.description || first.trip_id));
+    setMore(Boolean(first.description || first.trip_id || next.payment_method_id));
     if (note) toast.message(note);
     if (rest.length) toast.message(`Found ${list.length} transactions. Review and save each one.`);
   }

@@ -17,8 +17,8 @@ export default async function Page() {
   }
   const items = ref.paymentMethods.map((p) => ({ id: p.id, name: p.name, archived: p.archived, is_self: "is_self" in p ? (p.is_self as boolean) : undefined, uses: uses.get(p.id) ?? 0 }));
   return (
-    <SettingsPage title="Payment methods" info={HELP.payments} description="Archived items stay on old transactions but are hidden from pickers. Deleting clears them from transactions.">
-      <ListEditor table="payment_methods" items={items} noun="payment method" />
+    <SettingsPage title="Payment methods" info={HELP.payments} description="Tap the star to pre-select a method on new transactions. Archived items stay on old transactions but are hidden from pickers. Deleting clears them from transactions.">
+      <ListEditor table="payment_methods" items={items} noun="payment method" defaultId={ref.profile.default_payment_method_id} />
     </SettingsPage>
   );
 }

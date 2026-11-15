@@ -7,11 +7,39 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
 import { useAction } from "@/hooks/use-action";
 import { allCurrencies, currencyName, formatMoney } from "@/lib/money";
-import { useAppData } from "@/components/app-data";
 import { updatePreferences } from "@/app/(app)/settings/actions";
 import type { Profile } from "@/lib/data/types";
 
 const noop = () => () => {};
+
+/** A short list of common zones with plain names; the stored value is still the IANA id. */
+const TIMEZONES: [id: string, label: string][] = [
+  ["Pacific/Honolulu", "Hawaii"],
+  ["America/Anchorage", "Alaska"],
+  ["America/Los_Angeles", "Pacific Time (US)"],
+  ["America/Denver", "Mountain Time (US)"],
+  ["America/Chicago", "Central Time (US)"],
+  ["America/New_York", "Eastern Time (US)"],
+  ["America/Toronto", "Toronto"],
+  ["America/Sao_Paulo", "Brasília"],
+  ["Europe/London", "London"],
+  ["Europe/Paris", "Central Europe (Paris, Berlin)"],
+  ["Europe/Athens", "Eastern Europe (Athens)"],
+  ["Europe/Moscow", "Moscow"],
+  ["Africa/Cairo", "Cairo"],
+  ["Africa/Lagos", "West Africa (Lagos)"],
+  ["Africa/Johannesburg", "South Africa"],
+  ["Asia/Dubai", "Dubai"],
+  ["Asia/Kolkata", "India (Mumbai, Delhi)"],
+  ["Asia/Dhaka", "Dhaka"],
+  ["Asia/Bangkok", "Bangkok"],
+  ["Asia/Singapore", "Singapore"],
+  ["Asia/Shanghai", "China"],
+  ["Asia/Tokyo", "Tokyo"],
+  ["Australia/Sydney", "Sydney"],
+  ["Pacific/Auckland", "New Zealand"],
+];
+const cityOf = (id: string) => id.split("/").pop()!.replace(/_/g, " ");
 
 export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCount: number }) {
   const [v, setV] = useState({
@@ -21,19 +49,16 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
     week_start: profile.week_start,
     theme: profile.theme as "dark" | "light" | "system",
     default_spread_months: profile.default_spread_months,
-    default_payment_method_id: profile.default_payment_method_id,
   });
-  const { paymentMethods } = useAppData();
   const [convertBudgets, setConvertBudgets] = useState(true);
   const a = useAction();
   const currencies = useMemo(() => allCurrencies().map((c) => ({ code: c, name: currencyName(c) })), []);
-  // timezone list + device zone come from the browser only (server ICU differs)
-  const zonesKey = useSyncExternalStore(noop, () => "client", () => "server");
-  const zones = useMemo(
-    () => (zonesKey === "client" && typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [profile.timezone]),
-    [zonesKey, profile.timezone],
-  );
-  const deviceZone = zonesKey === "client" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
+  // the device's zone comes from the browser only (the server's differs)
+  const isClient = useSyncExternalStore(noop, () => true, () => false);
+  const deviceZone = isClient ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
+  const known = new Set(TIMEZONES.map(([id]) => id));
+  // offered first: this device's zone; also keep whatever is saved even if it isn't in the short list
+  const extra = [deviceZone, v.timezone].filter((z, i, a): z is string => Boolean(z) && !known.has(z!) && a.indexOf(z) === i);
   const currencyChanged = v.base_currency !== profile.base_currency;
   const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((s) => ({ ...s, [k]: val }));
 
@@ -66,14 +91,6 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
           ) : null}
           <Field label="Spread new purchases over (months, default)" htmlFor="dsm">
             <Input id="dsm" type="number" min={1} max={120} value={v.default_spread_months} onChange={(e) => set("default_spread_months", Number(e.target.value))} />
-          </Field>
-          <Field label="Default payment method" htmlFor="dpm" hint="Pre-selected on new transactions. Manage the list under Payment methods.">
-            <Select id="dpm" value={v.default_payment_method_id ?? ""} onChange={(e) => set("default_payment_method_id", e.target.value || null)}>
-              <option value="">None</option>
-              {paymentMethods.filter((p) => !p.archived || p.id === v.default_payment_method_id).map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </Select>
           </Field>
         </div>
       </Card>
@@ -112,17 +129,14 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
           </div>
           <Field label="Timezone" htmlFor="tz" hint="Decides what counts as 'today' and which payments are still scheduled.">
             <Select id="tz" value={v.timezone} onChange={(e) => set("timezone", e.target.value)}>
-              {!zones.includes(v.timezone) ? <option value={v.timezone}>{v.timezone}</option> : null}
-              {zones.map((z) => (
-                <option key={z} value={z}>{z.replace(/_/g, " ")}</option>
+              {extra.map((z) => (
+                <option key={z} value={z}>{z === deviceZone ? `This device (${cityOf(z)})` : cityOf(z)}</option>
+              ))}
+              {TIMEZONES.map(([id, label]) => (
+                <option key={id} value={id}>{id === deviceZone ? `${label} · this device` : label}</option>
               ))}
             </Select>
           </Field>
-          {deviceZone && v.timezone !== deviceZone ? (
-            <Button variant="ghost" size="sm" onClick={() => set("timezone", deviceZone)}>
-              Use this device&apos;s timezone ({deviceZone})
-            </Button>
-          ) : null}
         </div>
       </Card>
 

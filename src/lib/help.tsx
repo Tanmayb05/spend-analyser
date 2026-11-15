@@ -188,7 +188,7 @@ export const HELP = {
       </p>
     </>
   ),
-  payments: <p>Cards, accounts and cash you pay with. Optional on each transaction; filter by them on the Transactions page.</p>,
+  payments: <p>Cards, accounts and cash you pay with. Optional on each transaction; filter by them on the Transactions page. Tap the star on one to make it the default: it is pre-selected on every new transaction.</p>,
   people: <p>Who paid for an expense, you or someone else. For your information only: no balances or debts are tracked.</p>,
   merchants: (
     <p>

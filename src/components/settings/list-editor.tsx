@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, ArchiveRestore, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { Badge } from "@/components/ui/badge";
 import { useAction } from "@/hooks/use-action";
-import { deleteListItem, saveListItem, setListItemArchived } from "@/app/(app)/settings/actions";
+import { deleteListItem, saveListItem, setDefaultPaymentMethod, setListItemArchived } from "@/app/(app)/settings/actions";
 
 type Item = { id: string; name: string; archived: boolean; is_self?: boolean; uses: number };
 
-export function ListEditor({ table, items, noun }: { table: "payment_methods" | "people"; items: Item[]; noun: string }) {
+export function ListEditor({ table, items, noun, defaultId }: { table: "payment_methods" | "people"; items: Item[]; noun: string; /** payment methods only: the one pre-selected on new transactions */ defaultId?: string | null }) {
   const [adding, setAdding] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -50,7 +50,20 @@ export function ListEditor({ table, items, noun }: { table: "payment_methods" | 
               <>
                 <span className={`min-w-0 flex-1 truncate ${it.archived ? "text-faint line-through" : ""}`}>{it.name}</span>
                 {it.is_self ? <Badge tone="accent">You</Badge> : null}
+                {table === "payment_methods" && defaultId === it.id ? <Badge tone="accent">Default</Badge> : null}
                 <span className="text-xs text-muted">{it.uses} uses</span>
+                {table === "payment_methods" && !it.archived ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={defaultId === it.id ? `Remove ${it.name} as default` : `Make ${it.name} the default`}
+                    aria-pressed={defaultId === it.id}
+                    title={defaultId === it.id ? "Default for new transactions (tap to clear)" : "Use as default for new transactions"}
+                    onClick={() => a.run(() => setDefaultPaymentMethod(defaultId === it.id ? null : it.id))}
+                  >
+                    <Star size={16} className={defaultId === it.id ? "fill-current text-accent" : undefined} />
+                  </Button>
+                ) : null}
                 <Button size="icon" variant="ghost" aria-label={`Rename ${it.name}`} onClick={() => setEditing({ id: it.id, name: it.name })}><Pencil size={16} /></Button>
                 <Button size="icon" variant="ghost" aria-label={it.archived ? "Restore" : "Archive"} title={it.archived ? "Restore" : "Archive (hide from pickers)"} onClick={() => a.run(() => setListItemArchived(table, it.id, !it.archived))}>
                   {it.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}

@@ -85,7 +85,6 @@ const prefsSchema = z.object({
   week_start: z.coerce.number().int().min(0).max(1),
   theme: z.enum(["dark", "light", "system"]),
   default_spread_months: z.coerce.number().int().min(1).max(120),
-  default_payment_method_id: uuid.nullable(),
   convert_budgets: z.boolean().optional(),
 });
 
@@ -232,7 +231,27 @@ export async function setListItemArchived(table: ListTable, id: string, archived
   if (table !== "payment_methods" && table !== "people") return fail("Invalid list");
   const { supabase } = await requireUser();
   const { error } = await supabase.from(table).update({ archived }).eq("id", id);
-  return error ? fail(error) : done(archived ? "Archived" : "Restored");
+  if (error) return fail(error);
+  // an archived payment method can't stay the default
+  if (table === "payment_methods" && archived) {
+    const { userId } = await requireUser();
+    await supabase.from("profiles").update({ default_payment_method_id: null }).eq("id", userId).eq("default_payment_method_id", id);
+  }
+  return done(archived ? "Archived" : "Restored");
+}
+
+/** The payment method pre-selected on new transactions; null clears it. */
+export async function setDefaultPaymentMethod(id: string | null): Promise<Result> {
+  const v = uuid.nullable().safeParse(id);
+  if (!v.success) return fail("Invalid payment method");
+  const { supabase, userId } = await requireUser();
+  if (v.data) {
+    const { data } = await supabase.from("payment_methods").select("archived").eq("id", v.data).single();
+    if (!data) return fail("Payment method not found");
+    if (data.archived) return fail("Restore it before making it the default.");
+  }
+  const { error } = await supabase.from("profiles").update({ default_payment_method_id: v.data }).eq("id", userId);
+  return error ? fail(error) : done(v.data ? "Default payment method set" : "Default cleared");
 }
 
 export async function deleteListItem(table: ListTable, id: string): Promise<Result> {

@@ -67,8 +67,18 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
     [...all].sort((a, b) => (a.entry_date < b.entry_date ? 1 : -1)).flatMap((r) => (r.description?.trim() ? [r.description.trim()] : [])),
   )].slice(0, 300);
 
-  const series = yearSeries(filtered, year, filters, today);
-  const incomeView = filters.type === "income";
+  // Income view: Type = Income, or filtering by income categories (or a subcategory of one). Only then do the charts and totals track income.
+  const pickedCats = filters.categories.length
+    ? filters.categories
+    : filters.subcategory
+      ? [ref.subcategories.find((s) => s.id === filters.subcategory)?.category_id ?? ""]
+      : [];
+  const incomeView =
+    filters.type === "income" ||
+    (!filters.type && pickedCats.length > 0 && pickedCats.every((id) => ref.categories.find((c) => c.id === id)?.kind === "income"));
+  // metric() / breakdown() read the filters' type to decide between income and spend
+  const viewFilters = incomeView ? { ...filters, type: "income" as const } : filters;
+  const series = yearSeries(filtered, year, viewFilters, today);
   const money = (n: number) => formatMoney(n, currency, { whole: Math.abs(n) >= 1000 });
 
   // current period vs previous period
@@ -77,7 +87,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   const prevFrom = view === "year" ? `${year - 1}-01-01` : addMonths(month, -1);
   const prevTo = view === "year" ? `${year - 1}-12-01` : addMonths(month, -1);
   const periodRows = rowsInMonths(filtered, periodFrom, periodTo);
-  const total = metric(periodRows, filters);
+  const total = metric(periodRows, viewFilters);
 
   const kpis = periodKpis(rowsInMonths(totalsBase, periodFrom, periodTo));
   const prevKpis = periodKpis(rowsInMonths(totalsBase, prevFrom, prevTo));
@@ -105,7 +115,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   };
 
   const oneCategory = filters.categories.length === 1;
-  const catItems = breakdown(periodRows, (r) => (oneCategory ? r.subcategory_id : r.category_id), filters, 1000);
+  const catItems = breakdown(periodRows, (r) => (oneCategory ? r.subcategory_id : r.category_id), viewFilters, 1000);
   const slices = foldOther(catItems, 6).map((b) => {
     if (b.key === "other") return { key: "other", label: "Other", value: b.value, color: "var(--c-other)" };
     const cat = ref.categories.find((x) => x.id === b.key);
@@ -118,7 +128,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
       href: qsFor(oneCategory ? { sub: b.key } : { cat: b.key }),
     };
   });
-  const byMerchant = breakdown(periodRows, (r) => r.merchant_id, filters, view === "year" ? 8 : 5);
+  const byMerchant = breakdown(periodRows, (r) => r.merchant_id, viewFilters, view === "year" ? 8 : 5);
   const periodLabel = view === "year" ? String(year) : formatMonth(month);
 
   // the list shows everything that matches the filters: posted rows by day, scheduled ones under "Upcoming"
