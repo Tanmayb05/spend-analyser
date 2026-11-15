@@ -35,6 +35,9 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
 
   // edit
   await page.getByRole("button", { name: /Kroger/ }).first().click();
+  // clicking a row opens a read-only detail panel first; "Edit" hands over to the form
+  await expect(dialog.getByText("−$42.50")).toBeVisible();
+  await dialog.getByRole("button", { name: "Edit" }).click();
   await expect(dialog.getByLabel("Amount", { exact: true })).toHaveValue("42.5");
   await dialog.getByLabel("Amount", { exact: true }).fill("50");
   await dialog.getByRole("button", { name: "Save changes" }).click();
@@ -52,14 +55,13 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 
-  await page.goto(`/?m=${month}&mode=normalized`);
-  await expect(page.getByText("$150").first()).toBeVisible(); // 50 + 100 installment
-  await page.goto(`/?m=${month}&mode=cash`);
-  await expect(page.getByText("$1,250").first()).toBeVisible(); // paid upfront counts in full
+  await page.goto(`/?m=${month}`);
+  await expect(page.getByText("$150").first()).toBeVisible(); // 50 + 100 installment (smoothed)
 
   // delete + undo
-  await page.goto(`/transactions?m=${month}&mode=cash`);
+  await page.goto(`/transactions?m=${month}`);
   await page.getByRole("button", { name: /Kroger/ }).first().click();
+  await dialog.getByRole("button", { name: "Edit" }).click();
   await dialog.getByRole("button", { name: "Delete" }).click();
   await dialog.getByRole("button", { name: "Tap again to delete" }).click();
   await expect(page.getByText("Deleted")).toBeVisible();

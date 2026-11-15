@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_BIWEEKLY } from "@/lib/biweekly";
 
 const uuid = z.string().uuid();
 const optUuid = z.union([uuid, z.literal(""), z.null()]).optional().transform((v) => v || null);
@@ -24,7 +25,14 @@ export const planSchema = z.union([
   }),
 ]);
 
-export const transactionSchema = z.object({
+/** Income only: create `count` paychecks, one every 14 days starting on the transaction date. */
+export const repeatSchema = z.object({
+  kind: z.literal("biweekly"),
+  count: z.coerce.number({ message: "Enter how many paychecks" }).int("Whole paychecks only").min(2, "At least 2 paychecks").max(MAX_BIWEEKLY, `At most ${MAX_BIWEEKLY} paychecks`),
+});
+
+export const transactionSchema = z
+  .object({
   id: optUuid,
   date: isoDate,
   type: z.enum(["expense", "income", "refund"]),
@@ -43,7 +51,15 @@ export const transactionSchema = z.object({
   notes: z.string().trim().max(2000).optional().default(""),
   source: z.enum(["manual", "text", "receipt", "voice", "import"]).optional().default("manual"),
   plan: planSchema.nullable().optional().default(null),
-});
+  repeat: repeatSchema.nullable().optional().default(null),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.repeat) return;
+    if (v.type !== "income") ctx.addIssue({ code: "custom", path: ["repeat"], message: "Only income can repeat" });
+    else if (v.id) ctx.addIssue({ code: "custom", path: ["repeat"], message: "Repeats apply to new transactions only" });
+    else if (v.plan) ctx.addIssue({ code: "custom", path: ["repeat"], message: "Income can't be spread and repeat" });
+    else if (v.trip_id) ctx.addIssue({ code: "custom", path: ["repeat"], message: "Trip transactions can't repeat" });
+  });
 
 export type TransactionInput = z.input<typeof transactionSchema>;
 export type TransactionPayload = z.output<typeof transactionSchema>;

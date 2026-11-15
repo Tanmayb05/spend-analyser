@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/supabase/server";
 import { getRate } from "@/lib/fx";
+import { biweeklyDates } from "@/lib/biweekly";
 import { transactionSchema, type TransactionInput } from "@/lib/validation/transaction";
 import type { Installment, SpreadPlan, Transaction } from "@/lib/data/types";
 
@@ -14,7 +15,7 @@ function friendly(message: string): string {
   return message;
 }
 
-export async function saveTransaction(input: TransactionInput): Promise<ActionResult<{ id: string }>> {
+export async function saveTransaction(input: TransactionInput): Promise<ActionResult<{ id: string; created: number }>> {
   const parsed = transactionSchema.safeParse(input);
   if (!parsed.success) {
     const fields: Record<string, string> = {};
@@ -36,11 +37,22 @@ export async function saveTransaction(input: TransactionInput): Promise<ActionRe
     }
   }
 
-  const { data, error } = await supabase.rpc("save_transaction", { p: { ...p, fx_rate: fx } });
-  if (error) return { ok: false, error: friendly(error.message) };
+  const { repeat, ...row } = p;
+  // Bi-weekly income: one real transaction per paycheck, first on the chosen date. The rate is fixed once so every paycheck matches.
+  const dates = repeat ? biweeklyDates(p.date, repeat.count) : [p.date];
+  let firstId = "";
+  for (const [i, date] of dates.entries()) {
+    const { data, error } = await supabase.rpc("save_transaction", { p: { ...row, date, fx_rate: fx } });
+    if (error) {
+      if (i > 0) revalidatePath("/", "layout");
+      const saved = i > 0 ? ` ${i} of ${dates.length} paychecks were added before it failed.` : "";
+      return { ok: false, error: `${friendly(error.message)}${saved}` };
+    }
+    if (i === 0) firstId = data;
+  }
 
   revalidatePath("/", "layout");
-  return { ok: true, data: { id: data } };
+  return { ok: true, data: { id: firstId, created: dates.length } };
 }
 
 export type DeletedSnapshot = { transactions: Transaction[]; plans: SpreadPlan[]; installments: Installment[] };

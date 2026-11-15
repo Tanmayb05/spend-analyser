@@ -11,8 +11,9 @@ import { Segmented } from "@/components/ui/segmented";
 import { useAppData } from "@/components/app-data";
 import { createClient } from "@/lib/supabase/client";
 import { allCurrencies, formatMoney } from "@/lib/money";
-import { formatMonth, monthStart } from "@/lib/dates";
+import { formatDay, formatMonth, monthStart } from "@/lib/dates";
 import { buildSchedule, monthsForAmount } from "@/lib/installments";
+import { DEFAULT_BIWEEKLY, MAX_BIWEEKLY, biweeklyDates } from "@/lib/biweekly";
 import { cn } from "@/lib/utils";
 import { deleteTransactions, restoreTransactions, saveTransaction } from "@/app/(app)/transactions/actions";
 import { SmartAdd } from "@/components/ai/smart-add";
@@ -42,6 +43,8 @@ type FormValues = {
   plan_amount: string;
   plan_start: string; // YYYY-MM
   plan_touched: boolean;
+  repeat: boolean; // income only, new transactions only: bi-weekly paychecks
+  repeat_count: string;
 };
 
 const CURRENCIES = allCurrencies();
@@ -92,6 +95,8 @@ function blank(app: ReturnType<typeof useAppData>, preset?: Record<string, strin
     plan_amount: "",
     plan_start: app.today.slice(0, 7),
     plan_touched: false,
+    repeat: false,
+    repeat_count: String(DEFAULT_BIWEEKLY),
     ...(preset as Partial<FormValues>),
   };
 }
@@ -159,6 +164,8 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         plan_amount: plan?.installment_amount ? String(plan.installment_amount) : "",
         plan_start: (plan?.start_month ?? t.date).slice(0, 7),
         plan_touched: false,
+        repeat: false,
+        repeat_count: String(DEFAULT_BIWEEKLY),
       });
       setMore(Boolean(t.payment_method_id || t.trip_id || t.notes || t.description || t.external_url));
       setLoading(false);
@@ -190,6 +197,12 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
       installmentAmount: Number(v.plan_amount) || null,
     });
   }, [v.spread, baseTotal, v.plan_months, v.plan_start, v.date, v.plan_amount]);
+
+  const repeating = !editId && v.type === "income" && v.repeat;
+  const paychecks = useMemo(() => {
+    const n = Number(v.repeat_count);
+    return repeating && Number.isInteger(n) && n >= 2 && n <= MAX_BIWEEKLY ? biweeklyDates(v.date, n) : [];
+  }, [repeating, v.repeat_count, v.date]);
 
   function onMerchant(name: string) {
     set("merchant_name", name);
@@ -233,13 +246,14 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         notes: v.notes,
         source: editId ? undefined : (source as "manual" | "text" | "voice"),
         plan,
+        repeat: repeating ? { kind: "biweekly", count: Number(v.repeat_count) } : null,
       });
       if (!res.ok) {
         setErrors(res.fields ?? {});
         toast.error(res.error);
         return;
       }
-      toast.success(editId ? "Saved" : "Added");
+      toast.success(editId ? "Saved" : res.data.created > 1 ? `${res.data.created} paychecks added` : "Added");
       router.refresh();
       if (queue.length) {
         applyPresets(queue, null);
@@ -328,7 +342,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
             value={v.amount}
             onChange={(e) => set("amount", e.target.value)}
             className={cn(
-              "num h-16 min-w-0 flex-1 rounded-2xl border bg-surface-2 px-4 text-right text-4xl font-medium outline-none focus:border-accent",
+              "num h-16 min-w-0 flex-1 rounded-2xl border bg-surface-2 px-4 text-right text-3xl font-medium outline-none focus:border-accent",
               errors.amount ? "border-bad" : "border-border",
             )}
           />
@@ -465,8 +479,33 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
               </p>
               <p className="text-xs text-faint">
                 {v.plan_kind === "spread"
-                  ? "Paid upfront: cash view shows the full amount on the purchase date; normalized view spreads it."
-                  : "EMI: each installment counts in the month it's due, in both views."}
+                  ? "Paid upfront: you pay it all now, but it counts a bit each month."
+                  : "EMI: each installment counts in the month it's due."}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Bi-weekly income */}
+      {v.type === "income" && !editId ? (
+        <div className="rounded-3xl border border-border bg-surface-2 p-4">
+          <label className="flex cursor-pointer items-center justify-between gap-3">
+            <span>
+              <span className="block font-medium">Repeats bi-weekly</span>
+              <span className="block text-sm text-muted">A paycheck every 2 weeks, starting on the date above</span>
+            </span>
+            <input type="checkbox" className="h-6 w-6 accent-[var(--accent)]" checked={v.repeat} onChange={(e) => set("repeat", e.target.checked)} />
+          </label>
+          {v.repeat ? (
+            <div className="mt-4 space-y-3">
+              <Field label="Number of paychecks" htmlFor="rc" error={errors.repeat} hint={`26 is a full year. Up to ${MAX_BIWEEKLY}.`}>
+                <Input id="rc" type="number" inputMode="numeric" min={2} max={MAX_BIWEEKLY} value={v.repeat_count} onChange={(e) => set("repeat_count", e.target.value)} />
+              </Field>
+              <p className="text-sm text-muted">
+                {paychecks.length
+                  ? `${paychecks.length} × ${formatMoney(baseTotal, app.currency)} · ${formatDay(paychecks[0])} – ${formatDay(paychecks[paychecks.length - 1])}`
+                  : "Enter a whole number of paychecks."}
               </p>
             </div>
           ) : null}

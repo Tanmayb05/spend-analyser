@@ -5,15 +5,14 @@ import { EmptyState } from "@/components/ui/empty";
 import { NetBars } from "@/components/charts/net-bars";
 import { categoryColor } from "@/components/charts/colors";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { ModeControl } from "@/components/dashboard/view-controls";
 import { SummaryCard } from "@/components/dashboard/summary-card";
+import { PeriodPicker } from "@/components/transactions/period-picker";
 import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { SpendDonut, type AttentionItem } from "@/components/dashboard/spend-donut";
 import { AddFirst } from "@/components/dashboard/add-first";
 import { HELP } from "@/lib/help";
-import { MODE_LABEL } from "@/lib/labels";
 import { getReferenceData } from "@/lib/data/reference";
-import { getLedger, parseMode } from "@/lib/data/ledger";
+import { getLedger } from "@/lib/data/ledger";
 import { addMonths, formatMonth, isValidMonthParam, monthEnd, monthStart, relativeDays } from "@/lib/dates";
 import { formatMoney, formatPercent, pctChange } from "@/lib/money";
 import { budgetStatus, budgetTotals, budgetsForMonth } from "@/lib/analytics/budgets";
@@ -25,7 +24,7 @@ export const metadata = { title: "Overview" };
 
 /**
  * Overview = three things: how am I doing (summary), when did I spend (calendar), what on (donut).
- * The month comes from `?m=` and is changed in the calendar card; mode and scope are global filters.
+ * The month comes from `?m=` and is changed in the calendar card; scope is a global filter.
  */
 export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
@@ -33,16 +32,15 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const { today, profile, categories } = ref;
   const currency = profile.base_currency;
   const month = isValidMonthParam(sp.m as string) ? `${sp.m}-01` : monthStart(today);
-  const mode = parseMode(sp.mode, profile.dashboard_mode);
   const scope: Scope = sp.scope === "core" ? "core" : "all";
-  const qs = (extra: Record<string, string>) => `/transactions?${new URLSearchParams({ m: month.slice(0, 7), mode, ...extra })}`;
+  const qs = (extra: Record<string, string>) => `/transactions?${new URLSearchParams({ m: month.slice(0, 7), ...extra })}`;
 
   const thisMonth = monthStart(today);
   // 14 months back for the trend, 3 ahead for what's coming; trip rows (every trip itemized) so "not counted" trips can still show on the calendar
   const to = [monthEnd(addMonths(month, 3)), monthEnd(addMonths(thisMonth, 3))].sort().at(-1)!;
   const [rows, tripRows] = await Promise.all([
-    getLedger(mode, addMonths(month, -14), to),
-    getLedger(mode, month, monthEnd(month), true),
+    getLedger(addMonths(month, -14), to),
+    getLedger(month, monthEnd(month), true),
   ]);
 
   const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? "Uncategorized";
@@ -50,7 +48,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const money = (n: number) => formatMoney(n, currency, { whole: true });
 
   // a brand-new account (nothing anywhere) gets the empty state; any other empty month still gets the calendar
-  const isNew = rows.length === 0 && tripRows.length === 0 && (await getLedger(mode, "2000-01-01", monthEnd(addMonths(thisMonth, 24)), true)).length === 0;
+  const isNew = rows.length === 0 && tripRows.length === 0 && (await getLedger("2000-01-01", monthEnd(addMonths(thisMonth, 24)), true)).length === 0;
   if (isNew) {
     return (
       <>
@@ -151,18 +149,16 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
 
   return (
     <>
-      <DashboardHeader info={HELP.overview} />
+      <DashboardHeader info={HELP.overview} addTransaction />
 
       <SummaryCard
         header={
           <>
-            <div className="min-w-0">
-              <h2 className="text-base font-medium">Financial summary</h2>
-            </div>
-            <ModeControl mode={mode} />
+            <h2 className="card-title min-w-0">Financial summary</h2>
+            {/* same picker + same ?m= param as the calendar card, so the two always show the same month */}
+            <PeriodPicker view="month" month={month} year={Number(month.slice(0, 4))} today={today} monthOnly />
           </>
         }
-        footer={<span className="font-medium text-text">{formatMonth(month)}</span>}
         metrics={[
           {
             label: "Income",
@@ -225,7 +221,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           <Card className="flex flex-col">
             <CardHeader
               title={scope === "core" ? "Everyday Spending Breakdown" : "All Spending Breakdown"}
-              subtitle={`${scope === "core" ? "Everyday categories" : "All categories"} · ${MODE_LABEL[mode]}`}
+              subtitle={scope === "core" ? "Everyday categories" : "All categories"}
               info={HELP.donut}
               action={<Link href="/settings/budgets" className="text-sm text-muted hover:text-text">Budgets</Link>}
             />

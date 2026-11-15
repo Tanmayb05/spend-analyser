@@ -52,7 +52,7 @@ export function AnalysisPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-accent" />
-          <h2 className="text-lg font-medium">Deep analysis</h2>
+          <h2 className="card-title">Deep analysis</h2>
         </div>
         {ready ? (
           <Button onClick={run} disabled={pending || remaining <= 0} variant={result ? "outline" : "accent"}>

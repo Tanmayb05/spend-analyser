@@ -12,7 +12,6 @@ const PAGES = [
   ["/?m=2026-09&scope=core", "Overview"],
   ["/transactions?m=2026-09", "Transactions"],
   ["/trips", "Trips"],
-  ["/plans", "Plans & EMIs"],
   ["/items", "Items"],
   ["/insights", "Insights"],
   ["/settings", "Settings"],
@@ -44,6 +43,11 @@ test("every page renders with real data", async ({ page }, info) => {
     if (path !== "/settings") await expect(page.locator("details:has(h1) > summary"), path).toHaveCount(1);
     await page.screenshot({ path: `test-results/pages/${info.project.name}${path.replace(/[/?=&]/g, "_") || "_root"}.png`, fullPage: true });
   }
+  // settings pages are grouped under headings (labels only; the desktop sidebar repeats them, so take the first)
+  await page.goto("/settings");
+  for (const heading of ["Transaction setup", "Account", "App", "Data"]) {
+    await expect(page.getByRole("heading", { level: 2, name: heading }).first()).toBeVisible();
+  }
   // a trip detail page
   await page.goto("/trips");
   await page.getByText("SF Bay Trip 2026-07").click();
@@ -52,7 +56,7 @@ test("every page renders with real data", async ({ page }, info) => {
   // info panels: open on tap; KPI overlays close on a tap elsewhere
   await page.goto("/");
   await page.getByRole("heading", { level: 1, name: "Overview" }).click();
-  await expect(page.getByText(/Smoothed spreads big costs/)).toBeVisible();
+  await expect(page.getByText(/Big costs .* are smoothed/)).toBeVisible();
   const spent = page.getByRole("group", { name: "Total spend", exact: true });
   await spent.locator("summary").click();
   await expect(spent.getByText(/expenses minus refunds/)).toBeVisible();
@@ -116,7 +120,7 @@ test("trip counting modes change monthly totals", async ({ page }, info) => {
   await d.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 
-  await page.goto("/?m=2026-10&mode=cash");
+  await page.goto("/?m=2026-10");
   await expect(page.getByText("No transactions yet")).toBeVisible(); // excluded trip: nothing counted
   await page.goto("/trips");
   await expect(page.getByText("$300").first()).toBeVisible();
@@ -127,7 +131,7 @@ test("trip counting modes change monthly totals", async ({ page }, info) => {
   await page.getByRole("radio", { name: /One lump sum/ }).click();
   await page.getByRole("button", { name: "Save trip" }).click();
   await expect(page.getByText("Trip saved")).toBeVisible();
-  await page.goto("/?m=2026-10&mode=cash");
+  await page.goto("/?m=2026-10");
   await expect(page.getByText("$300").first()).toBeVisible();
 });
 

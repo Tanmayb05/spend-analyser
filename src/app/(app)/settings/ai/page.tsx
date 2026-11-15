@@ -28,7 +28,7 @@ export default async function AiSettingsPage() {
         {meters.map((m) => (
           <Card key={m.label}>
             <p className="text-xs uppercase tracking-wide text-muted">{m.label}</p>
-            <p className="num mt-2 text-4xl font-medium">
+            <p className="num mt-2 text-3xl font-medium">
               {m.left}
               <span className="text-lg text-muted"> / {m.limit} left</span>
             </p>

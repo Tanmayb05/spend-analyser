@@ -1,9 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { InfoTitle } from "@/components/ui/info-title";
@@ -11,13 +9,35 @@ import { LedgerItem } from "@/components/transactions/ledger-item";
 import { useAppData } from "@/components/app-data";
 import { useParamHref } from "@/components/dashboard/dashboard-header";
 import { ScopeControl } from "@/components/dashboard/view-controls";
+import { PeriodPicker } from "@/components/transactions/period-picker";
 import type { Scope } from "@/lib/analytics/summary";
 import { addMonths, daysInMonth, formatMonth, parseISO } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { LedgerRow } from "@/lib/data/types";
 
-type Day = { rows: LedgerRow[]; spent: number; regular: boolean; trip: boolean; plan: boolean };
+type Kind = "regular" | "plan" | "trip";
+type Day = { rows: LedgerRow[]; spent: number; regular: boolean; trip: boolean; plan: boolean; kindSpend: Record<Kind, number> };
+
+/** Heat scale: a day's spend picks one of 8 shades of its own colour (upper bound in the base currency, mix % of the colour over the card). */
+const SHADES = [
+  { max: 10, label: "0–10", pct: 10 },
+  { max: 25, label: "11–25", pct: 18 },
+  { max: 50, label: "26–50", pct: 27 },
+  { max: 100, label: "51–100", pct: 37 },
+  { max: 200, label: "101–200", pct: 48 },
+  { max: 400, label: "201–400", pct: 59 },
+  { max: 600, label: "401–600", pct: 70 },
+  { max: Infinity, label: "600+", pct: 82 },
+] as const;
+const DARK_FROM = 5; // shades from here on are strong enough to need the on-accent text colour
+const KIND_VAR: Record<Kind, string> = { regular: "--accent", plan: "--plan", trip: "--trip" };
+
+const shadeOf = (spent: number) => SHADES.findIndex((s) => spent <= s.max);
+/** The kind that carries most of the day's spend colours the cell (mixed days still show every kind in the bar underneath). */
+function dominantKind(d: Day): Kind {
+  return (["regular", "plan", "trip"] as const).reduce((best, k) => (d.kindSpend[k] > d.kindSpend[best] ? k : best), "regular" as Kind);
+}
 
 const KIND_NAME = { regular: "regular", plan: "EMI or spread", trip: "trip" } as const;
 
@@ -46,14 +66,16 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
     const m = new Map<string, Day>();
     for (const r of rows) {
       if (r.type === "income") continue;
-      const d = m.get(r.entry_date) ?? { rows: [], spent: 0, regular: false, trip: false, plan: false };
+      const d = m.get(r.entry_date) ?? { rows: [], spent: 0, regular: false, trip: false, plan: false, kindSpend: { regular: 0, plan: 0, trip: 0 } };
       d.rows.push(r);
       const trip = r.trip_id ? app.maps.trip.get(r.trip_id) : null;
       // trips marked "not counted" appear on the calendar but never add to a total
-      if (trip?.include_mode !== "excluded") d.spent += Number(r.spend);
-      if (r.trip_id) d.trip = true;
-      else if (r.plan_kind) d.plan = true;
-      else d.regular = true;
+      const kind: Kind = r.trip_id ? "trip" : r.plan_kind ? "plan" : "regular";
+      if (trip?.include_mode !== "excluded") {
+        d.spent += Number(r.spend);
+        d.kindSpend[kind] += Number(r.spend);
+      }
+      d[kind] = true;
       m.set(r.entry_date, d);
     }
     return m;
@@ -70,7 +92,6 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
   const monthTotal = [...byDay.values()].flatMap((d) => d.rows).filter((r) => !r.is_scheduled && !(r.trip_id && app.maps.trip.get(r.trip_id)?.include_mode === "excluded")).reduce((a, r) => a + Number(r.spend), 0);
 
   const sel = selected ? byDay.get(selected) : undefined;
-  const maxDay = Math.max(1, ...[...byDay.values()].map((d) => d.spent));
   const busiest = [...byDay.entries()].filter(([, d]) => d.spent > 0).sort((a, b) => b[1].spent - a[1].spent)[0];
   // average over the days that have happened (the whole month once it is over)
   const elapsed = month === thisMonth ? Number(today.slice(8, 10)) : month < thisMonth ? days : 0;
@@ -124,31 +145,9 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
       onPointerCancel={() => (swipe.current = null)}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <InfoTitle as="h2" info={info} className="text-base font-medium" panelClassName="max-w-md">Transaction calendar</InfoTitle>
+        <InfoTitle as="h2" info={info} className="card-title" panelClassName="max-w-md">Transaction calendar</InfoTitle>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center rounded-full border border-border bg-surface-2 p-1">
-            <Link href={href({ m: addMonths(month, -1).slice(0, 7) })} scroll={false} aria-label="Previous month" className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent">
-              <ChevronLeft size={18} />
-            </Link>
-            <label className="relative focus-within:rounded-full focus-within:outline-2 focus-within:outline-accent">
-              <span className="block min-w-32 px-2 text-center text-sm font-medium sm:min-w-36">{formatMonth(month)}</span>
-              <input
-                type="month"
-                aria-label="Pick month"
-                value={month.slice(0, 7)}
-                onChange={(e) => e.target.value && router.push(href({ m: e.target.value }), { scroll: false })}
-                className="absolute inset-0 cursor-pointer opacity-0"
-              />
-            </label>
-            <Link href={href({ m: addMonths(month, 1).slice(0, 7) })} scroll={false} aria-label="Next month" className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent">
-              <ChevronRight size={18} />
-            </Link>
-          </div>
-          {month !== thisMonth ? (
-            <Link href={href({ m: null })} scroll={false} className="rounded-full border border-border bg-surface-2 px-3.5 py-2 text-sm font-medium hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent">
-              Today
-            </Link>
-          ) : null}
+          <PeriodPicker view="month" month={month} year={Number(month.slice(0, 4))} today={today} monthOnly />
           <ScopeControl scope={scope} />
         </div>
       </div>
@@ -169,6 +168,8 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
           const day = byDay.get(d);
           const isSel = selected === d;
           const isToday = d === today;
+          const shade = day && day.spent > 0 ? shadeOf(day.spent) : 0;
+          const strong = !!day && day.spent > 0 && shade >= DARK_FROM;
           const kinds = day ? (["regular", "plan", "trip"] as const).filter((k) => day[k]).map((k) => KIND_NAME[k]) : [];
           return (
             <button
@@ -179,16 +180,18 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
               aria-pressed={isSel}
               aria-current={isToday ? "date" : undefined}
               aria-label={`${longDay(d)}${day ? `: ${day.spent ? `${formatMoney(day.spent, currency)} spent, ` : ""}${kinds.join(" and ")} transactions` : ", no transactions"}`}
-              // heat: busier days sit on a stronger tint; trips keep their own colour in the bar underneath
-              style={!isSel && day && day.spent > 0 ? { background: `color-mix(in oklab, var(--accent) ${Math.round(8 + Math.sqrt(day.spent / maxDay) * 34)}%, var(--surface-2))` } : undefined}
+              // heat: 8 shades of the day's own colour (regular / EMI / trip) by amount spent
+              style={day && day.spent > 0 ? { background: `color-mix(in oklab, var(${KIND_VAR[dominantKind(day)]}) ${SHADES[shade].pct}%, var(--surface-2))` } : undefined}
               className={cn(
                 "flex h-14 flex-col items-center justify-between rounded-xl px-0.5 py-1.5 text-sm outline-none transition motion-reduce:transition-none sm:h-[4.5rem] lg:h-20",
                 "hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
-                isSel ? "bg-surface-3 ring-2 ring-accent" : "bg-surface-2 hover:bg-surface-3",
+                isSel && "ring-2 ring-accent ring-offset-1 ring-offset-surface",
+                !(day && day.spent > 0) && (isSel ? "bg-surface-3" : "bg-surface-2 hover:bg-surface-3"),
+                day && day.spent > 0 && (strong ? "hover:brightness-110" : "hover:brightness-95"),
               )}
             >
-              <span className={cn("grid h-6 min-w-6 place-items-center rounded-full px-1 leading-none", isToday ? "bg-accent font-medium text-accent-fg" : isSel ? "font-medium text-text" : "text-text")}>{n}</span>
-              <span className="num max-w-full truncate text-[11px] leading-none text-muted max-sm:hidden">{day && day.spent ? formatMoney(day.spent, currency, { compact: true }) : " "}</span>
+              <span className={cn("grid h-6 min-w-6 place-items-center rounded-full px-1 leading-none", isToday ? (strong ? "bg-accent-fg font-medium text-text" : "bg-accent font-medium text-accent-fg") : strong ? "font-medium text-accent-fg" : "text-text")}>{n}</span>
+              <span className={cn("num max-w-full truncate text-xs leading-none max-sm:hidden", strong ? "text-accent-fg/80" : "text-muted")}>{day && day.spent ? formatMoney(day.spent, currency, { compact: true }) : " "}</span>
               <span className="flex h-1 w-7 gap-px overflow-hidden rounded-full" aria-hidden>
                 {day?.regular ? <span className="flex-1 bg-accent" /> : null}
                 {day?.plan ? <span className="flex-1 bg-plan" /> : null}
@@ -204,21 +207,17 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
         <li className="inline-flex items-center gap-1.5"><span className="h-1 w-5 rounded-full bg-plan" />EMI / spread</li>
         <li className="inline-flex items-center gap-1.5"><span className="h-1 w-5 rounded-full bg-trip" />Trip</li>
         <li className="inline-flex items-center gap-1.5"><span className="flex h-1 w-5 gap-px overflow-hidden rounded-full"><span className="flex-1 bg-accent" /><span className="flex-1 bg-plan" /><span className="flex-1 bg-trip" /></span>Mixed</li>
-        <li className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded-full bg-accent text-[9px] font-medium text-accent-fg">{Number(today.slice(8, 10))}</span>Today</li>
+        <li className="inline-flex items-center gap-1.5"><span className="grid h-5 w-5 place-items-center rounded-full bg-accent text-xs leading-none font-medium text-accent-fg">{Number(today.slice(8, 10))}</span>Today</li>
         <li className="ml-auto inline-flex items-center gap-1.5" aria-hidden>
           less
-          {[8, 18, 30, 42].map((p) => (
-            <span key={p} className="h-2.5 w-2.5 rounded-[3px]" style={{ background: `color-mix(in oklab, var(--accent) ${p}%, var(--surface-2))` }} />
+          {SHADES.map((s) => (
+            <span key={s.label} title={`${s.label} spent`} className="h-2.5 w-2.5 rounded-[3px]" style={{ background: `color-mix(in oklab, var(--accent) ${s.pct}%, var(--surface-2))` }} />
           ))}
           more
         </li>
       </ul>
 
-      <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
-        <div className="rounded-xl bg-surface-2 px-3 py-2.5">
-          <dt className="text-muted">{scope === "core" ? "Everyday this month" : "This month"}</dt>
-          <dd className="num mt-1 truncate text-base font-medium text-text">{formatMoney(monthTotal, currency, { whole: true })}</dd>
-        </div>
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-xl bg-surface-2 px-3 py-2.5">
           <dt className="text-muted">Daily average</dt>
           <dd className="num mt-1 truncate text-base font-medium text-text">{elapsed ? formatMoney(monthTotal / elapsed, currency, { whole: true }) : "–"}</dd>

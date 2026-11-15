@@ -4,7 +4,7 @@ import { TrendBars } from "@/components/charts/trend-bars";
 import { SERIES } from "@/components/charts/colors";
 import { AnalysisPanel } from "@/components/insights/analysis-panel";
 import { getReferenceData } from "@/lib/data/reference";
-import { getLedger, parseMode } from "@/lib/data/ledger";
+import { getLedger } from "@/lib/data/ledger";
 import { requireUser } from "@/lib/supabase/server";
 import { getAiUsage } from "@/lib/ai/usage";
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
@@ -25,14 +25,13 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   const sp = await searchParams;
   const ref = await getReferenceData();
   const month = isValidMonthParam(sp.m as string) ? `${sp.m}-01` : monthStart(ref.today);
-  const mode = parseMode(sp.mode, ref.profile.dashboard_mode);
   const scopeName = sp.scope === "quarter" || sp.scope === "year" ? sp.scope : "month";
-  const scope = { scope: scopeName, month, mode } as const;
-  const scopeKey = `${scopeName}|${month}|${mode}`;
+  const scope = { scope: scopeName, month } as const;
+  const scopeKey = `${scopeName}|${month}`;
 
   const { supabase } = await requireUser();
   const [rows, usage, cachedRow] = await Promise.all([
-    getLedger(mode, addMonths(month, -14), monthEnd(addMonths(month, 3))),
+    getLedger(addMonths(month, -14), monthEnd(addMonths(month, 3))),
     getAiUsage(),
     supabase.from("ai_insights").select("result, scope, created_at").eq("scope_key", scopeKey).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
@@ -48,7 +47,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   const thisMonth = monthStart(ref.today);
   const trend = lastMonths(month, 12).map((m) => {
     const t = series.find((x) => x.month === m)!;
-    return { month: m, a: t.spent, b: t.income, href: `?${new URLSearchParams({ m: m.slice(0, 7), mode, scope: scopeName })}` };
+    return { month: m, a: t.spent, b: t.income, href: `?${new URLSearchParams({ m: m.slice(0, 7), scope: scopeName })}` };
   });
   const activeMonths = trend.filter((t) => t.month <= thisMonth && (t.a > 0 || t.b > 0));
   const overMonths = activeMonths.filter((t) => t.a > t.b).length;
@@ -67,11 +66,11 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
     6,
   );
 
-  const link = (patch: Record<string, string>) => `?${new URLSearchParams({ m: month.slice(0, 7), mode, scope: scopeName, ...patch })}`;
+  const link = (patch: Record<string, string>) => `?${new URLSearchParams({ m: month.slice(0, 7), scope: scopeName, ...patch })}`;
 
   return (
     <>
-      <InfoTitle as="h1" info={HELP.insights} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Insights</InfoTitle>
+      <InfoTitle as="h1" info={HELP.insights} className="text-2xl font-medium" panelClassName="max-w-xl">Insights</InfoTitle>
       <p className="mb-5 mt-1 text-sm text-muted">What stands out in your money, in plain words.</p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">

@@ -13,6 +13,8 @@ export type TxnFilters = {
   receipt: boolean;
   plan: boolean;
   q: string;
+  /** View option, not a filter: count scheduled (future-dated) rows in the totals. */
+  sched: boolean;
 };
 
 type Params = Record<string, string | string[] | undefined>;
@@ -33,7 +35,20 @@ export function parseFilters(sp: Params): TxnFilters {
     receipt: one(sp.receipt) === "1",
     plan: one(sp.plan) === "1",
     q: one(sp.q).trim().slice(0, 100),
+    sched: one(sp.sched) === "1",
   };
+}
+
+export type TxnSort = "newest" | "oldest" | "largest";
+export function parseSort(sp: Params): TxnSort {
+  const s = one(sp.sort);
+  return s === "oldest" || s === "largest" ? s : "newest";
+}
+
+/** "42", "$1,250.5" → "42" / "1250.5"; null when the text isn't a plain amount. */
+export function amountQuery(q: string): string | null {
+  const t = q.replace(/[$,\s]/g, "");
+  return /^\d+(\.\d{0,2})?$/.test(t) ? t : null;
 }
 
 export function activeFilterCount(f: TxnFilters): number {
@@ -42,6 +57,7 @@ export function activeFilterCount(f: TxnFilters): number {
 
 export function applyFilters(rows: LedgerRow[], f: TxnFilters, extraText?: (r: LedgerRow) => string): LedgerRow[] {
   const q = f.q.toLowerCase();
+  const amt = amountQuery(f.q);
   return rows.filter((r) => {
     if (f.type && r.type !== f.type) return false;
     if (f.categories.length && !f.categories.includes(r.category_id)) return false;
@@ -55,7 +71,7 @@ export function applyFilters(rows: LedgerRow[], f: TxnFilters, extraText?: (r: L
     if (f.plan && !r.plan_kind) return false;
     if (q) {
       const hay = `${r.merchant_name ?? ""} ${r.description ?? ""} ${extraText?.(r) ?? ""}`.toLowerCase();
-      if (!hay.includes(q)) return false;
+      if (!hay.includes(q) && !(amt && Math.abs(Number(r.amount)).toFixed(2).includes(amt))) return false;
     }
     return true;
   });

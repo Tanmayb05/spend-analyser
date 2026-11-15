@@ -9,7 +9,6 @@ import { useAction } from "@/hooks/use-action";
 import { allCurrencies, currencyName, formatMoney } from "@/lib/money";
 import { updatePreferences } from "@/app/(app)/settings/actions";
 import type { Profile } from "@/lib/data/types";
-import { MODE_OPTIONS } from "@/lib/labels";
 
 const noop = () => () => {};
 
@@ -20,7 +19,6 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
     timezone: profile.timezone,
     week_start: profile.week_start,
     theme: profile.theme as "dark" | "light" | "system",
-    dashboard_mode: profile.dashboard_mode,
     default_spread_months: profile.default_spread_months,
   });
   const [convertBudgets, setConvertBudgets] = useState(true);
@@ -72,15 +70,6 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
       <Card>
         <CardHeader title="Dashboard" />
         <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-sm text-muted">Default view</p>
-            <Segmented
-              value={v.dashboard_mode}
-              onChange={(m) => set("dashboard_mode", m)}
-              options={MODE_OPTIONS}
-            />
-            <p className="mt-2 text-xs text-faint">Smoothed spreads EMIs and big purchases across months. Cash flow shows money on the day it left.</p>
-          </div>
           <div>
             <p className="mb-2 text-sm text-muted">Week starts on</p>
             <Segmented

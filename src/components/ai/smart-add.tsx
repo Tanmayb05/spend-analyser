@@ -30,18 +30,18 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
 
   return (
     <div className="rounded-3xl border border-border bg-surface-2 p-3">
-      <form
-        className="flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (text.trim()) run(text);
-        }}
-      >
+      {/* A div, not a <form>: this renders inside the transaction form, and forms can't nest. */}
+      <div className="flex items-center gap-2">
         <Sparkles size={18} className="ml-1 shrink-0 text-accent" />
         <input
           aria-label="Describe a transaction"
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault(); // don't submit the outer transaction form
+            if (text.trim() && !pending) run(text);
+          }}
           placeholder={speech.listening ? "Listening…" : "e.g. 12.50 Kroger groceries yesterday"}
           className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-faint"
           disabled={pending}
@@ -59,10 +59,10 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
         <button type="button" onClick={onReceipt} aria-label="Read a receipt" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-3">
           <Receipt size={18} />
         </button>
-        <button type="submit" disabled={!text.trim() || pending} className="h-9 shrink-0 rounded-full bg-text px-3 text-sm font-medium text-bg disabled:opacity-40">
+        <button type="button" onClick={() => text.trim() && run(text)} disabled={!text.trim() || pending} className="h-9 shrink-0 rounded-full bg-text px-3 text-sm font-medium text-bg disabled:opacity-40">
           {pending ? "…" : "Fill"}
         </button>
-      </form>
+      </div>
       <p className="mt-1.5 px-1 text-xs leading-relaxed text-muted">
         Type{speech.supported ? " or say" : ""} what you spent (amount, place, when) and tap Fill. AI fills the form below for you to check before saving. Several at once works too. The receipt icon reads a bill.
       </p>

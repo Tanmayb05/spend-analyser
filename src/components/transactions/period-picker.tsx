@@ -21,8 +21,9 @@ const YEAR_WINDOW = 12;
  * Month | Year switch, prev/next arrows and a popover to jump straight to any month or year.
  * `month` is the `m` param (always set), `year` is the year being viewed.
  * Everything is a link: the page re-renders on the server like the rest of the filters.
+ * It only writes the `m` param, so several pickers on one page (Overview: summary + calendar) always show the same month.
  */
-export function PeriodPicker({ view, month, year, today }: { view: PeriodView; month: string; year: number; today: string }) {
+export function PeriodPicker({ view, month, year, today, monthOnly = false }: { view: PeriodView; month: string; year: number; today: string; /** Hide the Month | Year switch (pages with no year view, like Overview). */ monthOnly?: boolean }) {
   const href = useParamHref();
   const router = useRouter();
   const panelId = useId();
@@ -87,7 +88,7 @@ export function PeriodPicker({ view, month, year, today }: { view: PeriodView; m
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Segmented
+      {monthOnly ? null : <Segmented
         size="sm"
         ariaLabel="Period view"
         value={view}
@@ -97,7 +98,7 @@ export function PeriodPicker({ view, month, year, today }: { view: PeriodView; m
           setOpen(false);
           router.push(v === "year" ? href({ view: "year", y: month.slice(0, 4) }) : href({ view: null, y: null, m: monthForYear(year, month, today).slice(0, 7) }), { scroll: false });
         }}
-      />
+      />}
       <div ref={root} className="relative flex items-center rounded-full border border-border bg-surface-2 p-1">
         <Link href={prev} scroll={false} aria-label={`Previous ${noun}`} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3">
           <ChevronLeft size={18} />

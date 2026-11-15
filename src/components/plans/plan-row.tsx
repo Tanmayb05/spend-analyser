@@ -26,7 +26,7 @@ export function PlanRow({ p }: { p: PlanView }) {
   const ratio = p.total ? p.paid / p.total : 0;
   const done = p.paidCount >= p.count;
   return (
-    <button type="button" onClick={() => app.openTxnSheet({ id: p.txnId })} className="w-full rounded-2xl px-2 py-3 text-left hover:bg-surface-2">
+    <button type="button" id={`plan-${p.txnId}`} onClick={() => app.openTxnSheet({ id: p.txnId })} className="block w-full scroll-mt-24 rounded-2xl px-2 py-3 text-left hover:bg-surface-2 target:bg-accent/10">
       <div className="flex items-center gap-3">
         <span className="h-3 w-3 shrink-0 rounded-[4px]" style={{ background: categoryColor(cat) }} />
         <span className="min-w-0 flex-1">
@@ -44,7 +44,7 @@ export function PlanRow({ p }: { p: PlanView }) {
       <div className="ml-6 mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3">
         <div className={`h-full rounded-full ${done ? "bg-good" : "bg-accent"}`} style={{ width: `${Math.min(100, ratio * 100)}%` }} />
       </div>
-      {p.lastDue ? <p className="ml-6 mt-1 text-[11px] text-faint">Ends {formatDay(p.lastDue)}</p> : null}
+      {p.lastDue ? <p className="ml-6 mt-1 text-xs text-faint">Ends {formatDay(p.lastDue)}</p> : null}
     </button>
   );
 }

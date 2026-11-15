@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Search, Store, TextCursorInput } from "lucide-react";
+import { Search, Store, TextCursorInput, X } from "lucide-react";
 import { useAppData } from "@/components/app-data";
 import { buildSuggestIndex, suggest, type SuggestItem } from "@/lib/analytics/suggest";
 import { cn } from "@/lib/utils";
@@ -122,9 +122,19 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Search merchant or description"
-        className="h-11 w-full rounded-full border border-border bg-surface-2 pl-10 pr-4 text-sm outline-none focus:border-accent"
+        placeholder="Search merchant, category or amount"
+        className="h-11 w-full rounded-full border border-border bg-surface-2 pl-10 pr-10 text-sm outline-none focus:border-accent"
       />
+      {q ? (
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => { setQ(""); setOpen(false); setActive(-1); push({ q: null }); }}
+          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-faint hover:text-text"
+        >
+          <X size={16} />
+        </button>
+      ) : null}
       {showList ? (
         <ul
           id={listId}
@@ -160,5 +170,5 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="px-3 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-faint">{children}</p>;
+  return <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-faint">{children}</p>;
 }

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isValidYearParam, monthForYear, monthsOfYear, yearEnd, yearStart } from "@/lib/dates";
-import { foldOther, periodKpis, rowsInMonths, yearSeries } from "@/lib/analytics/period";
-import { parseFilters } from "@/lib/analytics/filters";
+import { foldOther, periodKpis, postedRows, rowsInMonths, yearSeries } from "@/lib/analytics/period";
+import { groupRows } from "@/components/transactions/txn-list";
+import { amountQuery, applyFilters, parseFilters, parseSort } from "@/lib/analytics/filters";
 import type { LedgerRow } from "@/lib/data/types";
 
 const r = (month: string, spend: number, income = 0): LedgerRow => ({ month, spend, income }) as unknown as LedgerRow;
@@ -71,5 +72,51 @@ describe("foldOther", () => {
     expect(out).toHaveLength(7);
     expect(out[6]).toEqual({ key: "other", value: 4 + 3 + 2 + 1 });
     expect(out.reduce((a, x) => a + x.value, 0)).toBe(55);
+  });
+});
+
+describe("scheduled rows and amount search", () => {
+  const sched = (month: string, spend: number) => ({ month, spend, income: 0, is_scheduled: true }) as unknown as LedgerRow;
+  const posted = (month: string, spend: number) => ({ month, spend, income: 0, is_scheduled: false }) as unknown as LedgerRow;
+
+  it("postedRows drops scheduled rows except in months that haven't started", () => {
+    const rows = [posted("2026-11-01", 10), sched("2026-11-01", 20), sched("2026-12-01", 30)];
+    const out = postedRows(rows, "2026-11-15");
+    expect(out.map((x) => x.spend)).toEqual([10, 30]);
+    expect(periodKpis(out).spend).toBe(40);
+  });
+
+  it("amountQuery recognises plain amounts only", () => {
+    expect(amountQuery("42")).toBe("42");
+    expect(amountQuery("$1,250.5")).toBe("1250.5");
+    expect(amountQuery("netflix")).toBeNull();
+    expect(amountQuery("")).toBeNull();
+  });
+
+  it("applyFilters matches by amount, merchant and extra text", () => {
+    const rows = [
+      { month: "2026-11-01", amount: 42.5, merchant_name: "Kroger", description: null } as unknown as LedgerRow,
+      { month: "2026-11-01", amount: 9.99, merchant_name: "Netflix", description: null } as unknown as LedgerRow,
+    ];
+    const f = (q: string) => applyFilters(rows, { ...none, q }, () => "").map((x) => x.merchant_name);
+    expect(f("$42")).toEqual(["Kroger"]);
+    expect(f("9.99")).toEqual(["Netflix"]);
+    expect(f("netf")).toEqual(["Netflix"]);
+  });
+
+  it("parseSort defaults to newest", () => {
+    expect(parseSort({})).toBe("newest");
+    expect(parseSort({ sort: "largest" })).toBe("largest");
+    expect(parseSort({ sort: "x" })).toBe("newest");
+  });
+
+  it("groupRows orders days and flattens for largest", () => {
+    const mk = (d: string, a: number) => ({ entry_date: d, amount: a, spend: a, income: 0 }) as unknown as LedgerRow;
+    const rows = [mk("2026-11-01", 5), mk("2026-11-03", 50), mk("2026-11-03", 7)];
+    expect(groupRows(rows, "newest").map((g) => g.key)).toEqual(["2026-11-03", "2026-11-01"]);
+    expect(groupRows(rows, "oldest").map((g) => g.key)).toEqual(["2026-11-01", "2026-11-03"]);
+    const big = groupRows(rows, "largest");
+    expect(big).toHaveLength(1);
+    expect(big[0].rows.map((x) => x.amount)).toEqual([50, 7, 5]);
   });
 });

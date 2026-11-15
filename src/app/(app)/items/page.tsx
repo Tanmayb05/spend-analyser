@@ -62,7 +62,7 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
     <>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <InfoTitle as="h1" info={HELP.items} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Items</InfoTitle>
+          <InfoTitle as="h1" info={HELP.items} className="text-2xl font-medium" panelClassName="max-w-xl">Items</InfoTitle>
           <p className="mt-1 text-sm text-muted">Everything you bought, from your receipts: what, when, where and for how much.</p>
         </div>
         <ReadReceiptButton />

@@ -1,11 +1,19 @@
-Remove Smoothed and cash flow. Only have smoothed by default
+===========================
+In a new Session
 
+6. If the transactions made by the credit cards, then i want to create a visualisation of 
+Pay for credit Card visualisation+data.
+Have an option to mark the Credit Card Payment setoff, this is separate from the expenses, 
+but this feature just shows or reminds the credit card utilisation.
+When adding a new credit card in Payment methods, ask for credit limit for each credit card.
 
-Add expense/income location change
+7. In transactions page:
+If any filter is applied, treat it as a new page load, so when pressed back page, 
+then the earlier state is restored. 
+i would like to have a demo before actually implementing. 
+if the featrue is implemented directly then should be ableto revert the changes easily.
+The Swipe action of the touchpad, or the back action of the mouse, or the back page button click of the browser should do this
 
-By weekly income option for add expense
+8. Create a system for Scanning the Receipts and somehow adding the data to new transactions or existing transactions
 
-
-
-
-Pay for credit Card visualisation
+9.

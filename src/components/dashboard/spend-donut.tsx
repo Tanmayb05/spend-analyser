@@ -132,7 +132,7 @@ export function SpendDonut({
         <div
           role="row"
           className={cn(
-            "grid items-center gap-x-2 px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint",
+            "grid items-center gap-x-2 px-2 pb-1.5 text-xs font-medium uppercase tracking-wide text-faint",
             showBudget ? COLS_WITH_BUDGET : COLS_NO_BUDGET,
           )}
         >

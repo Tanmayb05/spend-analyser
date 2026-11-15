@@ -12,6 +12,14 @@ The user must be able to see every UI and backend change running locally **befor
 4. **Make sure the local stack is running** before telling the user to look: check `npx supabase status`; start with `npx supabase start` if needed (Docker must be running). Start `npm run dev` (http://localhost:3000) if it is not already running.
 5. **Verify before handing back:** `npm run typecheck`, `npm run lint`, `npm test`, plus `npm run test:db` when the schema changed. Report failures plainly.
 
+## Secrets in `.env.local` (never read values)
+
+- **Never** `cat`/`Read`/`grep -v`/`echo` `.env.local` or print any env var value. Do not let a secret appear in tool output, logs, commits, or chat.
+- To see which keys exist (names only): `grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' .env.local | tr -d '='`
+- To use a key, reference it by env var name, never paste the value. For ad-hoc scripts: `node --env-file=.env.local script.mjs` and read `process.env.NAME` inside the script. For shell: `set -a; source .env.local; set +a` then use `$NAME` — never `echo $NAME`.
+- Scripts must not log the key, request headers, or full request objects. Print only status codes and response bodies.
+- Put temporary scripts in the scratchpad dir, not the repo.
+
 ## When finishing a change, always report
 
 - What changed (files, migrations).

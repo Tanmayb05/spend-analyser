@@ -10,7 +10,7 @@ export function CardHeader({ title, action, subtitle, info }: { title: ReactNode
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <InfoTitle info={info} className="text-lg font-medium leading-tight">{title}</InfoTitle>
+        <InfoTitle info={info} className="card-title">{title}</InfoTitle>
         {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
       </div>
       {action}

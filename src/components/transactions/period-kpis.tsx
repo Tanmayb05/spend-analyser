@@ -26,6 +26,8 @@ export function PeriodKpiStrip({
   currency,
   period,
   deltas,
+  everyday = false,
+  basis,
   children,
 }: {
   kpis: PeriodKpis;
@@ -33,17 +35,26 @@ export function PeriodKpiStrip({
   /** e.g. "November 2026" or "2026" */
   period: string;
   deltas: { spend: Delta; income: Delta; saved: Delta };
+  /** Everyday view: income isn't part of it, so income and saved read "—" rather than a misleading $0. */
+  everyday?: boolean;
+  /** "Actual" (posted only) or "Projected" (incl. scheduled), shown when scheduled rows exist in the period. */
+  basis?: "Actual" | "Projected";
   /** Chart / insight shown under the totals, inside the same card */
   children?: ReactNode;
 }) {
   const money = (n: number) => formatMoney(n, currency, { whole: true });
   const noIncome = kpis.income <= 0; // "saved" is meaningless without income (e.g. a month of only planned spend)
   const loss = !noIncome && kpis.saved < 0;
+  const noDelta = { value: null, label: "" };
   const items = [
-    { key: "spend", label: "Total spend", value: money(kpis.spend), tone: "", sub: null as string | null, delta: deltas.spend, goodWhenUp: false },
-    { key: "income", label: "Total income", value: money(kpis.income), tone: "", sub: null, delta: deltas.income, goodWhenUp: true },
-    noIncome
-      ? { key: "saved", label: "Saved / loss", value: "–", tone: "", sub: "No income in this period", delta: { value: null, label: "" }, goodWhenUp: true }
+    { key: "spend", label: "Total spend", value: money(kpis.spend), tone: "", sub: null as string | null, delta: deltas.spend, goodWhenUp: false, hint: undefined as string | undefined },
+    everyday
+      ? { key: "income", label: "Total income", value: "—", tone: "text-muted", sub: "Not part of Everyday", delta: noDelta, goodWhenUp: true, hint: "Income is excluded from Everyday view." }
+      : { key: "income", label: "Total income", value: money(kpis.income), tone: "", sub: null, delta: deltas.income, goodWhenUp: true, hint: undefined },
+    everyday
+      ? { key: "saved", label: "Saved / loss", value: "—", tone: "text-muted", sub: "Needs income", delta: noDelta, goodWhenUp: true, hint: "Saved needs income, which Everyday view leaves out." }
+      : noIncome
+      ? { key: "saved", label: "Saved / loss", value: "–", tone: "", sub: "No income in this period", delta: noDelta, goodWhenUp: true, hint: undefined }
       : {
           key: "saved",
           label: loss ? "Loss" : "Saved",
@@ -52,18 +63,20 @@ export function PeriodKpiStrip({
           sub: kpis.savingsRate == null ? null : loss ? `${formatPercent(Math.abs(kpis.savingsRate))} over income` : `${formatPercent(kpis.savingsRate)} of income saved`,
           delta: deltas.saved,
           goodWhenUp: true,
+          hint: undefined,
         },
   ];
   return (
     <Card aria-label={`Totals for ${period}`}>
       <InfoTitle as="p" info={HELP.filteredTotal} className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
         Totals · {period}
+        {basis ? <span className="ml-2 rounded-full bg-surface-3 px-2 py-0.5 text-xs normal-case tracking-normal text-muted">{basis}</span> : null}
       </InfoTitle>
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {items.map((i) => (
           <div key={i.key} className="min-w-0">
             <dt className="text-sm text-muted">{i.label}</dt>
-            <dd className={cn("num mt-1 truncate text-3xl font-medium", i.tone)}>{i.value}</dd>
+            <dd className={cn("num mt-1 truncate text-3xl font-medium", i.tone)} title={i.hint}>{i.value}</dd>
             {i.sub ? <p className="mt-0.5 text-xs text-muted">{i.sub}</p> : null}
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
               <DeltaPill delta={i.delta} goodWhenUp={i.goodWhenUp} />

@@ -26,7 +26,7 @@ export default async function TripsPage() {
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <InfoTitle as="h1" info={HELP.trips} className="text-3xl font-medium sm:text-4xl" panelClassName="max-w-xl">Trips</InfoTitle>
+          <InfoTitle as="h1" info={HELP.trips} className="text-2xl font-medium" panelClassName="max-w-xl">Trips</InfoTitle>
           <p className="mt-1 text-sm text-muted">
             {formatMoney(total, currency, { whole: true })} across {trips.length} trips · {formatMoney(excluded, currency, { whole: true })} kept out of monthly spending
           </p>
@@ -51,7 +51,7 @@ export default async function TripsPage() {
                   </div>
                   <p className="mt-4 truncate text-lg font-medium">{t.name}</p>
                   <p className="text-xs text-muted">{start ? `${formatDay(start)}${end && end !== start ? ` – ${formatDay(end)}` : ""}` : "No dates yet"}</p>
-                  <p className="num mt-4 text-4xl font-medium">{formatMoney(spent, currency, { whole: true })}</p>
+                  <p className="num mt-4 text-3xl font-medium">{formatMoney(spent, currency, { whole: true })}</p>
                   <p className="mt-1 text-sm text-muted">
                     {days ? `${formatMoney(spent / days, currency, { whole: true })}/day · ${days} days` : `${s?.count ?? 0} expenses`}
                   </p>

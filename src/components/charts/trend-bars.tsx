@@ -22,6 +22,7 @@ export function TrendBars({
   aColor,
   bColor,
   height = 200,
+  barMaxWidth = 16,
   confirmSelect = false,
 }: {
   data: TrendPoint[];
@@ -32,6 +33,8 @@ export function TrendBars({
   aColor: string;
   bColor?: string;
   height?: number;
+  /** Widest a single bar may grow, in px (bars still shrink to fit narrow slots). */
+  barMaxWidth?: number;
   /** Bars pin a preview on click; only the "View <month>" button (using the point's href) navigates. */
   confirmSelect?: boolean;
 }) {
@@ -70,7 +73,7 @@ export function TrendBars({
       </div>
       <div className="flex min-h-0 flex-1 gap-2">
         {/* y axis: a plot-height column plus an invisible twin of the x-label row so ticks line up with the bars */}
-        <div className="flex w-9 shrink-0 flex-col text-right text-[11px] text-faint">
+        <div className="flex w-10 shrink-0 flex-col text-right text-xs text-faint">
           <div className="relative flex-1" style={{ minHeight: height }}>
             {ticks.map((t) => (
               <span key={t} className="num absolute right-0 -translate-y-1/2" style={{ bottom: `${(t / top) * 100}%` }}>
@@ -78,7 +81,7 @@ export function TrendBars({
               </span>
             ))}
           </div>
-          <div className="mt-2 text-[11px]" aria-hidden>&nbsp;</div>
+          <div className="mt-2 text-xs" aria-hidden>&nbsp;</div>
         </div>
         <div className="relative flex min-w-0 flex-1 flex-col">
           <div className="relative flex-1" style={{ minHeight: height }}>
@@ -95,8 +98,8 @@ export function TrendBars({
               const groupClass = "flex h-full min-w-0 flex-1 items-end justify-center gap-[2px] px-[3px] outline-none";
               const bars = (
                 <>
-                  <Bar value={d.a} top={top} color={aColor} dim={active !== -1 && !emphasized} future={d.future} />
-                  {pair ? <Bar value={d.b ?? 0} top={top} color={bColor!} dim={active !== -1 && !emphasized} future={d.future} /> : null}
+                  <Bar value={d.a} top={top} maxWidth={barMaxWidth} color={aColor} dim={active !== -1 && !emphasized} future={d.future} />
+                  {pair ? <Bar value={d.b ?? 0} top={top} maxWidth={barMaxWidth} color={bColor!} dim={active !== -1 && !emphasized} future={d.future} /> : null}
                 </>
               );
               const hoverProps = { onMouseEnter: () => setHover(i), onFocus: () => setHover(i) };
@@ -133,7 +136,7 @@ export function TrendBars({
           {/* x labels */}
           <div className="mt-2 flex">
             {data.map((d, i) => (
-              <span key={d.month} className={cn("flex-1 text-center text-[11px]", active === -1 || i === active ? "text-text" : "text-faint", data.length > 12 && i % 2 === 1 && "max-sm:invisible")}>
+              <span key={d.month} className={cn("flex-1 text-center text-xs", active === -1 || i === active ? "text-text" : "text-faint", data.length > 12 && i % 2 === 1 && "max-sm:invisible")}>
                 {formatMonth(d.month, "short")}
               </span>
             ))}
@@ -185,12 +188,12 @@ export function TrendBars({
   );
 }
 
-function Bar({ value, top, color, dim, future }: { value: number; top: number; color: string; dim: boolean; future?: boolean }) {
+function Bar({ value, top, maxWidth, color, dim, future }: { value: number; top: number; maxWidth: number; color: string; dim: boolean; future?: boolean }) {
   const h = Math.max(0, (value / top) * 100);
   return (
     <div
-      className="w-full max-w-4 rounded-t-[4px] transition-opacity"
-      style={{ height: `${h}%`, minHeight: value > 0 ? 2 : 0, background: color, opacity: (dim ? 0.35 : 1) * (future ? 0.55 : 1) }}
+      className="w-full rounded-t-[4px] transition-[height,opacity] duration-300 ease-out"
+      style={{ height: `${h}%`, maxWidth, minHeight: value > 0 ? 2 : 0, background: color, opacity: (dim ? 0.35 : 1) * (future ? 0.55 : 1) }}
     />
   );
 }

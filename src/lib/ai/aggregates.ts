@@ -17,7 +17,7 @@ export async function buildAnalysisInput(scope: AnalysisScope) {
   const span = SPAN[scope.scope];
   const contextMonths = Math.max(span * 2, 6);
   const months = lastMonths(scope.month, contextMonths);
-  const rows = await getLedger(scope.mode, months[0], monthEnd(addMonths(scope.month, 3)));
+  const rows = await getLedger(months[0], monthEnd(addMonths(scope.month, 3)));
   const series = monthlySeries(rows, months, ref.today);
   const focus = months.slice(-span);
   const catName = (id: string) => ref.categories.find((c) => c.id === id)?.name ?? "Other";
@@ -63,7 +63,7 @@ export async function buildAnalysisInput(scope: AnalysisScope) {
   }
 
   const payload = {
-    period: { scope: scope.scope, from: focus[0].slice(0, 7), to: scope.month.slice(0, 7), mode: scope.mode, today: ref.today },
+    period: { scope: scope.scope, from: focus[0].slice(0, 7), to: scope.month.slice(0, 7), today: ref.today },
     months: series.map((s) => ({ month: s.month.slice(0, 7), spent: s.spent, income: s.income, net: s.net, core: s.core, inFocus: focus.includes(s.month) })),
     budgets: budgetTotals(budgetsForMonth(ref.budgets, ref.categories, scope.month), ref.categories),
     categories,

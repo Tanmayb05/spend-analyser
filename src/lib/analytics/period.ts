@@ -21,6 +21,12 @@ export function yearSeries(rows: LedgerRow[], year: number | string, filters: Tx
   }));
 }
 
+/** Rows that count "to date": scheduled rows are left out, except in months that haven't started (where they're all there is). */
+export function postedRows(rows: LedgerRow[], today: string): LedgerRow[] {
+  const current = monthStart(today);
+  return rows.filter((r) => !r.is_scheduled || r.month > current);
+}
+
 export type PeriodKpis = { spend: number; income: number; saved: number; savingsRate: number | null };
 
 /** Totals for a set of rows. saved = income - spend (negative = loss). */

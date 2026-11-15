@@ -25,7 +25,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link href="/" aria-label="Overview">
           <Logo size={44} />
         </Link>
-        <nav className="mt-10 flex flex-1 flex-col items-center gap-2" aria-label="Main">
+        <button
+          type="button"
+          onClick={() => openTxnSheet()}
+          className="group relative mt-8 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-accent-fg"
+          aria-label="Add transaction"
+        >
+          <Plus size={22} />
+          <SideTip>Add transaction</SideTip>
+        </button>
+        <nav className="mt-4 flex flex-1 flex-col items-center gap-2" aria-label="Main">
           {NAV.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -42,15 +51,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <button
-          type="button"
-          onClick={() => openTxnSheet()}
-          className="group relative mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-accent-fg"
-          aria-label="Add transaction"
-        >
-          <Plus size={22} />
-          <SideTip>Add transaction</SideTip>
-        </button>
         <form action={signOut}>
           <button type="submit" className="group relative grid h-12 w-12 place-items-center rounded-2xl text-muted hover:bg-surface-3 hover:text-text" aria-label="Sign out">
             <LogOut size={20} />

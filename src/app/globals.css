@@ -94,7 +94,32 @@
   --color-plan: var(--plan);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display), var(--font-geist-sans);
   --radius-card: 1.5rem;
+
+  /* Type scale (~1.2 ratio, 16px body). Semantic roles:
+     xs  12/16 captions, chart labels, badges
+     sm  14/20 UI text, buttons, secondary text
+     base 16/24 body
+     lg  18/26 small card heading
+     xl  22/28 card / section heading (.card-title)
+     2xl 28/36 page heading, KPI numbers
+     3xl 32/40 hero numbers
+     No text-4xl and no arbitrary text-[Npx]: add a role here instead. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.25rem;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 2.5rem;
 }
 
 html,
@@ -153,4 +178,26 @@ input[type="number"]::-webkit-outer-spin-button {
 /* Safe area for mobile bottom nav */
 .pb-safe {
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+/* Respect the OS "reduce motion" setting: no transitions or animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Card headings: bold display face, tight tracking, full-strength colour, so the eye lands on the title first. Size = --text-xl (22px). */
+@utility card-title {
+  font-size: var(--text-xl);
+  font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--text-xl--line-height);
+  color: var(--text);
 }

@@ -1,17 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { CalendarClock, ExternalLink, Plane, Repeat } from "lucide-react";
 import { useAppData } from "@/components/app-data";
+import { Badge } from "@/components/ui/badge";
 import { categoryColor } from "@/components/charts/colors";
 import { formatMoney } from "@/lib/money";
 import { formatDay } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { LedgerRow } from "@/lib/data/types";
 
-type LedgerRowWithLink = LedgerRow & { external_url?: string | null };
+export type LedgerRowWithLink = LedgerRow & { external_url?: string | null; notes?: string | null };
 
 /** One ledger row. Tapping opens the parent transaction for editing. */
-export function LedgerItem({ row, showDate = true, right, showKind = false }: { row: LedgerRowWithLink; showDate?: boolean; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
+export function LedgerItem({ row, showDate = true, right, showKind = false, onOpen }: { row: LedgerRowWithLink; showDate?: boolean; /** Open a detail view instead of the edit form. */ onOpen?: (row: LedgerRowWithLink) => void; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
   const app = useAppData();
   const cat = app.maps.category.get(row.category_id);
   const sub = row.subcategory_id ? app.maps.subcategory.get(row.subcategory_id) : null;
@@ -25,11 +27,11 @@ export function LedgerItem({ row, showDate = true, right, showKind = false }: { 
   const uncounted = showKind && trip?.include_mode === "excluded";
 
   return (
-    <div className="relative flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-surface-2">
+    <div className="relative flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-surface-2">
       <button
         type="button"
         disabled={!row.txn_id}
-        onClick={() => row.txn_id && app.openTxnSheet({ id: row.txn_id })}
+        onClick={() => row.txn_id && (onOpen ? onOpen(row) : app.openTxnSheet({ id: row.txn_id }))}
         className="absolute inset-0 z-0 rounded-2xl disabled:cursor-default"
         aria-label={row.txn_id ? `Edit ${title}` : undefined}
       />
@@ -56,10 +58,14 @@ export function LedgerItem({ row, showDate = true, right, showKind = false }: { 
             </a>
           ) : null}
           {row.installment_seq ? (
-            <span className={cn("inline-flex shrink-0 items-center gap-0.5", showKind ? "text-plan" : "text-accent")}>
-              <Repeat size={11} />
-              {row.installment_seq}/{row.installment_count}
-            </span>
+            showKind ? (
+              <span className="inline-flex shrink-0 items-center gap-0.5 text-plan">
+                <Repeat size={11} />
+                {row.installment_seq}/{row.installment_count}
+              </span>
+            ) : (
+              <PlanBadge row={row} />
+            )
           ) : null}
           {showKind ? (
             trip ? (
@@ -84,23 +90,38 @@ export function LedgerItem({ row, showDate = true, right, showKind = false }: { 
           ) : null}
           {uncounted ? <span className="shrink-0 text-faint">not counted</span> : null}
           {row.is_scheduled ? (
-            <span className="inline-flex shrink-0 items-center gap-0.5 text-warn">
+            <Badge tone="warn" className="shrink-0 px-2 py-0">
               <CalendarClock size={11} />
-              scheduled
-            </span>
+              Scheduled
+            </Badge>
           ) : null}
         </span>
       </span>
       {right ?? (
         <span className="pointer-events-none relative z-10 shrink-0 text-right">
           <span className={cn("num block text-sm font-medium", income && "text-good", refund && "text-good", uncounted && "text-muted line-through decoration-faint")}>
-            {income || refund ? "+" : ""}
-            {formatMoney(Number(row.amount), app.currency)}
+            {formatMoney(income || refund ? Math.abs(Number(row.amount)) : -Math.abs(Number(row.amount)), app.currency, { signed: true })}
           </span>
           {foreign && !row.installment_seq ? <span className="num block text-xs text-faint">{formatMoney(Number(row.orig_amount), row.orig_currency!)}</span> : null}
         </span>
       )}
     </div>
+  );
+}
+
+/** "EMI 2/12" badge; links to that plan in the Plans & EMIs tab. */
+export function PlanBadge({ row }: { row: LedgerRow }) {
+  const badge = (
+    <Badge tone={row.plan_kind === "emi" ? "warn" : "accent"} className="px-2 py-0">
+      <Repeat size={11} />
+      {row.plan_kind === "emi" ? "EMI" : "Spread"} {row.installment_seq}/{row.installment_count}
+    </Badge>
+  );
+  if (!row.txn_id) return <span className="shrink-0">{badge}</span>;
+  return (
+    <Link href={`/transactions?tab=plans#plan-${row.txn_id}`} aria-label={`View plan: ${row.plan_kind === "emi" ? "EMI" : "Spread"} ${row.installment_seq} of ${row.installment_count}`} className="pointer-events-auto shrink-0 rounded-full hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent">
+      {badge}
+    </Link>
   );
 }
 

@@ -345,7 +345,7 @@ export async function saveReceiptAction(input: z.input<typeof saveSchema>): Prom
 // ---------------------------------------------------------------------------
 // Deep analysis (cached)
 // ---------------------------------------------------------------------------
-const scopeSchema = z.object({ scope: z.enum(["month", "quarter", "year"]), month: z.string().regex(/^\d{4}-\d{2}-01$/), mode: z.enum(["normalized", "cash"]) });
+const scopeSchema = z.object({ scope: z.enum(["month", "quarter", "year"]), month: z.string().regex(/^\d{4}-\d{2}-01$/) });
 export type AnalysisScope = z.infer<typeof scopeSchema>;
 
 export async function runAnalysisAction(input: AnalysisScope): Promise<{ ok: true; result: Analysis; remaining: number } | Fail> {
@@ -359,7 +359,7 @@ export async function runAnalysisAction(input: AnalysisScope): Promise<{ ok: tru
       "You are a careful personal-finance analyst. Write for a non-expert: short sentences, concrete numbers, no jargon.",
       `All amounts are in ${currency}. 'Core' = everyday controllable spending; fixed costs (rent, tuition, travel) are not core.`,
       "Each insight must be meaningful and actionable, citing figures from the data. Do not give investment advice.",
-      "Normalized mode spreads EMIs/big purchases over months; cash mode shows money when it left.",
+      "Figures are smoothed: EMIs and big purchases are spread over months rather than shown when the money left.",
     ].join("\n");
     const { data, remaining } = await generateJson({
       feature: "analysis",
@@ -369,7 +369,7 @@ export async function runAnalysisAction(input: AnalysisScope): Promise<{ ok: tru
       schema: analysisSchema,
       temperature: 0.3,
     });
-    const scopeKey = `${v.data.scope}|${v.data.month}|${v.data.mode}`;
+    const scopeKey = `${v.data.scope}|${v.data.month}`;
     await supabase.from("ai_insights").insert({ scope_key: scopeKey, scope: { ...v.data, fingerprint } as never, result: data as never, model: "smart" });
     revalidatePath("/insights");
     return { ok: true, result: data, remaining };

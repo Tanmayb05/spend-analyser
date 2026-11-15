@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { TripHeaderActions } from "@/components/trips/trip-actions";
 import { MODE_COPY } from "@/lib/trip-modes";
 import { TxnList } from "@/components/transactions/txn-list";
-import { categoryColor } from "@/components/charts/colors";
+import { tripPartColors } from "@/components/charts/colors";
 import { getReferenceData } from "@/lib/data/reference";
 import { getTripStats, tripDays } from "@/lib/data/trips";
 import { getLedger } from "@/lib/data/ledger";
@@ -25,22 +25,24 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
   const days = tripDays(start, end);
   const total = s?.total ?? 0;
 
-  const rows = (await getLedger("cash", "1900-01-01", "2999-12-31", true)).filter((r) => r.trip_id === id && !r.is_lump);
+  const rows = (await getLedger("1900-01-01", "2999-12-31", true)).filter((r) => r.trip_id === id && !r.is_lump);
 
   const parts = Object.entries(s?.bySub ?? {})
     .map(([k, v]) => {
       if (k.startsWith("cat:")) {
         const c = ref.categories.find((x) => x.id === k.slice(4));
-        return { label: c?.name ?? "Other", value: v, color: categoryColor(c) };
+        return { label: c?.name ?? "Other", value: v };
       }
       const sub = ref.subcategories.find((x) => x.id === k);
-      const c = ref.categories.find((x) => x.id === sub?.category_id);
-      return { label: sub?.name ?? "Other", value: v, color: categoryColor(c) };
+      return { label: sub?.name ?? "Other", value: v };
     })
     .filter((p) => p.value > 0)
     .sort((a, b) => b.value - a.value);
   // merge same labels (e.g. "Food" under different categories)
-  const merged = [...parts.reduce((m, p) => m.set(p.label, { ...p, value: (m.get(p.label)?.value ?? 0) + p.value }), new Map<string, (typeof parts)[number]>()).values()];
+  const mergedParts = [...parts.reduce((m, p) => m.set(p.label, { ...p, value: (m.get(p.label)?.value ?? 0) + p.value }), new Map<string, (typeof parts)[number]>()).values()].sort((a, b) => b.value - a.value);
+  // each part gets its own color: Flights / Stay / Food are fixed, the rest rotate (not the parent category's single color)
+  const colors = tripPartColors(mergedParts.map((p) => p.label));
+  const merged = mergedParts.map((p) => ({ ...p, color: colors.get(p.label)! }));
   const top = merged[0];
 
   return (
@@ -48,7 +50,7 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
       <Link href="/trips" className="text-sm text-muted hover:text-text">← Trips</Link>
       <div className="mb-5 mt-2 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-medium sm:text-4xl">{trip.name}</h1>
+          <h1 className="text-2xl font-medium">{trip.name}</h1>
           <p className="mt-1 text-sm text-muted">{start ? `${formatDay(start)}${end && end !== start ? ` – ${formatDay(end)}` : ""}` : "No dates yet"}</p>
         </div>
         <TripHeaderActions trip={trip} />
@@ -76,7 +78,7 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
             {trip.include_mode === "lump_sum" ? (
               <p className="mt-2 text-sm text-muted">
                 Counts as {formatMoney(total, currency, { whole: true })} in {ref.categories.find((c) => c.id === trip.lump_category_id)?.name}
-                {trip.lump_spread_months && trip.lump_spread_months > 1 ? `, spread over ${trip.lump_spread_months} months in the normalized view` : ""}.
+                {trip.lump_spread_months && trip.lump_spread_months > 1 ? `, spread over ${trip.lump_spread_months} months` : ""}.
               </p>
             ) : null}
             <p className="mt-3 text-xs text-faint">Change it with Edit.</p>

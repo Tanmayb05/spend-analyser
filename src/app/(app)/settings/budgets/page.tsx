@@ -12,7 +12,7 @@ export default async function BudgetsPage({ searchParams }: PageProps<"/settings
   const sp = await searchParams;
   const ref = await getReferenceData();
   const month = isValidMonthParam(sp.m as string) ? `${sp.m}-01` : monthStart(ref.today);
-  const rows = await getLedger(ref.profile.dashboard_mode, addMonths(month, -1), monthEnd(month));
+  const rows = await getLedger(addMonths(month, -1), monthEnd(month));
 
   const toMap = (m: string) => {
     const out: Record<string, number> = {};

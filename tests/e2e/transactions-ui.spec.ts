@@ -24,29 +24,41 @@ test("transactions: labeled filters, period picker, Jan–Dec bars, year view, s
   const monthIdx = now.getUTCMonth();
   await page.goto(`/transactions?m=${month}`);
 
-  // labeled filters, including the Accounting toggle; Everyday only sits beside the period selector
-  for (const name of ["Accounting", "Type", "Category"]) {
+  // toolbar: period + search on top; All activity / Everyday switch, Filters and Sort beneath
+  await expect(page.getByRole("radio", { name: "All activity" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Everyday" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Filters/ })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Sort" })).toBeVisible();
+  // the Smoothed / Cash flow toggle is gone: smoothed is the only view
+  await expect(page.getByRole("radio", { name: "Smoothed" })).toHaveCount(0);
+  await expect(page.getByRole("radio", { name: "Cash flow" })).toHaveCount(0);
+  // Type and Category live in the Filters sheet
+  await page.getByRole("button", { name: /^Filters/ }).click();
+  for (const name of ["Type", "Category"]) {
     await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
   }
-  await expect(page.getByRole("radio", { name: "Smoothed" })).toBeVisible();
-  await expect(page.getByRole("radio", { name: "Cash flow" })).toBeVisible();
-  const everyday = page.getByRole("button", { name: "Everyday only", exact: true });
-  const trigger = page.getByRole("button", { name: /\d{4}$/ }).first();
-  const eb = await everyday.boundingBox();
-  const tb = await trigger.boundingBox();
-  expect(eb && tb && Math.abs(eb.y - tb.y) < 40).toBeTruthy(); // same row
+  await page.getByRole("button", { name: "Done" }).click();
+
+  // Activity / Plans & EMIs switch
+  await page.getByRole("radio", { name: "Plans & EMIs" }).click();
+  await expect(page).toHaveURL(/tab=plans/);
+  await expect(page.getByRole("radio", { name: "EMIs" })).toBeVisible();
+  await page.getByRole("radio", { name: "Activity" }).click();
+  await expect(page).not.toHaveURL(/tab=plans/);
+
+  // expenses read −$42.50 in the list
+  await expect(page.getByText("−$42.50").first()).toBeVisible();
+
+  // Everyday view: income is outside it, so it reads "—" rather than $0
+  await page.getByRole("radio", { name: "Everyday" }).click();
+  await expect(page).toHaveURL(/core=1/);
+  await expect(page.getByText("Not part of Everyday")).toBeVisible();
+  await page.getByRole("radio", { name: "All activity" }).click();
+  await expect(page).not.toHaveURL(/core=1/);
 
   // Spent card: always Jan..Dec
   const bars = page.getByRole("button", { name: /: Spent / });
   await expect(bars).toHaveCount(12);
-
-  // bar colors follow the accounting mode (blue = Smoothed, purple = Cash flow)
-  const barColor = () => bars.nth(monthIdx).locator("div").first().evaluate((el) => getComputedStyle(el).backgroundColor);
-  const smoothed = await barColor();
-  await page.goto(`/transactions?m=${month}&mode=cash`);
-  const cash = await barColor();
-  expect(cash).not.toBe(smoothed);
-  await page.goto(`/transactions?m=${month}`);
 
   // month bar: click previews, does not navigate; the View button does
   const other = monthIdx === 0 ? 1 : 0;

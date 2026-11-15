@@ -1,61 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
-import { Segmented } from "@/components/ui/segmented";
 import { Sheet } from "@/components/ui/sheet";
 import { Field, Select } from "@/components/ui/field";
+import { Segmented } from "@/components/ui/segmented";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/components/app-data";
 import { useParamHref } from "@/components/dashboard/dashboard-header";
-import { cn } from "@/lib/utils";
-import type { TxnFilters } from "@/lib/analytics/filters";
-import type { LedgerMode } from "@/lib/data/types";
-import { MODE_HINT, MODE_OPTIONS } from "@/lib/labels";
+import type { TxnFilters, TxnSort } from "@/lib/analytics/filters";
 import { SearchBox } from "@/components/transactions/search-box";
 import { PeriodPicker, type PeriodView } from "@/components/transactions/period-picker";
 
-/** Pill with its caption inside ("Type  All types ▾") so every control in the row is the same height and reads on its own. */
-function InlineField({ label, htmlFor, children }: { label: string; htmlFor: string; children: ReactNode }) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className="flex h-10 shrink-0 items-center rounded-full border border-border bg-surface-2 pl-4 text-sm focus-within:border-accent"
-    >
-      <span className="text-xs font-medium uppercase tracking-wide text-muted">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-const INLINE_SELECT = "h-full w-auto min-w-0 rounded-full border-0 bg-transparent py-0 pl-2 pr-8 text-sm focus:ring-0";
-
-const FILTER_KEYS = ["type", "cat", "sub", "core", "trip", "merchant", "pay", "by", "receipt", "plan", "q"] as const;
+const FILTER_KEYS = ["type", "cat", "sub", "core", "trip", "merchant", "pay", "by", "receipt", "plan", "q", "sched"] as const;
 
 export function FilterBar({
   view,
   month,
   year,
   today,
-  mode,
   filters,
   descriptions,
+  sort,
 }: {
   view: PeriodView;
   month: string;
   year: number;
   today: string;
-  mode: LedgerMode;
   filters: TxnFilters;
   descriptions: string[];
+  sort: TxnSort;
 }) {
   const app = useAppData();
   const router = useRouter();
   const href = useParamHref();
-  const typeId = useId();
-  const catId = useId();
   const [more, setMore] = useState(false);
   const go = (patch: Record<string, string | null>) => router.push(href(patch), { scroll: false });
 
@@ -77,7 +57,9 @@ export function FilterBar({
     filters.paidBy && chip(`Paid by ${app.maps.person.get(filters.paidBy)?.name ?? "?"}`, { by: null }),
     filters.receipt && chip("Has receipt", { receipt: null }),
     filters.plan && chip("Spread / EMI", { plan: null }),
+    filters.sched && chip("Incl. scheduled", { sched: null }),
   ].filter(Boolean);
+  const filterCount = chips.length;
 
   const kind = filters.type === "income" ? "income" : "expense";
 
@@ -85,52 +67,60 @@ export function FilterBar({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <PeriodPicker view={view} month={month} year={year} today={today} />
-        <button
-          type="button"
-          aria-pressed={filters.core}
-          onClick={() => go({ core: filters.core ? null : "1" })}
-          className={cn("h-11 shrink-0 rounded-full border px-4 text-sm", filters.core ? "border-text bg-text text-bg" : "border-border bg-surface-2 text-muted hover:text-text")}
-        >
-          Everyday only
-        </button>
         <SearchBox value={filters.q} descriptions={descriptions} go={go} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2" title={MODE_HINT[mode]}>
-          <span className="pl-1 text-xs font-medium uppercase tracking-wide text-muted">Accounting</span>
-          <Segmented size="sm" ariaLabel="Accounting mode" value={mode} onChange={(v) => go({ mode: v })} options={MODE_OPTIONS} className="h-10 items-center" />
+      {/* one line on phones (toggle · Filters · Sort, chips drop below); on sm+ chips sit beside the toggle and Filters/Sort stay right */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+        <Segmented
+          ariaLabel="Activity view"
+          className="shrink-0 max-sm:[&_button]:px-2.5 max-sm:[&_button]:text-xs"
+          value={filters.core ? "core" : "all"}
+          onChange={(v) => go({ core: v === "core" ? "1" : null })}
+          options={[{ value: "all", label: "All activity" }, { value: "core", label: "Everyday" }]}
+        />
+        {chips.length ? (
+          <div className="order-last flex w-full flex-wrap items-center gap-2 sm:order-none sm:w-auto sm:min-w-0" aria-label="Active filters">
+            {chips}
+            <Link href={href(Object.fromEntries(FILTER_KEYS.map((k) => [k, null])))} scroll={false} className="text-xs text-muted hover:text-text">Clear all</Link>
+          </div>
+        ) : null}
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <button type="button" onClick={() => setMore(true)} aria-label={filterCount ? `Filters, ${filterCount} active` : "Filters"} className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-surface-2 text-sm hover:text-text sm:w-auto sm:px-4">
+            <SlidersHorizontal size={16} />
+            <span className="max-sm:sr-only">Filters</span>
+            {filterCount ? (
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs font-medium text-white max-sm:absolute max-sm:-right-1 max-sm:-top-1" aria-hidden>{filterCount}</span>
+            ) : null}
+          </button>
+          <Select aria-label="Sort" value={sort} onChange={(e) => go({ sort: e.target.value === "newest" ? null : e.target.value })} className="h-11 w-auto rounded-full py-0 pl-3 pr-8 text-xs sm:pl-4 sm:pr-9 sm:text-sm">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="largest">Largest first</option>
+          </Select>
         </div>
-        <InlineField label="Type" htmlFor={typeId}>
-          <Select id={typeId} value={filters.type ?? ""} onChange={(e) => go({ type: e.target.value || null, cat: null, sub: null })} className={INLINE_SELECT}>
-            <option value="">All types</option>
-            <option value="expense">Expenses</option>
-            <option value="income">Income</option>
-            <option value="refund">Refunds</option>
-          </Select>
-        </InlineField>
-        <InlineField label="Category" htmlFor={catId}>
-          <Select id={catId} value={filters.categories[0] ?? ""} onChange={(e) => go({ cat: e.target.value || null, sub: null })} className={INLINE_SELECT}>
-            <option value="">All categories</option>
-            {app.categories.filter((c) => !filters.type || c.kind === kind).map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </Select>
-        </InlineField>
-        <button type="button" onClick={() => setMore(true)} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-border bg-surface-2 px-4 text-sm text-muted">
-          <SlidersHorizontal size={14} /> More filters
-        </button>
       </div>
-
-      {chips.length ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {chips}
-          <Link href={href(Object.fromEntries(FILTER_KEYS.map((k) => [k, null])))} scroll={false} className="text-xs text-muted hover:text-text">Clear all</Link>
-        </div>
-      ) : null}
 
       <Sheet open={more} onClose={() => setMore(false)} title="More filters">
         <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Type">
+              <Select value={filters.type ?? ""} onChange={(e) => go({ type: e.target.value || null, cat: null, sub: null })}>
+                <option value="">All types</option>
+                <option value="expense">Expenses</option>
+                <option value="income">Income</option>
+                <option value="refund">Refunds</option>
+              </Select>
+            </Field>
+            <Field label="Category">
+              <Select value={filters.categories[0] ?? ""} onChange={(e) => go({ cat: e.target.value || null, sub: null })}>
+                <option value="">All categories</option>
+                {app.categories.filter((c) => !filters.type || c.kind === kind).map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
           {filters.categories[0] ? (
             <Field label="Subcategory">
               <Select value={filters.subcategory ?? ""} onChange={(e) => go({ sub: e.target.value || null })}>
@@ -182,6 +172,13 @@ export function FilterBar({
           <label className="flex items-center gap-3 text-sm">
             <input type="checkbox" checked={filters.plan} onChange={(e) => go({ plan: e.target.checked ? "1" : null })} className="h-5 w-5 accent-[var(--accent)]" />
             Spread / EMI only
+          </label>
+          <label className="flex items-start gap-3 text-sm">
+            <input type="checkbox" checked={filters.sched} onChange={(e) => go({ sched: e.target.checked ? "1" : null })} className="mt-0.5 h-5 w-5 accent-[var(--accent)]" />
+            <span>
+              Include scheduled in totals
+              <span className="block text-xs text-muted">Future-dated entries are left out of totals until they happen. Turn on to see projected totals.</span>
+            </span>
           </label>
           <Button className="w-full" onClick={() => setMore(false)}>Done</Button>
         </div>

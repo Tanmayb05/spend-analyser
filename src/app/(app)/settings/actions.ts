@@ -84,7 +84,6 @@ const prefsSchema = z.object({
   timezone: z.string().min(1).max(64),
   week_start: z.coerce.number().int().min(0).max(1),
   theme: z.enum(["dark", "light", "system"]),
-  dashboard_mode: z.enum(["normalized", "cash"]),
   default_spread_months: z.coerce.number().int().min(1).max(120),
   convert_budgets: z.boolean().optional(),
 });

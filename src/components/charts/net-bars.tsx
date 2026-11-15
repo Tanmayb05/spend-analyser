@@ -73,7 +73,7 @@ export function NetBars({
         </div>
         <div className="mt-1.5 flex">
           {data.map((d, i) => (
-            <span key={d.month} className={cn("flex-1 text-center text-[9px]", i === active ? "text-text" : "text-faint", i % 2 === 1 && "max-sm:invisible")}>
+            <span key={d.month} className={cn("flex-1 text-center text-xs", i === active ? "text-text" : "text-faint", i % 2 === 1 && "max-sm:invisible")}>
               {formatMonth(d.month, "short")}
             </span>
           ))}

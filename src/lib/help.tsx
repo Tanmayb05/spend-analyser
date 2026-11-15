@@ -10,9 +10,8 @@ export const HELP = {
     <>
       <p>Your month at a glance. Move between months in the calendar.</p>
       <p>
-        <b>Smoothed</b> spreads big costs (EMIs, spread purchases, lump-sum trips) evenly over their months, so one big
-        purchase doesn&apos;t make a month look terrible. <b>Cash flow</b> shows money on the day it actually left your account.
-        It&apos;s set in the summary card and changes every number.
+        Big costs (EMIs, spread purchases, lump-sum trips) are <b>smoothed</b>: spread evenly over their months, so one big
+        purchase doesn&apos;t make a month look terrible.
       </p>
       <p>
         <b>Everyday</b> (in the calendar header) shows only everyday, controllable spending in the calendar and the donut,
@@ -33,8 +32,7 @@ export const HELP = {
         Months that haven&apos;t started show lighter bars: those are planned amounts (EMIs, spread costs).
       </p>
       <p>
-        In <b>Smoothed</b> view a spread purchase shows as its monthly part (“3 of 12”); in <b>Cash flow</b> view it shows as
-        the full payment.
+        A spread purchase shows as its monthly part (“3 of 12”).
       </p>
     </>
   ),
@@ -67,8 +65,8 @@ export const HELP = {
         $100 a month for 12 months. <b>EMI</b>: you really are paying it off month by month.
       </p>
       <p>
-        Smoothed view counts both monthly. Cash flow view counts a paid-upfront purchase on the day you bought it, and an EMI as
-        each installment is due.
+        Both count monthly: a paid-upfront purchase is spread across the months you pick, and an EMI counts as each
+        installment is due.
       </p>
     </>
   ),
@@ -167,8 +165,7 @@ export const HELP = {
         exchange rate from each transaction&apos;s own date.
       </p>
       <p>
-        <b>Default view</b>: whether pages open in Smoothed or Cash flow. <b>Spread months</b>: pre-filled when you turn on
-        “Spread this cost”.
+        <b>Spread months</b>: pre-filled when you turn on “Spread this cost”.
       </p>
     </>
   ),
