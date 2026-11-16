@@ -18,7 +18,6 @@ import type { LedgerRow } from "@/lib/data/types";
 
 /** regular / plan / trip are spending; "in" is money coming back (income and refunds). */
 type Kind = "regular" | "plan" | "trip" | "in";
-type SpendKind = Exclude<Kind, "in">;
 type Day = {
   rows: LedgerRow[];
   /** net spending for the day: expenses minus refunds (what the totals use) */
@@ -29,6 +28,8 @@ type Day = {
   inflow: number;
   has: Record<Kind, boolean>;
   kindSpend: Record<Kind, number>;
+  /** the single biggest counted transaction of the day; its kind colours the cell */
+  top: { kind: Kind; amount: number } | null;
 };
 
 /** Heat scale: a day's spend picks one of 8 shades of its own colour (upper bound in the base currency, mix % of the colour over the card). */
@@ -51,7 +52,6 @@ const RAMP: Record<Kind, { lo: string; hi: string }> = {
   in: { lo: "--income-lo", hi: "--income" }, // mint -> green
 };
 const KINDS: Kind[] = ["regular", "plan", "trip", "in"];
-const SPEND_KINDS: SpendKind[] = ["regular", "plan", "trip"];
 
 const shadeOf = (amount: number) => SHADES.findIndex((s) => amount <= s.max);
 /** Background for a cell: the kind's ramp colour for this shade, mixed over the card by the shade's strength. */
@@ -60,11 +60,10 @@ function heat(kind: Kind, shade: number) {
   const t = Math.round((shade / (SHADES.length - 1)) * 100);
   return `color-mix(in oklab, color-mix(in oklab, var(${hi}) ${t}%, var(${lo})) ${SHADES[shade].pct}%, var(--surface-2))`;
 }
-/** Spending colours the cell; the kind carrying most of it wins. A day with only income/refunds is green. Mixed days still show every kind in the bar underneath. */
-function cellKind(d: Day): Kind | null {
-  if (d.gross > 0) return SPEND_KINDS.reduce((best, k) => (d.kindSpend[k] > d.kindSpend[best] ? k : best), "regular" as SpendKind);
-  return d.inflow > 0 ? "in" : null;
-}
+/** Net for the day: money in (income + refunds) minus spending. Negative = spent more than came in. */
+const netOf = (d: Day) => d.inflow - d.gross;
+/** The day's biggest single transaction picks the colour (income, regular, EMI or trip). Mixed days still show every kind in the bar underneath. */
+const cellKind = (d: Day): Kind | null => d.top?.kind ?? null;
 
 const KIND_NAME = { regular: "regular", plan: "EMI or spread", trip: "trip", in: "income or refund" } as const;
 
@@ -100,6 +99,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
         inflow: 0,
         has: { regular: false, plan: false, trip: false, in: false },
         kindSpend: { regular: 0, plan: 0, trip: 0, in: 0 },
+        top: null,
       };
       d.rows.push(r);
       const trip = r.trip_id ? app.maps.trip.get(r.trip_id) : null;
@@ -108,6 +108,8 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
       const inflow = r.type === "income" || r.type === "refund";
       const kind: Kind = inflow ? "in" : r.trip_id ? "trip" : r.plan_kind ? "plan" : "regular";
       if (counted) {
+        const size = Math.abs(Number(r.type === "income" ? r.income : r.spend));
+        if (!d.top || size > d.top.amount) d.top = { kind, amount: size };
         if (r.type === "income") {
           d.inflow += Number(r.income);
           d.kindSpend.in += Number(r.income);
@@ -217,10 +219,11 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
           const isSel = selected === d;
           const isToday = d === today;
           const tint = day ? cellKind(day) : null;
-          const shade = day && tint ? shadeOf(tint === "in" ? day.inflow : day.gross) : 0;
+          const net = day ? netOf(day) : 0;
+          const shade = day && tint ? shadeOf(Math.abs(net)) : 0;
           const strong = !!tint && shade >= DARK_FROM;
           const kinds = day ? KINDS.filter((k) => day.has[k]).map((k) => KIND_NAME[k]) : [];
-          const spoken = day ? [day.spent > 0 ? `${formatMoney(day.spent, currency)} spent` : "", day.inflow > 0 ? `${formatMoney(day.inflow, currency)} received` : ""].filter(Boolean) : [];
+          const spoken = day ? [day.spent > 0 ? `${formatMoney(day.spent, currency)} spent` : "", day.inflow > 0 ? `${formatMoney(day.inflow, currency)} received` : "", day.inflow > 0 && day.gross > 0 ? `net ${formatMoney(net, currency, { signed: true })}` : ""].filter(Boolean) : [];
           return (
             <button
               key={d}
@@ -241,7 +244,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
               )}
             >
               <span className={cn("grid h-6 min-w-6 place-items-center rounded-full px-1 leading-none", isToday ? (strong ? "bg-accent-fg font-medium text-text" : "bg-accent font-medium text-accent-fg") : strong ? "font-medium text-accent-fg" : "text-text")}>{n}</span>
-              <span className={cn("num max-w-full truncate text-xs leading-none max-sm:hidden", strong ? "text-accent-fg/80" : "text-muted")}>{day && day.gross > 0 ? formatMoney(day.spent, currency, { compact: true }) : day && day.inflow > 0 ? formatMoney(day.inflow, currency, { compact: true, signed: true }) : " "}</span>
+              <span className={cn("num max-w-full truncate text-xs leading-none max-sm:hidden", strong ? "text-accent-fg/80" : "text-muted")}>{day && tint ? formatMoney(net, currency, { compact: true, signed: true }) : " "}</span>
               <span className="flex h-1 w-7 gap-px overflow-hidden rounded-full" aria-hidden>
                 {day?.has.regular ? <span className="flex-1 bg-expense" /> : null}
                 {day?.has.plan ? <span className="flex-1 bg-plan" /> : null}
@@ -263,7 +266,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
         <li className="ml-auto inline-flex items-center gap-1.5" aria-hidden>
           less
           {SHADES.map((s, i) => (
-            <span key={s.label} title={`${s.label} spent`} className="h-2.5 w-2.5 rounded-[3px]" style={{ background: heat("regular", i) }} />
+            <span key={s.label} title={`${s.label} net`} className="h-2.5 w-2.5 rounded-[3px]" style={{ background: heat("regular", i) }} />
           ))}
           more
         </li>
@@ -300,6 +303,8 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
                   <>
                     <span className="mx-2 text-faint" aria-hidden>·</span>
                     Received <span className="ml-1 text-lg font-medium text-income">{formatMoney(sel.inflow, currency)}</span>
+                    <span className="mx-2 text-faint" aria-hidden>·</span>
+                    Net <span className={cn("ml-1 text-lg font-medium", netOf(sel) >= 0 ? "text-income" : "text-text")}>{formatMoney(netOf(sel), currency, { signed: true })}</span>
                   </>
                 ) : null}
               </p>
