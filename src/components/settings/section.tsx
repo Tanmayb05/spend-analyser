@@ -4,7 +4,7 @@ import { InfoTitle } from "@/components/ui/info-title";
 
 export function SettingsPage({ title, description, info, children }: { title: string; description?: ReactNode; info?: ReactNode; children: ReactNode }) {
   return (
-    <div className="min-w-0 flex-1">
+    <div data-settings-page className="min-w-0 flex-1">
       <SettingsBack />
       <InfoTitle as="h1" info={info} className="text-2xl font-medium">{title}</InfoTitle>
       {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}

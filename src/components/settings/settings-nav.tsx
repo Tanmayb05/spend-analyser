@@ -4,15 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SETTINGS_GROUPS } from "./nav";
+import { PANE_SLIDE, PANE_WIDTH, useSettingsTransition } from "./settings-transition";
 
 export function SettingsNav() {
   const pathname = usePathname();
-  // the Settings landing page is the menu itself; the side pane appears once a setting is open
-  if (pathname.replace(/\/$/, "") === "/settings") return null;
+  const { flyingHref, paneOpen, paneTransition } = useSettingsTransition();
   return (
-    <nav aria-label="Settings" className="hidden w-64 shrink-0 lg:block">
+    // Always in the layout on lg+, collapsed on the Settings home (so opening a setting can slide it in); `inert` keeps it out of reach while closed.
+    // overflow-x-clip (not hidden) so the inner panel's `sticky` keeps working.
+    <nav
+      aria-label="Settings"
+      inert={!paneOpen}
+      className="hidden shrink-0 overflow-x-clip lg:block"
+      style={{ width: paneOpen ? PANE_WIDTH : 0, transition: paneTransition }}
+    >
       {/* same panel as the main sidebar: bordered surface, rounded, ink-on-light active item */}
-      <div className="sticky top-4 max-h-[calc(100dvh-2rem)] space-y-5 overflow-y-auto rounded-[28px] border border-border bg-surface p-3">
+      <div
+        className="sticky top-4 max-h-[calc(100dvh-2rem)] w-64 space-y-5 overflow-y-auto rounded-[28px] border border-border bg-surface p-3"
+        style={{ opacity: paneOpen ? 1 : 0, transform: paneOpen ? "none" : `translateX(-${PANE_SLIDE}px)`, transition: paneTransition }}
+      >
         {SETTINGS_GROUPS.map((group) => (
           <section key={group.title} aria-labelledby={`settings-group-${group.id}`}>
             <h2 id={`settings-group-${group.id}`} className="mb-1.5 px-3 text-xs font-medium uppercase tracking-wide text-faint">
@@ -31,7 +41,14 @@ export function SettingsNav() {
                         active ? "bg-text font-medium text-bg" : "text-muted hover:bg-surface-3 hover:text-text",
                       )}
                     >
-                      <Icon size={18} />
+                      {/* circle holder: the Settings-home circle lands here (hidden until it arrives) */}
+                      <span
+                        data-settings-icon={href}
+                        className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-3", active ? "text-text" : "text-muted")}
+                        style={flyingHref === href ? { visibility: "hidden" } : undefined}
+                      >
+                        <Icon size={16} />
+                      </span>
                       {label}
                     </Link>
                   </li>

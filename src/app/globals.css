@@ -192,6 +192,15 @@ input[type="number"]::-webkit-outer-spin-button {
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
 }
 
+/* Settings home -> a setting (see settings-transition.tsx): the grid fades out, the new page fades up. */
+@keyframes settings-page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+[data-settings-grid] { transition: opacity 220ms ease-out; }
+[data-launching] [data-settings-grid] { opacity: 0; }
+[data-launched] [data-settings-page] { animation: settings-page-in 380ms 40ms ease-out both; }
+
 /* Respect the OS "reduce motion" setting: no transitions or animations. */
 @media (prefers-reduced-motion: reduce) {
   *,
