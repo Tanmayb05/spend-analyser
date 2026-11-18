@@ -31,7 +31,8 @@ describe("callModel", () => {
   it("returns validated data and token usage", async () => {
     const model = new MockLanguageModelV4({ doGenerate: async () => reply('{"amount":12.5,"label":"lunch"}') });
     const r = await callModel({ model, system: "sys", input: { text: "hi" }, schema });
-    expect(r).toEqual({ data: { amount: 12.5, label: "lunch" }, tokensIn: 11, tokensOut: 7 });
+    expect(r).toMatchObject({ data: { amount: 12.5, label: "lunch" }, tokensIn: 11, tokensOut: 7 });
+    expect(r.stats).toEqual({ usage: { input: 11, output: 7, cacheRead: null, cacheWrite: null, reasoning: null }, finishReason: "stop", steps: 1, toolCalls: 0 });
   });
 
   it("sends system prompt, files and text to the model", async () => {
@@ -45,6 +46,13 @@ describe("callModel", () => {
     expect(parts.find((p) => p.type === "file")?.mediaType).toBe("application/pdf");
     expect(parts.find((p) => p.type === "text")?.text).toBe("read this");
     expect(model.doGenerateCalls[0].responseFormat).toMatchObject({ type: "json" });
+  });
+
+  it("keeps the tokens a failed validation still used", async () => {
+    const notJson = new MockLanguageModelV4({ doGenerate: async () => reply("sorry, I can't") });
+    const err = await callModel({ model: notJson, system: "", input: { text: "x" }, schema }).catch((e) => e as AiError);
+    expect(err).toBeInstanceOf(AiError);
+    expect(err.stats?.usage).toMatchObject({ input: 11, output: 7 });
   });
 
   it("maps unreadable or schema-invalid output to bad_response", async () => {
@@ -164,6 +172,7 @@ describe("callWithTools (Q&A)", () => {
     const second = JSON.stringify(model.doGenerateCalls[1].prompt);
     expect(second).toContain('"spent":120');
     expect(r.tokensIn).toBe(22);
+    expect(r.stats).toMatchObject({ steps: 2, toolCalls: 1, finishReason: "stop" });
   });
 
   it("stops after maxSteps; no final text is a bad_response", async () => {

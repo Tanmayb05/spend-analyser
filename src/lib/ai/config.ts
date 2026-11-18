@@ -42,7 +42,7 @@ export const PROVIDER_KEY_ENV: Record<Exclude<AiProvider, "mock">, string> = {
   openai: "OPENAI_API_KEY",
 };
 
-const DEFAULT_MODELS: Record<AiProvider, Record<AiTier, string>> = {
+export const DEFAULT_MODELS: Record<AiProvider, Record<AiTier, string>> = {
   gemini: { fast: "gemini-2.5-flash", smart: "gemini-2.5-pro" },
   claude: { fast: "claude-haiku-5-5", smart: "claude-sonnet-5-5" },
   openai: { fast: "gpt-5.4-mini", smart: "gpt-5.5" },

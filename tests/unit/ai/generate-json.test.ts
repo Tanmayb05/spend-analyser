@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
   quotaError: null as null | { message: string },
   updates: [] as Array<Record<string, unknown>>,
   deletes: [] as number[],
+  logs: [] as Array<Record<string, unknown>>,
+  logFails: false,
   model: null as unknown,
 }));
 
@@ -21,9 +23,15 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     rpc: async () => (state.quotaError ? { error: state.quotaError, data: null } : { error: null, data: [{ usage_id: 42, remaining: 9 }] }),
-    from: () => ({
+    from: (table: string) => ({
       update: (row: Record<string, unknown>) => ({ eq: async () => void state.updates.push(row) }),
       delete: () => ({ eq: async (_: string, id: number) => void state.deletes.push(id) }),
+      insert: async (row: Record<string, unknown>) => {
+        if (table !== "ai_call_log") throw new Error(`unexpected insert into ${table}`);
+        if (state.logFails) return { error: { code: "XX000", message: "boom" } };
+        state.logs.push(row);
+        return { error: null };
+      },
     }),
   }),
 }));
@@ -44,8 +52,8 @@ const { generateAnswer, generateJson } = await import("@/lib/ai/generate");
 
 // --- helpers ---------------------------------------------------------------
 const usage = {
-  inputTokens: { total: 100, noCache: 100, cacheRead: undefined, cacheWrite: undefined },
-  outputTokens: { total: 20, text: 20, reasoning: undefined },
+  inputTokens: { total: 100, noCache: 60, cacheRead: 40, cacheWrite: undefined },
+  outputTokens: { total: 20, text: 15, reasoning: 5 },
 };
 const modelReturning = (text: string) =>
   new MockLanguageModelV4({ doGenerate: async () => ({ content: [{ type: "text", text }], finishReason: { unified: "stop", raw: undefined }, usage, warnings: [] }) });
@@ -57,6 +65,8 @@ beforeEach(() => {
   state.quotaError = null;
   state.updates = [];
   state.deletes = [];
+  state.logs = [];
+  state.logFails = false;
   state.model = modelReturning('{"ok":true}');
 });
 
@@ -102,5 +112,63 @@ describe("generateJson", () => {
     await expect(run()).rejects.toMatchObject({ code: "quota" });
     state.quotaError = { message: "AI_GLOBAL_LIMIT" };
     await expect(run()).rejects.toMatchObject({ code: "global_limit" });
+  });
+
+  it("logs a successful call with tokens, time and cost", async () => {
+    await run();
+    expect(state.logs).toHaveLength(1);
+    const log = state.logs[0];
+    expect(log).toMatchObject({
+      user_id: "u1",
+      feature: "parse_text",
+      provider: "claude",
+      model: "test-model",
+      tier: "fast",
+      status: "ok",
+      tokens_in: 100,
+      tokens_out: 20,
+      cache_read_tokens: 40,
+      reasoning_tokens: 5,
+      steps: 1,
+      tool_calls: 0,
+      finish_reason: "stop",
+      file_count: 0,
+      cost_usd: null, // "test-model" has no price
+    });
+    expect(log.latency_ms).toEqual(expect.any(Number));
+    expect(log.input_bytes).toBe(2); // "s" + "t"
+    expect(JSON.stringify(log)).not.toMatch(/ok":true/); // never the answer
+  });
+
+  it("logs a failed call with its error code and the tokens it still used", async () => {
+    state.model = modelReturning("not json");
+    await expect(run()).rejects.toMatchObject({ code: "bad_response" });
+    expect(state.logs).toEqual([expect.objectContaining({ status: "error", error_code: "bad_response", tokens_in: 100, tokens_out: 20 })]);
+  });
+
+  it("logs calls stopped by a limit as blocked, without tokens", async () => {
+    state.quotaError = { message: "AI_QUOTA_EXCEEDED" };
+    await expect(run()).rejects.toMatchObject({ code: "quota" });
+    expect(state.logs).toEqual([expect.objectContaining({ status: "blocked", error_code: "quota" })]);
+    expect(state.logs[0]).not.toHaveProperty("tokens_in");
+  });
+
+  it("does not log when AI is disabled for the user", async () => {
+    state.aiEnabled = false;
+    await expect(run()).rejects.toMatchObject({ code: "disabled" });
+    expect(state.logs).toEqual([]);
+  });
+
+  it("a failing log write never breaks the feature", async () => {
+    state.logFails = true;
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await expect(run()).resolves.toMatchObject({ data: { ok: true } });
+    expect(warn).toHaveBeenCalledWith("ai_call_log insert failed:", "XX000");
+    warn.mockRestore();
+  });
+
+  it("logs file count and size for receipts", async () => {
+    await generateJson({ feature: "parse_receipt", system: "", input: { text: "", files: [{ data: new Uint8Array(1000), mediaType: "image/png" }] }, schema });
+    expect(state.logs[0]).toMatchObject({ feature: "parse_receipt", file_count: 1, input_bytes: 1000 });
   });
 });

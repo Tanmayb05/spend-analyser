@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SettingsPage } from "@/components/settings/section";
@@ -25,6 +26,9 @@ export default async function AiSettingsPage() {
             ? `Provider: ${AI.label}. Using ${AI.models.fast} for entry/receipts and ${AI.models.smart} for analysis.`
             : `Set ${AI.keyEnv} on the server (see .env.example) to enable smart entry, receipt reading and deep analysis. Everything else works without it.`}
         </p>
+        <Link href="/settings/ai/usage" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
+          See every call: tokens, time and cost →
+        </Link>
       </Card>
       <div className="grid gap-4 sm:grid-cols-2">
         {meters.map((m) => (

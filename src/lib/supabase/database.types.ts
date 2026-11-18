@@ -23,7 +23,20 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ai_flags": {
+            "ai_call_log": {
+                  Row: {
+                    "cache_read_tokens": number | null,"cache_write_tokens": number | null,"cost_usd": number | null,"created_at": string,"error_code": string | null,"feature": Database["public"]['Enums']["ai_feature"],"file_count": number | null,"finish_reason": string | null,"id": number,"input_bytes": number | null,"latency_ms": number | null,"model": string | null,"provider": string | null,"reasoning_tokens": number | null,"status": string,"steps": number | null,"tier": string | null,"tokens_in": number | null,"tokens_out": number | null,"tool_calls": number | null,"user_id": string
+                  }
+                  Insert: {
+                    "cache_read_tokens"?: number | null,"cache_write_tokens"?: number | null,"cost_usd"?: number | null,"created_at"?: string,"error_code"?: string | null,"feature": Database["public"]['Enums']["ai_feature"],"file_count"?: number | null,"finish_reason"?: string | null,"id"?: never,"input_bytes"?: number | null,"latency_ms"?: number | null,"model"?: string | null,"provider"?: string | null,"reasoning_tokens"?: number | null,"status": string,"steps"?: number | null,"tier"?: string | null,"tokens_in"?: number | null,"tokens_out"?: number | null,"tool_calls"?: number | null,"user_id": string
+                  }
+                  Update: {
+                    "cache_read_tokens"?: number | null,"cache_write_tokens"?: number | null,"cost_usd"?: number | null,"created_at"?: string,"error_code"?: string | null,"feature"?: Database["public"]['Enums']["ai_feature"],"file_count"?: number | null,"finish_reason"?: string | null,"id"?: never,"input_bytes"?: number | null,"latency_ms"?: number | null,"model"?: string | null,"provider"?: string | null,"reasoning_tokens"?: number | null,"status"?: string,"steps"?: number | null,"tier"?: string | null,"tokens_in"?: number | null,"tokens_out"?: number | null,"tool_calls"?: number | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"ai_flags": {
                   Row: {
                     "created_at": string,"dismissed": boolean,"id": string,"kind": string,"reason": string,"related_id": string | null,"transaction_id": string,"user_id": string
                   }

@@ -9,9 +9,9 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:db": "supabase test db",
+    "test:db": "bash scripts/test-db.sh",
     "test:e2e": "playwright test",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "db:types": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres > src/lib/supabase/database.types.ts",
     "ai:smoke": "vitest run --config vitest.live.config.ts tests/live/ai-smoke.test.ts",
     "ai:eval": "vitest run --config vitest.live.config.ts tests/live/receipt-eval.test.ts"
   },
