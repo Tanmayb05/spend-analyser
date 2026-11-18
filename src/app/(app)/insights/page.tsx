@@ -4,6 +4,7 @@ import { TrendBars } from "@/components/charts/trend-bars";
 import { SERIES } from "@/components/charts/colors";
 import { AnalysisPanel } from "@/components/insights/analysis-panel";
 import { AskCard } from "@/components/insights/ask-card";
+import { pickAskExamples } from "@/lib/ai/ask-examples";
 import { FlagsCard, type FlagView } from "@/components/insights/flags-card";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
@@ -134,7 +135,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
           limit={usage.analysis.limit}
           ready={ref.aiReady}
         />
-        <AskCard ready={ref.aiReady} left={usage.chat.left} limit={usage.chat.limit} info={HELP.ask} />
+        <AskCard ready={ref.aiReady} left={usage.chat.left} limit={usage.chat.limit} info={HELP.ask} examples={pickAskExamples(5)} />
         {ref.aiReady || flags.length ? <FlagsCard flags={flags} ready={ref.aiReady} left={usage.organize.left} info={HELP.flags} /> : null}
       </div>
     </>

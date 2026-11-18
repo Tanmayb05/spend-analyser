@@ -11,9 +11,8 @@ import { askAction } from "@/app/(app)/ai/insight-actions";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
-const EXAMPLES = ["How much did I spend on food last month?", "What were my top 5 merchants this year?", "Did my spending go up compared with 3 months ago?"];
-
-export function AskCard({ ready, left, limit, info }: { ready: boolean; left: number; limit: number; info?: ReactNode }) {
+/** `examples` are picked (and shuffled) on the server for each page load, so server and client render the same list. */
+export function AskCard({ ready, left, limit, info, examples }: { ready: boolean; left: number; limit: number; info?: ReactNode; examples: string[] }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [q, setQ] = useState("");
   const [remaining, setRemaining] = useState(left);
@@ -61,7 +60,7 @@ export function AskCard({ ready, left, limit, info }: { ready: boolean; left: nu
         </ul>
       ) : (
         <div className="mb-4 flex flex-wrap gap-2">
-          {EXAMPLES.map((e) => (
+          {examples.map((e) => (
             <button key={e} type="button" onClick={() => ask(e)} disabled={pending || remaining <= 0} className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-left text-xs text-muted hover:bg-surface-3">
               {e}
             </button>
