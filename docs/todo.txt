@@ -1,5 +1,5 @@
 ===========================
-In a new Session
+7. Fix AI in prod
 
 8. Create a system for Scanning the Receipts and somehow adding the data to new transactions or existing transactions
 
