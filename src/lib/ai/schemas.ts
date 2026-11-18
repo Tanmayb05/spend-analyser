@@ -63,3 +63,64 @@ export const analysisSchema = z.object({
   actions: z.array(z.string()).min(1).max(3).describe("Concrete next steps"),
 });
 export type Analysis = z.infer<typeof analysisSchema>;
+
+// ---------------------------------------------------------------------------
+// Phase 2-3: tidy-up. Rows are referenced by their index `i` in the prompt, never by database id.
+// Every field is required (nullable where optional) so OpenAI strict mode accepts the schema.
+// ---------------------------------------------------------------------------
+export const categorizeSchema = z.object({
+  categorized: z
+    .array(
+      z.object({
+        i: z.number().int().describe("Row number from the input"),
+        category: z.string().describe("Exactly one of the provided category names"),
+        subcategory: z.string().nullable().describe("One of that category's subcategories, or null"),
+        confidence: z.enum(["high", "medium", "low"]),
+      }),
+    )
+    .max(60),
+});
+export type Categorized = z.infer<typeof categorizeSchema>;
+
+export const merchantCleanupSchema = z.object({
+  merchant_fixes: z
+    .array(
+      z.object({
+        name: z.string().describe("A merchant name exactly as given in the input"),
+        rename_to: z
+          .string()
+          .nullable()
+          .describe("Clean brand name in Title Case if this is messy or a duplicate of another merchant (use the same rename_to for all duplicates); null to keep"),
+        category: z.string().nullable().describe("Default expense category for this merchant if it has none and it's obvious; else null"),
+        subcategory: z.string().nullable(),
+      }),
+    )
+    .max(300),
+});
+export type MerchantCleanup = z.infer<typeof merchantCleanupSchema>;
+
+export const itemNamesSchema = z.object({
+  item_names: z
+    .array(
+      z.object({
+        i: z.number().int(),
+        normalized_name: z.string().describe("Generic product name, Title Case, no brand or size. Reuse an existing name when it's the same product"),
+        item_category: z.string().describe("Produce, Dairy, Meat, Bakery, Snacks, Beverages, Household, Personal Care, Electronics, Clothing, or similar"),
+      }),
+    )
+    .max(200),
+});
+export type ItemNames = z.infer<typeof itemNamesSchema>;
+
+export const anomalySchema = z.object({
+  explanations: z
+    .array(
+      z.object({
+        i: z.number().int(),
+        flag: z.boolean().describe("true if worth the user's attention; false if clearly expected (rent, planned purchase, two different items)"),
+        reason: z.string().describe("One short sentence for the user, with the numbers"),
+      }),
+    )
+    .max(40),
+});
+export type AnomalyExplanations = z.infer<typeof anomalySchema>;

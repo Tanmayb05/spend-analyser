@@ -3,6 +3,8 @@ import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { SERIES } from "@/components/charts/colors";
 import { AnalysisPanel } from "@/components/insights/analysis-panel";
+import { AskCard } from "@/components/insights/ask-card";
+import { FlagsCard, type FlagView } from "@/components/insights/flags-card";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
 import { requireUser } from "@/lib/supabase/server";
@@ -30,11 +32,21 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   const scopeKey = `${scopeName}|${month}`;
 
   const { supabase } = await requireUser();
-  const [rows, usage, cachedRow] = await Promise.all([
+  const [rows, usage, cachedRow, flagRows] = await Promise.all([
     getLedger(addMonths(month, -14), monthEnd(addMonths(month, 3))),
     getAiUsage(),
     supabase.from("ai_insights").select("result, scope, created_at").eq("scope_key", scopeKey).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("ai_flags").select("id, kind, reason, transaction_id").eq("dismissed", false).order("created_at", { ascending: false }).limit(20),
   ]);
+  const flagTxns = flagRows.data?.length
+    ? ((await supabase.from("transactions").select("id, date, amount, currency, description, merchants(name)").in("id", flagRows.data.map((f) => f.transaction_id))).data ?? [])
+    : [];
+  const flags: FlagView[] = (flagRows.data ?? []).flatMap((f) => {
+    const t = flagTxns.find((x) => x.id === f.transaction_id);
+    if (!t) return [];
+    const label = (t.merchants as { name: string } | null)?.name || t.description || "Transaction";
+    return [{ id: f.id, kind: f.kind as FlagView["kind"], reason: f.reason, date: t.date, label, amount: Number(t.amount), currency: t.currency, href: `/transactions?${new URLSearchParams({ m: t.date.slice(0, 7), q: label })}` }];
+  });
   let stale = false;
   if (cachedRow.data && ref.aiReady) {
     const { fingerprint } = await buildAnalysisInput(scope);
@@ -122,6 +134,8 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
           limit={usage.analysis.limit}
           ready={ref.aiReady}
         />
+        <AskCard ready={ref.aiReady} left={usage.chat.left} limit={usage.chat.limit} info={HELP.ask} />
+        {ref.aiReady || flags.length ? <FlagsCard flags={flags} ready={ref.aiReady} left={usage.organize.left} info={HELP.flags} /> : null}
       </div>
     </>
   );

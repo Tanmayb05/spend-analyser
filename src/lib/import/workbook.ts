@@ -71,6 +71,8 @@ export type ImportReport = {
 /** Categories the workbook's Bucket formula treats as not "Core". */
 const NON_CORE = new Set(["education", "travel", "rent & utilities", "income", "housing & utilities"]);
 const UNKNOWN = new Set(["", "unknown", "n/a", "-", "none"]);
+export const UNCATEGORIZED = "Uncategorized";
+export const UNCATEGORIZED_INCOME = "Uncategorized income";
 
 const str = (v: Cell): string => (v == null ? "" : String(v).trim());
 const clean = (v: Cell): string | null => {
@@ -226,21 +228,19 @@ export function parseExpenses(rows: Rows) {
     if (row.every((c) => str(c) === "")) continue;
     const date = toIsoDate(row[col.date]);
     const rawAmount = toAmount(row[col.amount]);
-    const category = str(row[col.category]);
+    const rawCategory = col.category >= 0 ? str(row[col.category]) : "";
     if (!date) {
-      if (rawAmount != null || category) skipped.push({ row: r + 1, reason: "missing or invalid date" });
+      if (rawAmount != null || rawCategory) skipped.push({ row: r + 1, reason: "missing or invalid date" });
       continue;
     }
     if (rawAmount == null || rawAmount === 0) {
       skipped.push({ row: r + 1, reason: "missing amount" });
       continue;
     }
-    if (!category) {
-      skipped.push({ row: r + 1, reason: "missing category" });
-      continue;
-    }
     const typeRaw = str(row[col.type]).toLowerCase();
     let type: ImportTxn["type"] = typeRaw === "income" ? "income" : typeRaw === "refund" ? "refund" : "expense";
+    // no category: park it (Settings → AI tidy-up can sort these later)
+    const category = rawCategory || (type === "income" ? UNCATEGORIZED_INCOME : UNCATEGORIZED);
     let amount = rawAmount;
     if (amount < 0) {
       // negative amounts in generic CSVs: expense refund

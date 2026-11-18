@@ -4,9 +4,10 @@ import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
-import { AiError, generateJson } from "@/lib/ai/gemini";
+import { AiError, generateJson } from "@/lib/ai/generate";
 import { analysisSchema, parseTextSchema, receiptSchema, type Analysis, type ReceiptExtraction } from "@/lib/ai/schemas";
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
+import { analysisSystem, parseTextSystem, receiptSystem } from "@/lib/ai/prompts";
 import { fetchDriveFile, MAX_BYTES, sniffMime } from "@/lib/receipts/fetch";
 import { allocate } from "@/lib/receipts/allocate";
 import { getRate } from "@/lib/fx";
@@ -65,19 +66,14 @@ export async function parseTextAction(text: string): Promise<{ ok: true; presets
   if (!t.success) return { ok: false, error: "Type a short description, e.g. “12.50 Kroger groceries yesterday”." };
   try {
     const ctx = await context();
-    const system = [
-      "You turn short notes about money into structured transactions for a personal finance app.",
-      `Today is ${ctx.today}. Default currency: ${ctx.base}.`,
-      "Pick category and subcategory only from the list. Income (salary, refunds from employer, cashback) uses income categories.",
-      "If the note lists several purchases, return several transactions. Never invent amounts.",
-    ].join("\n");
+    const system = parseTextSystem(ctx.today, ctx.base);
     const prompt = [
       `Categories:\n${categoryList(ctx.cats, ctx.subs)}`,
       `Known merchants: ${ctx.merchants.map((m) => m.name).join(", ") || "none"}`,
       `Trips: ${ctx.trips.map((tr) => `${tr.name} (${tr.start_date ?? "?"}–${tr.end_date ?? "?"})`).join("; ") || "none"}`,
       `Note: """${t.data}"""`,
     ].join("\n\n");
-    const { data, remaining } = await generateJson({ feature: "parse_text", system, parts: [{ text: prompt }], schema: parseTextSchema });
+    const { data, remaining } = await generateJson({ feature: "parse_text", system, input: { text: prompt }, schema: parseTextSchema });
     const presets = data.transactions.map((p) => {
       const m = matchCategory(ctx.cats, ctx.subs, p.category, p.subcategory);
       const trip = ctx.trips.find((tr) => tr.name.toLowerCase() === (p.trip ?? "").toLowerCase());
@@ -173,19 +169,14 @@ export async function parseReceiptAction(input: { storagePath?: string; driveUrl
     }
 
     if (!extraction) {
-      const system = [
-        "You read shopping receipts and invoices for a personal finance app. Extract exactly what is printed; never invent lines.",
-        `If no currency symbol is visible assume ${ctx.base}. Dates must be YYYY-MM-DD.`,
-        "For each line item choose the best matching expense category/subcategory from the list.",
-        "Skip non-item lines (subtotal, tax, payment, change, loyalty points) from items.",
-      ].join("\n");
+      const system = receiptSystem(ctx.base, ctx.today);
       const res = await generateJson({
         feature: "parse_receipt",
         system,
-        parts: [
-          { inlineData: { mimeType: mime, data: Buffer.from(bytes).toString("base64") } },
-          { text: `Expense categories:\n${categoryList(ctx.cats, ctx.subs, "expense")}\n\nKnown merchants: ${ctx.merchants.map((m) => m.name).join(", ")}` },
-        ],
+        input: {
+          text: `Expense categories:\n${categoryList(ctx.cats, ctx.subs, "expense")}\n\nKnown merchants: ${ctx.merchants.map((m) => m.name).join(", ")}`,
+          files: [{ data: bytes, mediaType: mime }],
+        },
         schema: receiptSchema,
       });
       extraction = res.data;
@@ -355,22 +346,17 @@ export async function runAnalysisAction(input: AnalysisScope): Promise<{ ok: tru
     const { supabase } = await requireUser();
     const { payload, fingerprint, currency } = await buildAnalysisInput(v.data);
     if (!payload.months.some((m) => m.spent > 0 || m.income > 0)) return { ok: false, error: "Not enough data in this period to analyse." };
-    const system = [
-      "You are a careful personal-finance analyst. Write for a non-expert: short sentences, concrete numbers, no jargon.",
-      `All amounts are in ${currency}. 'Core' = everyday controllable spending; fixed costs (rent, tuition, travel) are not core.`,
-      "Each insight must be meaningful and actionable, citing figures from the data. Do not give investment advice.",
-      "Figures are smoothed: EMIs and big purchases are spread over months rather than shown when the money left.",
-    ].join("\n");
-    const { data, remaining } = await generateJson({
+    const system = analysisSystem(currency);
+    const { data, remaining, modelId } = await generateJson({
       feature: "analysis",
       model: "smart",
       system,
-      parts: [{ text: `Data (JSON):\n${JSON.stringify(payload)}` }],
+      input: { text: `Data (JSON):\n${JSON.stringify(payload)}` },
       schema: analysisSchema,
       temperature: 0.3,
     });
     const scopeKey = `${v.data.scope}|${v.data.month}`;
-    await supabase.from("ai_insights").insert({ scope_key: scopeKey, scope: { ...v.data, fingerprint } as never, result: data as never, model: "smart" });
+    await supabase.from("ai_insights").insert({ scope_key: scopeKey, scope: { ...v.data, fingerprint } as never, result: data as never, model: modelId });
     revalidatePath("/insights");
     return { ok: true, result: data, remaining };
   } catch (e) {

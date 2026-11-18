@@ -142,7 +142,7 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
       ) : (
         <EmptyState
           title="No items yet"
-          body={ref.aiReady ? "Read a receipt (PDF, photo or Drive link) and every line item is saved here with its price and date." : "Item tracking needs Gemini (GEMINI_API_KEY) to read receipts."}
+          body={ref.aiReady ? "Read a receipt (PDF, photo or Drive link) and every line item is saved here with its price and date." : "Item tracking needs an AI provider configured on the server to read receipts."}
           action={<ReadReceiptButton />}
         />
       )}

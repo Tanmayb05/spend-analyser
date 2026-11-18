@@ -11,7 +11,7 @@ Phases 0–13 are built and running locally. Verified:
 Import parity: the real workbook imports with all 18 months matching Excel to the cent (cash mode, trips counted as each expense).
 
 **Not yet done or verified**
-- **Gemini flows** (text entry, receipts, deep analysis) need `GEMINI_API_KEY`. The code paths are written and the quota is tested in SQL, but nothing has run against the live API yet.
+- **AI flows** (text entry, receipts, deep analysis) run on the provider chosen by `AI_PROVIDER` (`gemini` | `claude` | `openai`, default gemini) and need that provider's key. Claude passes the live smoke test (`npm run ai:smoke`); the Gemini key in `.env.local` was rejected as invalid on 2026-11-18; OpenAI is untested (no key).
 - **Deployment:** not deployed. A Supabase project and Vercel env vars are required (see README).
 - **Voice entry** uses the browser Web Speech API. It's hidden when the browser doesn't support it, and has no automated test.
 
@@ -31,7 +31,7 @@ Turn `Expense_Tracker.xlsx` (Expenses sheet: 419 rows, Jul 2025 → Dec 2026) in
 - "Paid by Friend" rows are already settled: keep `paid_by` as info only, with no balance tracking.
 - Open source: MIT license, generic default categories, self-host docs, env-driven keys.
 - Drive receipts are shared as "anyone with link", so the app fetches them directly (no Google OAuth).
-- AI = **Gemini** (Google key, $300 GCP credits) with **strict usage quotas**.
+- AI = provider-agnostic via the Vercel AI SDK (`src/lib/ai/generate.ts`); admin picks **Gemini, Claude or OpenAI** with `AI_PROVIDER`. **Strict usage quotas** apply whichever is used.
 - **Multi-currency**: USD default, all major currencies including INR, default changeable in Settings.
 - **Budgets per category per month**: a month copies last month's budget by default; editing month M applies from M onward.
 - **Trips** are excluded from normal spending by default. Each trip can opt in as a lump sum or as itemized expenses.
@@ -71,7 +71,7 @@ Row types: `expense` adds, `refund` subtracts, `income` is tracked separately. F
 ## 2. Stack
 - Next.js 15 (App Router, TS, Server Actions), Tailwind + shadcn/ui, dark theme by default (from `sample_UI.png`), Recharts.
 - Supabase: Auth (bcrypt hashing, email confirm, forgot/reset flow), Postgres + RLS, private Storage bucket for receipts.
-- `@google/genai` SDK. Models come from env: `GEMINI_MODEL_FAST` (Flash: parsing and receipts) and `GEMINI_MODEL_SMART` (Pro: analysis). Default to the latest Flash/Pro at build time.
+- Vercel AI SDK (`ai` + `@ai-sdk/google|anthropic|openai`). `getModel(tier)` in `src/lib/ai/provider.ts` picks the model; `AI_MODEL_FAST` (parsing and receipts) / `AI_MODEL_SMART` (analysis) override per-provider defaults (`GEMINI_MODEL_*` still honoured for gemini). `AI_PROVIDER=mock` gives fixtures for E2E (refused in production). `ai_usage` records provider + model per call.
   Note: the $300 credits apply to a billing-enabled GCP project, so the AI Studio key must come from that project (or use Vertex).
 - FX rates: fawazahmed0 currency-api (free, no key, 150+ currencies, historical by date), cached in an `fx_rates` table.
 - SheetJS + Papaparse for import/export; Zod schemas shared by client and server; Vitest + Playwright.
@@ -224,7 +224,7 @@ One page covers both "show all transactions for a month" and "month-on-month ana
 5. Save the transactions and `receipt_items` linked to them. The receipt file opens from the transaction via a signed URL.
 
 ### AI quotas (cost control)
-Every Gemini call goes through `consume_ai_quota()`.
+Every AI call goes through `consume_ai_quota()`.
 
 | Env var | Default | Limit |
 |---|---|---|
@@ -282,7 +282,7 @@ Remaining quota is shown in the UI and in Settings → AI. Analysis results are 
 Key files:
 - `supabase/migrations/0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`
 - `src/lib/ledger.ts` (types), `src/lib/money.ts` (Intl formatting, FX), `src/lib/installments.ts` (schedule generation)
-- `src/lib/insights/rules.ts`, `src/lib/ai/gemini.ts`, `src/lib/import/workbook.ts`
+- `src/lib/insights/rules.ts`, `src/lib/ai/generate.ts`, `src/lib/import/workbook.ts`
 - `src/app/(app)/{page,transactions,trips,plans,items,insights,settings}/…`
 - `src/components/cards/*` (KpiTile, TrendBars, Donut, BudgetBars, UpcomingList, Calendar)
 

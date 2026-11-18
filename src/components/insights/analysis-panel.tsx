@@ -62,7 +62,7 @@ export function AnalysisPanel({
         ) : null}
       </div>
       {!ready ? (
-        <p className="mt-3 text-sm text-muted">Gemini isn&apos;t configured on this server. Rule-based insights above still work.</p>
+        <p className="mt-3 text-sm text-muted">AI isn&apos;t configured on this server. Rule-based insights above still work.</p>
       ) : result ? (
         <div className="mt-5 space-y-5">
           {generatedAt ? (
@@ -105,7 +105,7 @@ export function AnalysisPanel({
         </div>
       ) : (
         <p className="mt-3 text-sm text-muted">
-          Gemini reads your monthly totals, budgets and trends and explains what stands out. Each run uses one of your {limit} monthly analyses; results are saved, so viewing them again is free.
+          The AI reads your monthly totals, budgets and trends and explains what stands out. Each run uses one of your {limit} monthly analyses; results are saved, so viewing them again is free.
         </p>
       )}
     </Card>

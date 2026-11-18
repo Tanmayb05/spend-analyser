@@ -92,7 +92,7 @@ export const HELP = {
         pace to go over.
       </p>
       <p>
-        <b>Deep analysis</b> asks Gemini to review your spending and suggest actions. It sends totals only (monthly
+        <b>Deep analysis</b> asks the AI to review your spending and suggest actions. It sends totals only (monthly
         category sums, budgets, top merchants), never individual transactions. It&apos;s limited per month to keep costs
         down, and results are saved so reopening them is free.
       </p>
@@ -144,7 +144,7 @@ export const HELP = {
   quickInsights: (
     <p>
       Automatic checks on the month: categories well above their 3-month average, single big expenses, savings-rate swings,
-      budget pace, EMIs finishing. Free and always up to date. “Deep analysis” uses Gemini for a fuller review.
+      budget pace, EMIs finishing. Free and always up to date. “Deep analysis” uses the AI for a fuller review.
     </p>
   ),
   // ---- Transactions ------------------------------------------------------------------------
@@ -198,8 +198,32 @@ export const HELP = {
   ),
   ai: (
     <p>
-      Gemini powers describe-it entry, receipt reading and deep analysis. Each account gets a monthly allowance that resets
-      on the 1st. If the server has no Gemini key, these features stay hidden.
+      The AI provider (Gemini, Claude or OpenAI, chosen by the server admin) powers describe-it entry, receipt reading, deep analysis, tidy-up, the unusual-spending check and Ask your data.
+      Each account gets a monthly allowance per group that resets on the 1st. If the server has no AI key, these features stay hidden.
+    </p>
+  ),
+  tidy: (
+    <>
+      <p>
+        <b>Categorise</b>: suggests a better category for rows sitting in catch-all categories (Other, Uncategorized…) or missing a subcategory. Imported rows with no category land in
+        Uncategorized, ready for this.
+      </p>
+      <p>
+        <b>Merchants</b>: merges duplicates and cleans card-statement names, and fills in default categories. <b>Item names</b>: gives the same product one name across receipts.
+      </p>
+      <p>Nothing changes until you tick and apply. Rows you have reviewed are not sent again.</p>
+    </>
+  ),
+  flags: (
+    <p>
+      An automatic check finds possible duplicates (same amount, merchant and category within 3 days) and expenses over 3× the usual for their category. The AI then explains each one
+      in a sentence, or clears it when it&apos;s clearly expected (an EMI, a trip). Each item is checked once. Dismiss hides it.
+    </p>
+  ),
+  ask: (
+    <p>
+      Ask about your own spending in plain words. The AI can only call read-only summaries of your data (monthly totals, category and merchant totals, a transaction search); it never
+      sees your whole history at once and can&apos;t change anything. Each question uses one of your monthly questions.
     </p>
   ),
   data: <p>Bring in your spreadsheet, download everything you have, or start over.</p>,
@@ -210,8 +234,9 @@ export const HELP = {
         including EMI plans.
       </p>
       <p>
-        <b>Any .xlsx / .csv</b>: needs Date, Type (expense, income or refund), Category and Amount columns. Optional:
-        Subcategory, Merchant, Description, Currency, Payment, Paid by, Trip, Notes.
+        <b>Any .xlsx / .csv</b>: needs Date, Type (expense, income or refund) and Amount columns. Optional:
+        Category, Subcategory, Merchant, Description, Currency, Payment, Paid by, Trip, Notes. Rows without a category go to
+        Uncategorized; Settings → AI tidy-up can sort them.
       </p>
       <p>You see a preview before anything is saved. Importing the same file twice adds its rows twice.</p>
     </>

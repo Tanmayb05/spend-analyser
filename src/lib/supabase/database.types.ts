@@ -23,7 +23,32 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ai_insights": {
+            "ai_flags": {
+                  Row: {
+                    "created_at": string,"dismissed": boolean,"id": string,"kind": string,"reason": string,"related_id": string | null,"transaction_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"dismissed"?: boolean,"id"?: string,"kind": string,"reason": string,"related_id"?: string | null,"transaction_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"dismissed"?: boolean,"id"?: string,"kind"?: string,"reason"?: string,"related_id"?: string | null,"transaction_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_flags_related_id_user_id_fkey"
+      columns: ["related_id","user_id"]
+isOneToOne: false
+      referencedRelation: "transactions"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "ai_flags_transaction_id_user_id_fkey"
+      columns: ["transaction_id","user_id"]
+isOneToOne: false
+      referencedRelation: "transactions"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"ai_insights": {
                   Row: {
                     "created_at": string,"id": string,"model": string | null,"result": NonNullable<Json>,"scope": NonNullable<Json>,"scope_key": string,"user_id": string
                   }
@@ -38,13 +63,13 @@ export type Database = {
                   ]
                 },"ai_usage": {
                   Row: {
-                    "created_at": string,"feature": Database["public"]['Enums']["ai_feature"],"id": number,"tokens_in": number | null,"tokens_out": number | null,"user_id": string
+                    "created_at": string,"feature": Database["public"]['Enums']["ai_feature"],"id": number,"model": string | null,"provider": string | null,"tokens_in": number | null,"tokens_out": number | null,"user_id": string
                   }
                   Insert: {
-                    "created_at"?: string,"feature": Database["public"]['Enums']["ai_feature"],"id"?: never,"tokens_in"?: number | null,"tokens_out"?: number | null,"user_id": string
+                    "created_at"?: string,"feature": Database["public"]['Enums']["ai_feature"],"id"?: never,"model"?: string | null,"provider"?: string | null,"tokens_in"?: number | null,"tokens_out"?: number | null,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"feature"?: Database["public"]['Enums']["ai_feature"],"id"?: never,"tokens_in"?: number | null,"tokens_out"?: number | null,"user_id"?: string
+                    "created_at"?: string,"feature"?: Database["public"]['Enums']["ai_feature"],"id"?: never,"model"?: string | null,"provider"?: string | null,"tokens_in"?: number | null,"tokens_out"?: number | null,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -175,17 +200,23 @@ isOneToOne: false
                     "ai_enabled"?: boolean,"base_currency"?: string,"created_at"?: string,"dashboard_mode"?: Database["public"]['Enums']["ledger_mode"],"date_format"?: string,"default_payment_method_id"?: string | null,"default_spread_months"?: number,"display_name"?: string | null,"id"?: string,"locale"?: string,"theme"?: string,"timezone"?: string,"updated_at"?: string,"week_start"?: number
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "profiles_default_payment_method_fk"
+      columns: ["default_payment_method_id","id"]
+isOneToOne: false
+      referencedRelation: "payment_methods"
+      referencedColumns: ["id","user_id"]
+    }
                   ]
                 },"receipt_items": {
                   Row: {
-                    "id": string,"item_category": string | null,"line_no": number,"merchant_id": string | null,"normalized_name": string | null,"purchased_at": string | null,"quantity": number | null,"raw_name": string,"receipt_id": string,"total_price": number | null,"transaction_id": string | null,"unit": string | null,"unit_price": number | null,"user_id": string
+                    "id": string,"item_category": string | null,"line_no": number,"merchant_id": string | null,"name_checked": boolean,"normalized_name": string | null,"purchased_at": string | null,"quantity": number | null,"raw_name": string,"receipt_id": string,"total_price": number | null,"transaction_id": string | null,"unit": string | null,"unit_price": number | null,"user_id": string
                   }
                   Insert: {
-                    "id"?: string,"item_category"?: string | null,"line_no": number,"merchant_id"?: string | null,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name": string,"receipt_id": string,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"user_id"?: string
+                    "id"?: string,"item_category"?: string | null,"line_no": number,"merchant_id"?: string | null,"name_checked"?: boolean,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name": string,"receipt_id": string,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"user_id"?: string
                   }
                   Update: {
-                    "id"?: string,"item_category"?: string | null,"line_no"?: number,"merchant_id"?: string | null,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name"?: string,"receipt_id"?: string,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"user_id"?: string
+                    "id"?: string,"item_category"?: string | null,"line_no"?: number,"merchant_id"?: string | null,"name_checked"?: boolean,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name"?: string,"receipt_id"?: string,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -261,13 +292,13 @@ isOneToOne: false
                   ]
                 },"transactions": {
                   Row: {
-                    "amount": number,"base_amount": number | null,"category_id": string,"created_at": string,"currency": string,"date": string,"description": string | null,"external_url": string | null,"fx_rate": number,"id": string,"merchant_id": string | null,"notes": string | null,"paid_by_id": string | null,"payment_method_id": string | null,"receipt_id": string | null,"source": Database["public"]['Enums']["txn_source"],"subcategory_id": string | null,"trip_id": string | null,"type": Database["public"]['Enums']["txn_type"],"updated_at": string,"user_id": string
+                    "amount": number,"base_amount": number | null,"category_checked": boolean,"category_id": string,"created_at": string,"currency": string,"date": string,"description": string | null,"external_url": string | null,"fx_rate": number,"id": string,"merchant_id": string | null,"notes": string | null,"paid_by_id": string | null,"payment_method_id": string | null,"receipt_id": string | null,"source": Database["public"]['Enums']["txn_source"],"subcategory_id": string | null,"trip_id": string | null,"type": Database["public"]['Enums']["txn_type"],"updated_at": string,"user_id": string
                   }
                   Insert: {
-                    "amount": number,"base_amount"?: never,"category_id": string,"created_at"?: string,"currency"?: string,"date": string,"description"?: string | null,"external_url"?: string | null,"fx_rate"?: number,"id"?: string,"merchant_id"?: string | null,"notes"?: string | null,"paid_by_id"?: string | null,"payment_method_id"?: string | null,"receipt_id"?: string | null,"source"?: Database["public"]['Enums']["txn_source"],"subcategory_id"?: string | null,"trip_id"?: string | null,"type": Database["public"]['Enums']["txn_type"],"updated_at"?: string,"user_id"?: string
+                    "amount": number,"base_amount"?: never,"category_checked"?: boolean,"category_id": string,"created_at"?: string,"currency"?: string,"date": string,"description"?: string | null,"external_url"?: string | null,"fx_rate"?: number,"id"?: string,"merchant_id"?: string | null,"notes"?: string | null,"paid_by_id"?: string | null,"payment_method_id"?: string | null,"receipt_id"?: string | null,"source"?: Database["public"]['Enums']["txn_source"],"subcategory_id"?: string | null,"trip_id"?: string | null,"type": Database["public"]['Enums']["txn_type"],"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "amount"?: number,"base_amount"?: never,"category_id"?: string,"created_at"?: string,"currency"?: string,"date"?: string,"description"?: string | null,"external_url"?: string | null,"fx_rate"?: number,"id"?: string,"merchant_id"?: string | null,"notes"?: string | null,"paid_by_id"?: string | null,"payment_method_id"?: string | null,"receipt_id"?: string | null,"source"?: Database["public"]['Enums']["txn_source"],"subcategory_id"?: string | null,"trip_id"?: string | null,"type"?: Database["public"]['Enums']["txn_type"],"updated_at"?: string,"user_id"?: string
+                    "amount"?: number,"base_amount"?: never,"category_checked"?: boolean,"category_id"?: string,"created_at"?: string,"currency"?: string,"date"?: string,"description"?: string | null,"external_url"?: string | null,"fx_rate"?: number,"id"?: string,"merchant_id"?: string | null,"notes"?: string | null,"paid_by_id"?: string | null,"payment_method_id"?: string | null,"receipt_id"?: string | null,"source"?: Database["public"]['Enums']["txn_source"],"subcategory_id"?: string | null,"trip_id"?: string | null,"type"?: Database["public"]['Enums']["txn_type"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -339,7 +370,15 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "budgets_for":
+            "ai_quota_group":
+{ Args: { "f": Database["public"]['Enums']["ai_feature"] }; Returns: string
+                           },
+"anomaly_candidates":
+{ Args: { "p_from": string,"p_min_amount"?: number,"p_to": string }; Returns: {
+              "amount": number,"category": string,"currency": string,"date": string,"description": string,"has_plan": boolean,"kind": string,"merchant": string,"related_date": string,"related_id": string,"transaction_id": string,"trip": string,"typical": number
+            }[]
+                           },
+"budgets_for":
 { Args: { "p_month": string }; Returns: {
               "amount": number,"category_id": string,"effective_month": string
             }[]
@@ -383,7 +422,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "ai_feature": "analysis"|"parse_text"|"parse_receipt"|"transcribe","category_kind": "expense"|"income","ledger_mode": "normalized"|"cash","plan_kind": "spread"|"emi","receipt_status": "pending"|"parsed"|"failed","trip_mode": "excluded"|"lump_sum"|"itemized","txn_source": "manual"|"text"|"receipt"|"voice"|"import","txn_type": "expense"|"income"|"refund"
+            "ai_feature": "analysis"|"parse_text"|"parse_receipt"|"transcribe"|"categorize"|"merchants"|"items"|"anomalies"|"chat","category_kind": "expense"|"income","ledger_mode": "normalized"|"cash","plan_kind": "spread"|"emi","receipt_status": "pending"|"parsed"|"failed","trip_mode": "excluded"|"lump_sum"|"itemized","txn_source": "manual"|"text"|"receipt"|"voice"|"import","txn_type": "expense"|"income"|"refund"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -503,7 +542,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "ai_feature": ["analysis", "parse_text", "parse_receipt", "transcribe"],"category_kind": ["expense", "income"],"ledger_mode": ["normalized", "cash"],"plan_kind": ["spread", "emi"],"receipt_status": ["pending", "parsed", "failed"],"trip_mode": ["excluded", "lump_sum", "itemized"],"txn_source": ["manual", "text", "receipt", "voice", "import"],"txn_type": ["expense", "income", "refund"]
+            "ai_feature": ["analysis", "parse_text", "parse_receipt", "transcribe", "categorize", "merchants", "items", "anomalies", "chat"],"category_kind": ["expense", "income"],"ledger_mode": ["normalized", "cash"],"plan_kind": ["spread", "emi"],"receipt_status": ["pending", "parsed", "failed"],"trip_mode": ["excluded", "lump_sum", "itemized"],"txn_source": ["manual", "text", "receipt", "voice", "import"],"txn_type": ["expense", "income", "refund"]
           }
         }
 } as const

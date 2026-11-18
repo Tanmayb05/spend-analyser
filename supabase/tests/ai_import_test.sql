@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(11);
+select plan(14);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'q1@test.dev'),
@@ -24,6 +24,14 @@ select is((select remaining from public.consume_ai_quota('00000000-0000-0000-000
 select throws_ok(
   $$ select * from public.consume_ai_quota('00000000-0000-0000-0000-0000000000a2', 'parse_text', 5, 3) $$,
   'P0001', 'AI_GLOBAL_LIMIT', 'instance-wide daily cap applies across users');
+
+-- provider/model are recorded per call (AI_PROVIDER switch)
+select has_column('public', 'ai_usage', 'provider', 'ai_usage records the provider');
+select has_column('public', 'ai_usage', 'model', 'ai_usage records the model');
+select lives_ok(
+  $$ update public.ai_usage set provider = 'claude', model = 'claude-haiku-5-5', tokens_in = 10, tokens_out = 5
+     where user_id = '00000000-0000-0000-0000-0000000000a1' $$,
+  'service role can stamp provider and model');
 
 -- import bundle (atomic, names resolved)
 set local role authenticated;

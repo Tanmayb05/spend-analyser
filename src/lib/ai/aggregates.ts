@@ -11,7 +11,7 @@ import type { AnalysisScope } from "@/app/(app)/ai/actions";
 
 const SPAN = { month: 1, quarter: 3, year: 12 } as const;
 
-/** Compact, aggregate-only snapshot sent to Gemini (no individual transactions or notes). */
+/** Compact, aggregate-only snapshot sent to the LLM (no individual transactions or notes). */
 export async function buildAnalysisInput(scope: AnalysisScope) {
   const ref = await getReferenceData();
   const span = SPAN[scope.scope];

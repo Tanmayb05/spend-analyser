@@ -51,3 +51,6 @@ next-env.d.ts
 Expense_Tracker.xlsx
 *.xlsx
 sample_UI.png
+
+# receipt eval set: real personal receipts + labels, never commit
+/evals/

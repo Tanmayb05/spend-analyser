@@ -16,7 +16,7 @@ import { parseReceiptAction, saveReceiptAction, type ReceiptDraft } from "@/app/
 const MAX = 10 * 1024 * 1024;
 const CURRENCIES = allCurrencies();
 
-/** Upload / photo / Drive link → Gemini extraction → review → save as one or split transactions. */
+/** Upload / photo / Drive link → LLM extraction → review → save as one or split transactions. */
 export function ReceiptFlow({ onDone }: { onDone: () => void }) {
   const app = useAppData();
   const [draft, setDraft] = useState<ReceiptDraft | null>(null);

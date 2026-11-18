@@ -8,7 +8,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import { formatMoney } from "@/lib/money";
-import { buildBundle, type ImportReport, type Rows } from "@/lib/import/workbook";
+import { buildBundle, UNCATEGORIZED, UNCATEGORIZED_INCOME, type ImportReport, type Rows } from "@/lib/import/workbook";
 import { importBundle } from "@/app/(app)/settings/data/actions";
 import { HELP } from "@/lib/help";
 
@@ -54,9 +54,13 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
         return;
       }
       toast.success(`Imported ${res.transactions} transactions and ${res.plans} installment plans`);
+      const parked = report!.bundle.transactions.filter((t) => t.category === UNCATEGORIZED || t.category === UNCATEGORIZED_INCOME).length;
       setSheets(null);
       setFileName(null);
-      router.push("/");
+      if (parked) {
+        toast.info(`${parked} row${parked === 1 ? "" : "s"} had no category and went to Uncategorized.`, { description: "AI tidy-up can suggest categories for them." });
+        router.push("/settings/tidy");
+      } else router.push("/");
     });
   }
 

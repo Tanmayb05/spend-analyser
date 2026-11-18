@@ -16,4 +16,8 @@ The Swipe action of the touchpad, or the back action of the mouse, or the back p
 
 8. Create a system for Scanning the Receipts and somehow adding the data to new transactions or existing transactions
 
-9.
+9. Add Voice transactions better it. Add Whispr Flo integration
+
+10. Credit Score api.
+
+

@@ -8,7 +8,7 @@ import { useSpeech } from "@/hooks/use-speech";
 import { cn } from "@/lib/utils";
 import { parseTextAction, type TxnPreset } from "@/app/(app)/ai/actions";
 
-/** "Describe it" box: text or voice → Gemini → prefilled transaction(s). */
+/** "Describe it" box: text or voice → LLM → prefilled transaction(s). */
 export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[], note: string | null) => void; onReceipt: () => void }) {
   const app = useAppData();
   const [text, setText] = useState("");

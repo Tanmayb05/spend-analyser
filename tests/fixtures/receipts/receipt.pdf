@@ -1,0 +1,47 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 420 820] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+5 0 obj
+<< /Length 489 >>
+stream
+BT /F1 14 Tf 60 760 Td 18 TL
+(FRESH MART #204) Tj T*
+(123 Main St, Cincinnati OH) Tj T*
+(11/12/2026  14:32) Tj T*
+() Tj T*
+(WHOLE MILK 1GAL        4.29) Tj T*
+(BANANAS 2.1LB @0.59    1.24) Tj T*
+(SOURDOUGH BREAD        5.49) Tj T*
+(PAPER TOWELS 6PK       8.99) Tj T*
+(CHEDDAR CHEESE 8OZ     3.79) Tj T*
+() Tj T*
+(SUBTOTAL              23.80) Tj T*
+(TAX 7%                 1.67) Tj T*
+(TOTAL                 25.47) Tj T*
+(VISA ****1234         25.47) Tj T*
+(THANK YOU FOR SHOPPING) Tj T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000309 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+849
+%%EOF

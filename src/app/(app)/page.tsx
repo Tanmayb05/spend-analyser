@@ -10,6 +10,9 @@ import { PeriodPicker } from "@/components/transactions/period-picker";
 import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { SpendDonut, type AttentionItem } from "@/components/dashboard/spend-donut";
 import { AddFirst } from "@/components/dashboard/add-first";
+import { DigestCard } from "@/components/dashboard/digest-card";
+import { requireUser } from "@/lib/supabase/server";
+import { getAiUsage } from "@/lib/ai/usage";
 import { HELP } from "@/lib/help";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
@@ -144,6 +147,17 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const nextRatio = nextBudget > 0 ? committedNext / nextBudget : 0;
 
   const insights = ruleInsights({ rows, series, month, today, budgets: resolved, totals: bTotals, categoryName: catName, currency });
+
+  // last month in review: only on the current month, only if last month had activity
+  const lastMonth = addMonths(thisMonth, -1);
+  const lastActive = isCurrent && series.some((s) => s.month === lastMonth && (s.spent > 0 || s.income > 0));
+  const [digestRow, usage] = lastActive
+    ? await Promise.all([
+        (await requireUser()).supabase.from("ai_insights").select("result").eq("scope_key", `month|${lastMonth}`).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        getAiUsage(),
+      ])
+    : [null, null];
+  const digest = (digestRow?.data?.result as { headline: string; summary: string } | undefined) ?? null;
   // no alert banner for months that have not started: nothing has happened yet to warn about
   const alert = month > thisMonth ? undefined : insights.find((i) => i.tone === "bad" || i.tone === "warn");
 
@@ -212,6 +226,8 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           </span>
         </Link>
       ) : null}
+
+      {lastActive && usage ? <DigestCard month={lastMonth} label={formatMonth(lastMonth)} cached={digest} ready={ref.aiReady} left={usage.analysis.left} /> : null}
 
       <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
         {/* key: switching month remounts the card so the selected day resets */}
