@@ -37,6 +37,8 @@ export default async function Page() {
               due_day: p.due_day,
               opening_balance: Number(p.opening_balance),
               tracking_from: p.tracking_from,
+              min_due_pct: p.min_due_pct === null ? null : Number(p.min_due_pct),
+              min_due_floor: p.min_due_floor === null ? null : Number(p.min_due_floor),
             },
           ]),
         )}

@@ -195,15 +195,28 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"payment_methods": {
+                },"notification_state": {
                   Row: {
-                    "archived": boolean,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"name": string,"opening_balance": number,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
+                    "dismissed_at": string | null,"notice_id": string,"read_at": string | null,"snoozed_until": string | null,"updated_at": string,"user_id": string
                   }
                   Insert: {
-                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"name": string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                    "dismissed_at"?: string | null,"notice_id": string,"read_at"?: string | null,"snoozed_until"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"name"?: string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                    "dismissed_at"?: string | null,"notice_id"?: string,"read_at"?: string | null,"snoozed_until"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"payment_methods": {
+                  Row: {
+                    "archived": boolean,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"min_due_floor": number | null,"min_due_pct": number | null,"name": string,"opening_balance": number,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name": string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                  }
+                  Update: {
+                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name"?: string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     

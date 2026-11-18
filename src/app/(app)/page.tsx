@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarClock, Sparkles } from "lucide-react";
+import { ArrowUpRight, CalendarClock } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { NetBars } from "@/components/charts/net-bars";
@@ -10,9 +10,6 @@ import { PeriodPicker } from "@/components/transactions/period-picker";
 import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { SpendDonut, type AttentionItem } from "@/components/dashboard/spend-donut";
 import { AddFirst } from "@/components/dashboard/add-first";
-import { DigestCard } from "@/components/dashboard/digest-card";
-import { requireUser } from "@/lib/supabase/server";
-import { getAiUsage } from "@/lib/ai/usage";
 import { HELP } from "@/lib/help";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
@@ -20,7 +17,6 @@ import { addMonths, formatMonth, isValidMonthParam, monthEnd, monthStart, relati
 import { formatMoney, formatPercent, pctChange } from "@/lib/money";
 import { budgetStatus, budgetTotals, budgetsForMonth } from "@/lib/analytics/budgets";
 import { byCategory, daysLeft, lastMonths, monthlySeries, topWithOther, totalsFor, upcoming, type Scope } from "@/lib/analytics/summary";
-import { ruleInsights } from "@/lib/analytics/insights";
 import { cn, round2 } from "@/lib/utils";
 
 export const metadata = { title: "Overview" };
@@ -146,20 +142,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const nextBudget = budgetTotals(budgetsForMonth(ref.budgets, categories, nextMonth), categories).total;
   const nextRatio = nextBudget > 0 ? committedNext / nextBudget : 0;
 
-  const insights = ruleInsights({ rows, series, month, today, budgets: resolved, totals: bTotals, categoryName: catName, currency });
-
-  // last month in review: only on the current month, only if last month had activity
-  const lastMonth = addMonths(thisMonth, -1);
-  const lastActive = isCurrent && series.some((s) => s.month === lastMonth && (s.spent > 0 || s.income > 0));
-  const [digestRow, usage] = lastActive
-    ? await Promise.all([
-        (await requireUser()).supabase.from("ai_insights").select("result").eq("scope_key", `month|${lastMonth}`).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        getAiUsage(),
-      ])
-    : [null, null];
-  const digest = (digestRow?.data?.result as { headline: string; summary: string } | undefined) ?? null;
-  // no alert banner for months that have not started: nothing has happened yet to warn about
-  const alert = month > thisMonth ? undefined : insights.find((i) => i.tone === "bad" || i.tone === "warn");
+  // rule insights and the last-month review now live in the notifications panel (src/lib/data/notifications.ts)
 
   return (
     <>
@@ -216,18 +199,6 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           },
         ]}
       />
-
-      {alert ? (
-        <Link href="/insights" className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm transition hover:bg-surface-2">
-          <Sparkles size={16} className={cn("shrink-0", alert.tone === "bad" ? "text-bad" : "text-warn")} />
-          <span className="min-w-0 flex-1">{alert.text}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 text-muted">
-            All insights <ArrowUpRight size={14} />
-          </span>
-        </Link>
-      ) : null}
-
-      {lastActive && usage ? <DigestCard month={lastMonth} label={formatMonth(lastMonth)} cached={digest} ready={ref.aiReady} left={usage.analysis.left} /> : null}
 
       <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
         {/* key: switching month remounts the card so the selected day resets */}

@@ -1,20 +1,34 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNotifications } from "./notifications-provider";
+import { useNoticeList, useNotifications } from "./notifications-provider";
+
+type Variant = "sidebar" | "header";
 
 /** Bell with an unread badge. "sidebar" matches the desktop icon rail; "header" is the compact mobile top-bar button. */
-export function NotificationBell({ variant, tip }: { variant: "sidebar" | "header"; tip?: ReactNode }) {
-  const { unread, notices, setOpen } = useNotifications();
-  const urgent = notices.some((n) => !n.read && n.tone === "bad");
-  const label = unread ? `Notifications, ${unread} unread` : "Notifications";
+export function NotificationBell({ variant, tip }: { variant: Variant; tip?: ReactNode }) {
+  return (
+    <Suspense fallback={<BellButton variant={variant} tip={tip} unread={0} urgent={false} />}>
+      <LiveBell variant={variant} tip={tip} />
+    </Suspense>
+  );
+}
+
+function LiveBell({ variant, tip }: { variant: Variant; tip?: ReactNode }) {
+  const { notices, unread } = useNoticeList();
+  const urgent = notices.some((n) => !n.read && !n.hidden && n.tone === "bad");
+  return <BellButton variant={variant} tip={tip} unread={unread} urgent={urgent} />;
+}
+
+function BellButton({ variant, tip, unread, urgent }: { variant: Variant; tip?: ReactNode; unread: number; urgent: boolean }) {
+  const { setOpen } = useNotifications();
   return (
     <button
       type="button"
       onClick={() => setOpen(true)}
-      aria-label={label}
+      aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
       className={cn(
         "group relative grid place-items-center text-muted transition hover:text-text",
         variant === "sidebar" ? "h-12 w-12 rounded-2xl hover:bg-surface-3" : "h-10 w-10 rounded-full border border-border bg-surface hover:bg-surface-2",

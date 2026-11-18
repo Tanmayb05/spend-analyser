@@ -23,6 +23,8 @@ const cardSchema = z.object({
   due_day: day,
   opening_balance: z.number().min(0).max(1e12),
   tracking_from: isoDate.nullable(),
+  min_due_pct: z.number().positive("Minimum % must be above 0").max(100, "Minimum % can't exceed 100").nullable().optional(),
+  min_due_floor: z.number().min(0).max(1e12).nullable().optional(),
 });
 export type CardSettingsInput = z.infer<typeof cardSchema>;
 

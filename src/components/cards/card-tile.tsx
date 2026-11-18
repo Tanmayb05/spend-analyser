@@ -81,6 +81,11 @@ export function CardTile({ data, payments, settings, currency, today }: { data: 
                   ? s.amount > 0 ? `Paid · ${money(s.paid)}` : "Nothing to pay"
                   : `${money(s.remaining)} left · due ${formatDay(s.due)} (${relativeDays(s.due, today)})`}
               </p>
+              {s.status !== "paid" && s.minDue > 0 ? (
+                <p className={cn("text-xs", s.paid >= s.minDue ? "text-muted" : s.status === "overdue" ? "text-bad" : "text-muted")}>
+                  {s.paid >= s.minDue ? `Minimum ${money(s.minDue)} covered · pay in full to avoid interest` : `Minimum due ~${money(s.minDue)}${s.paid > 0 ? ` · ${money(s.minDue - s.paid)} more to cover it` : ""}`}
+                </p>
+              ) : null}
             </div>
             {s.status === "paid" ? <Badge tone="good">Paid</Badge> : <Badge tone={s.status === "overdue" ? "bad" : "warn"}>{s.status === "overdue" ? "Overdue" : "Due"}</Badge>}
           </div>

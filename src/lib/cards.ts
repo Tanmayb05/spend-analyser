@@ -14,7 +14,31 @@ export type CardConfig = {
   opening_balance: number;
   /** charges before this date are assumed to be inside opening_balance; null = count everything */
   tracking_from: ISODate | null;
+  /** minimum-due rule; resolved from the card's settings or the currency default (see minDueRule) */
+  min_due?: MinDueRule;
 };
+
+/** Minimum amount due: pct of the non-EMI part of the bill (at least `floor`), plus 100% of EMI installments billed. */
+export type MinDueRule = { pct: number; floor: number };
+
+/**
+ * Banks don't share one formula. Indian issuers commonly bill max(5% of the non-EMI balance, ~₹200) plus all EMIs;
+ * US issuers roughly 1-3% plus interest and fees, floored at $25-35. We have no interest/fee data, so the defaults
+ * lean high to warn early. Card settings override either part.
+ */
+export function minDueRule(currency: string, pct?: number | null, floor?: number | null): MinDueRule {
+  const inr = currency === "INR";
+  return { pct: pct ?? (inr ? 5 : 3), floor: floor ?? (inr ? 200 : 25) };
+}
+
+/** min(bill, max(pct x (bill - EMI billed), floor) + EMI billed). Never above the bill, 0 for an empty bill. */
+export function minimumDue(amount: number, emiBilled: number, rule: MinDueRule): number {
+  if (amount <= 0) return 0;
+  const emi = Math.min(Math.max(0, emiBilled), amount);
+  const base = Math.max(0, amount - emi);
+  const part = base > 0 ? Math.max((rule.pct / 100) * base, rule.floor) : 0;
+  return round2(Math.min(amount, part + emi));
+}
 
 /** One transaction on the card. `amount` is signed: purchases add, refunds and credits subtract. */
 export type CardCharge = {
@@ -32,6 +56,10 @@ export type Statement = {
   due: ISODate;
   /** what the statement asks for: billed balance at closing (never below 0) */
   amount: number;
+  /** EMI installments that fell due in this statement's cycle (billed in full, part of the minimum) */
+  emiBilled: number;
+  /** estimated minimum amount due (see minimumDue) */
+  minDue: number;
   /** payments made after closing, up to today */
   paid: number;
   remaining: number;
@@ -125,7 +153,12 @@ export function summarizeCard(card: CardConfig, charges: CardCharge[], payments:
       const paid = round2(payments.filter((p) => p.date > lastClosing && p.date <= today).reduce((a, p) => a + p.amount, 0));
       const remaining = round2(Math.max(0, amount - paid));
       const due = dueFor(lastClosing, dueDay);
-      statement = { closing: lastClosing, due, amount: round2(amount), paid, remaining, status: remaining <= 0 ? "paid" : today <= due ? "due" : "overdue" };
+      const prevClosing = dayIn(addMonths(monthStart(lastClosing), -1), card.statement_day);
+      const emiBilled = round2(
+        charges.filter((c) => counts(card, c.date)).reduce((a, c) => a + (c.emi ?? []).filter((i) => i.due_date > prevClosing && i.due_date <= lastClosing).reduce((x, i) => x + i.amount, 0), 0),
+      );
+      const minDue = minimumDue(amount, emiBilled, card.min_due ?? minDueRule(""));
+      statement = { closing: lastClosing, due, amount: round2(amount), emiBilled, minDue, paid, remaining, status: remaining <= 0 ? "paid" : today <= due ? "due" : "overdue" };
     }
   }
 

@@ -1,7 +1,7 @@
 import "server-only";
 import { requireUser } from "@/lib/supabase/server";
 import { getReferenceData } from "@/lib/data/reference";
-import { summarizeCard, type CardCharge, type CardConfig, type CardPayment, type CardSummary } from "@/lib/cards";
+import { minDueRule, summarizeCard, type CardCharge, type CardConfig, type CardPayment, type CardSummary } from "@/lib/cards";
 
 type TxnRow = {
   id: string;
@@ -51,6 +51,7 @@ export async function getCardData(): Promise<CardData[]> {
       due_day: c.due_day,
       opening_balance: Number(c.opening_balance),
       tracking_from: c.tracking_from,
+      min_due: minDueRule(ref.profile.base_currency, c.min_due_pct === null ? null : Number(c.min_due_pct), c.min_due_floor === null ? null : Number(c.min_due_floor)),
     };
     const charges: CardCharge[] = txns
       .filter((t) => t.payment_method_id === c.id)

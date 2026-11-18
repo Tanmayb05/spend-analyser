@@ -36,7 +36,7 @@ select is((select count(*) from public.card_payments), 0::bigint, 'other users c
 
 reset role;
 delete from public.payment_methods where id = '00000000-0000-0000-0000-00000000ca01';
-select is((select count(*) from public.card_payments), 0::bigint, 'deleting the card removes its payments');
+select is((select count(*) from public.card_payments where user_id = '00000000-0000-0000-0000-0000000000c1'), 0::bigint, 'deleting the card removes its payments');
 
 select * from finish();
 rollback;

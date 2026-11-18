@@ -87,6 +87,8 @@ export async function CardsView() {
                 due_day: pm.due_day,
                 opening_balance: Number(pm.opening_balance),
                 tracking_from: pm.tracking_from,
+                min_due_pct: pm.min_due_pct === null ? null : Number(pm.min_due_pct),
+                min_due_floor: pm.min_due_floor === null ? null : Number(pm.min_due_floor),
               }}
             />
           );

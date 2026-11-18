@@ -7,6 +7,7 @@ import { Field, Input } from "@/components/ui/field";
 import { useAction } from "@/hooks/use-action";
 import { addCardPayment, saveCardSettings } from "@/app/(app)/transactions/card-actions";
 import { formatMoney } from "@/lib/money";
+import { minDueRule } from "@/lib/cards";
 
 export type CardSettings = {
   id: string;
@@ -17,6 +18,8 @@ export type CardSettings = {
   due_day: number | null;
   opening_balance: number;
   tracking_from: string | null;
+  min_due_pct: number | null;
+  min_due_floor: number | null;
 };
 
 const num = (s: string) => (s.trim() === "" ? null : Number(s));
@@ -69,9 +72,14 @@ export function CardSettingsSheet({ card, open, onClose, currency, today }: { ca
     due: card.due_day?.toString() ?? "",
     opening: card.opening_balance ? card.opening_balance.toString() : "",
     from: card.tracking_from ?? today,
+    minPct: card.min_due_pct?.toString() ?? "",
+    minFloor: card.min_due_floor?.toString() ?? "",
   });
+  const defaults = minDueRule(currency);
   const a = useAction();
-  const valid = !on || (Number(v.limit) > 0 && dayOk(v.statement) && dayOk(v.due) && (v.opening === "" || Number(v.opening) >= 0));
+  const pctOk = v.minPct.trim() === "" || (Number(v.minPct) > 0 && Number(v.minPct) <= 100);
+  const floorOk = v.minFloor.trim() === "" || Number(v.minFloor) >= 0;
+  const valid = !on || (Number(v.limit) > 0 && dayOk(v.statement) && dayOk(v.due) && (v.opening === "" || Number(v.opening) >= 0) && pctOk && floorOk);
 
   return (
     <Sheet open={open} onClose={onClose} title={card.name}>
@@ -89,6 +97,8 @@ export function CardSettingsSheet({ card, open, onClose, currency, today }: { ca
                 due_day: num(v.due),
                 opening_balance: num(v.opening ?? "") ?? 0,
                 tracking_from: v.from || null,
+                min_due_pct: num(v.minPct),
+                min_due_floor: num(v.minFloor),
               }),
             onClose,
           );
@@ -102,6 +112,19 @@ export function CardSettingsSheet({ card, open, onClose, currency, today }: { ca
           </span>
         </label>
         {on ? <CardFields v={v} set={(p) => setV({ ...v, ...p })} currency={currency} showOpening /> : null}
+        {on ? (
+          <div className="grid grid-cols-2 gap-3">
+            <p className="col-span-2 text-sm text-muted">
+              Minimum due: the larger of a % of the bill or a fixed floor, plus all EMI installments. Copy these from your card terms, or leave blank for {defaults.pct}% / {formatMoney(defaults.floor, currency, { whole: true })}.
+            </p>
+            <Field label="Minimum due %" htmlFor="cc-minpct">
+              <Input id="cc-minpct" inputMode="decimal" type="number" min="0" max="100" step="any" placeholder={String(defaults.pct)} value={v.minPct} onChange={(e) => setV({ ...v, minPct: e.target.value })} />
+            </Field>
+            <Field label={`Minimum floor (${currency})`} htmlFor="cc-minfloor">
+              <Input id="cc-minfloor" inputMode="decimal" type="number" min="0" step="any" placeholder={String(defaults.floor)} value={v.minFloor} onChange={(e) => setV({ ...v, minFloor: e.target.value })} />
+            </Field>
+          </div>
+        ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="accent" disabled={!valid || a.pending}>Save</Button>

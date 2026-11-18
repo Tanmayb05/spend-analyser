@@ -14,15 +14,16 @@ import { useCloseOverlays } from "@/hooks/use-close-overlays";
 import { NotificationsProvider } from "@/components/notifications/notifications-provider";
 import { NotificationBell } from "@/components/notifications/bell";
 import { NotificationPanel } from "@/components/notifications/notification-panel";
+import type { Notice } from "@/lib/notifications/types";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, notices }: { children: ReactNode; notices: Promise<Notice[]> }) {
   useCloseOverlays();
   const pathname = usePathname();
   const { openTxnSheet } = useAppData();
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <NotificationsProvider>
+    <NotificationsProvider source={notices}>
     <div className="min-h-dvh lg:flex lg:gap-4 lg:p-4">
       {/* Desktop sidebar */}
       <aside className="sticky top-4 z-40 hidden h-[calc(100dvh-2rem)] w-20 shrink-0 flex-col items-center rounded-[28px] border border-border bg-surface py-5 lg:flex">
