@@ -112,7 +112,7 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
   );
 }
 
-/** "EMI 2/12" badge; links to that plan in the Plans & EMIs tab. */
+/** "EMI 2/12" badge; links to that plan in the Plans or EMIs tab. */
 export function PlanBadge({ row }: { row: LedgerRow }) {
   const badge = (
     <Badge tone={row.plan_kind === "emi" ? "warn" : "accent"} className="px-2 py-0">
@@ -122,7 +122,7 @@ export function PlanBadge({ row }: { row: LedgerRow }) {
   );
   if (!row.txn_id) return <span className="shrink-0">{badge}</span>;
   return (
-    <Link href={`/transactions?tab=plans#plan-${row.txn_id}`} aria-label={`View plan: ${row.plan_kind === "emi" ? "EMI" : "Spread"} ${row.installment_seq} of ${row.installment_count}`} className="pointer-events-auto shrink-0 rounded-full hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent">
+    <Link href={`/transactions?tab=${row.plan_kind === "emi" ? "emis" : "plans"}#plan-${row.txn_id}`} aria-label={`View plan: ${row.plan_kind === "emi" ? "EMI" : "Spread"} ${row.installment_seq} of ${row.installment_count}`} className="pointer-events-auto shrink-0 rounded-full hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent">
       {badge}
     </Link>
   );

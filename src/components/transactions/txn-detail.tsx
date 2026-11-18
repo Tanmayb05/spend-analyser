@@ -64,7 +64,7 @@ export function TxnDetail({ row, onClose }: { row: LedgerRowWithLink | null; onC
             {foreign ? <Item label="Original amount">{formatMoney(Number(row.orig_amount), row.orig_currency!)}</Item> : null}
             {row.installment_seq && row.txn_id ? (
               <Item label="Plan">
-                <Link href={`/transactions?tab=plans#plan-${row.txn_id}`} className="text-accent hover:underline">
+                <Link href={`/transactions?tab=${row.plan_kind === "emi" ? "emis" : "plans"}#plan-${row.txn_id}`} className="text-accent hover:underline">
                   Payment {row.installment_seq} of {row.installment_count} · view plan
                 </Link>
               </Item>

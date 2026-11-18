@@ -99,6 +99,8 @@ function blank(app: ReturnType<typeof useAppData>, preset?: Record<string, strin
     repeat: false,
     repeat_count: String(DEFAULT_BIWEEKLY),
     ...(preset as Partial<FormValues>),
+    // presets are strings; "1" turns "Spread this cost" on (Plans / EMIs empty states)
+    ...(preset?.spread ? { spread: preset.spread === "1" } : {}),
   };
 }
 

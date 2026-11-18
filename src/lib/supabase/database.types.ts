@@ -106,6 +106,25 @@ isOneToOne: false
       referencedColumns: ["id","user_id"]
     }
                   ]
+                },"card_payments": {
+                  Row: {
+                    "amount": number,"created_at": string,"date": string,"id": string,"note": string | null,"payment_method_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "amount": number,"created_at"?: string,"date": string,"id"?: string,"note"?: string | null,"payment_method_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"date"?: string,"id"?: string,"note"?: string | null,"payment_method_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "card_payments_payment_method_id_user_id_fkey"
+      columns: ["payment_method_id","user_id"]
+isOneToOne: false
+      referencedRelation: "payment_methods"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
                 },"categories": {
                   Row: {
                     "archived": boolean,"color": string | null,"created_at": string,"description": string | null,"icon": string | null,"id": string,"is_core": boolean,"kind": Database["public"]['Enums']["category_kind"],"name": string,"sort_order": number,"user_id": string
@@ -178,13 +197,13 @@ isOneToOne: false
                   ]
                 },"payment_methods": {
                   Row: {
-                    "archived": boolean,"id": string,"name": string,"sort_order": number,"user_id": string
+                    "archived": boolean,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"name": string,"opening_balance": number,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
                   }
                   Insert: {
-                    "archived"?: boolean,"id"?: string,"name": string,"sort_order"?: number,"user_id"?: string
+                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"name": string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"id"?: string,"name"?: string,"sort_order"?: number,"user_id"?: string
+                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"name"?: string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     

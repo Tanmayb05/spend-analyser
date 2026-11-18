@@ -59,21 +59,62 @@ export const HELP = {
   tripBreakdown: <p>The trip&apos;s spending split by type (flights, hotel, food…), biggest first.</p>,
   plans: (
     <>
-      <p>A plan splits one big cost into monthly amounts. Create one from any expense with “Spread this cost”.</p>
       <p>
-        <b>Paid upfront</b>: you paid everything at once but want it to count a bit each month, e.g. a $1,200 laptop as
-        $100 a month for 12 months. <b>EMI</b>: you really are paying it off month by month.
+        <b>Plans</b> are big purchases you paid for in full but want to count a bit each month, e.g. a $1,200 laptop
+        as $100 a month for 12 months. That keeps one expensive month from skewing your averages and budgets.
       </p>
       <p>
-        Both count monthly: a paid-upfront purchase is spread across the months you pick, and an EMI counts as each
-        installment is due.
+        To make one, add the expense, turn on <b>Spread this cost</b> and keep <b>Paid upfront</b>. Each month&apos;s part
+        then shows in Activity as “Spread 3/12”.
+      </p>
+      <p>Paying it off over time instead? That&apos;s an EMI, and lives in the EMIs tab.</p>
+    </>
+  ),
+  emis: (
+    <>
+      <p>
+        <b>EMIs</b> are purchases you&apos;re really paying off month by month (card or loan installments). Each installment
+        counts in the month it&apos;s due, so this tab shows what&apos;s still owed and which months are already spoken for.
+      </p>
+      <p>
+        To add one, add the purchase, turn on <b>Spread this cost</b> and choose <b>Paying in EMIs</b>. Installments show
+        in Activity as “EMI 2/12”.
+      </p>
+      <p>Paid in full and only want it counted gradually? Use a plan instead (Plans tab).</p>
+    </>
+  ),
+  cards: (
+    <>
+      <p>
+        Every payment method marked as a credit card, with what you owe now, your latest bill and how much of your limit
+        you&apos;re using. Purchases on the card add to what you owe; refunds lower it.
+      </p>
+      <p>
+        <b>Mark payment</b> records a bill payment. It isn&apos;t an expense (the purchases already were), so it never
+        changes your spending totals; it only lowers what&apos;s owed on the card.
+      </p>
+      <p>
+        <b>EMI</b> purchases block the full amount of your limit straight away, while the bill only includes each
+        installment as it falls due.
       </p>
     </>
   ),
+  cardUtilization: (
+    <p>
+      How much of your combined credit limit you&apos;re using. Credit scores usually reward staying under 30%, and under
+      10% is ideal. Paying before the statement date lowers the figure the bank reports.
+    </p>
+  ),
   plansCommitted: (
     <p>
-      Installments due in each of the next 12 months across all your plans. Tall bars are months that are already tight;
-      check here before taking on a new EMI.
+      How much of your plans counts in each of the next 12 months. The money is already spent; this is what will still
+      show up in those months&apos; totals.
+    </p>
+  ),
+  emisCommitted: (
+    <p>
+      EMI installments due in each of the next 12 months. Tall bars are months that are already tight; check here before
+      taking on a new EMI.
     </p>
   ),
   items: (
@@ -122,7 +163,7 @@ export const HELP = {
   ),
   upcoming: (
     <p>
-      Installments and future-dated expenses due in the next 30 days, plus what&apos;s already locked in for next month against that month&apos;s budget. Long-range commitments are on the Plans &amp; EMIs page.
+      Installments and future-dated expenses due in the next 30 days, plus what&apos;s already locked in for next month against that month&apos;s budget. Long-range commitments are in Transactions → Plans and EMIs.
     </p>
   ),
   calendar: (
@@ -188,7 +229,7 @@ export const HELP = {
       </p>
     </>
   ),
-  payments: <p>Cards, accounts and cash you pay with. Optional on each transaction; filter by them on the Transactions page. Tap the star on one to make it the default: it is pre-selected on every new transaction.</p>,
+  payments: <p>Cards, accounts and cash you pay with. Optional on each transaction; filter by them on the Transactions page. Tap the star on one to make it the default: it is pre-selected on every new transaction. Tap the card icon to mark one as a credit card with its limit and billing days.</p>,
   people: <p>Who paid for an expense, you or someone else. For your information only: no balances or debts are tracked.</p>,
   merchants: (
     <p>

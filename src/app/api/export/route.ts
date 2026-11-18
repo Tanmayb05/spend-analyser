@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const stamp = new Date().toISOString().slice(0, 10);
 
   if (format === "json") {
-    const tables = ["profiles", "categories", "subcategories", "budgets", "payment_methods", "people", "merchants", "trips", "receipts", "transactions", "spread_plans", "installments", "receipt_items"] as const;
+    const tables = ["profiles", "categories", "subcategories", "budgets", "payment_methods", "people", "merchants", "trips", "receipts", "transactions", "spread_plans", "installments", "receipt_items", "card_payments"] as const;
     const backup: Record<string, unknown[]> = {};
     for (const t of tables) backup[t] = await fetchAll((a, b) => supabase.from(t).select("*").range(a, b));
     return new NextResponse(JSON.stringify({ version: 1, exported_at: new Date().toISOString(), ...backup }, null, 2), {

@@ -8,7 +8,9 @@ import { Breakdown } from "@/components/transactions/breakdown";
 import { IncomeKpiStrip, PeriodKpiStrip } from "@/components/transactions/period-kpis";
 import { SpendDonut } from "@/components/dashboard/spend-donut";
 import { TxnTabs } from "@/components/transactions/txn-tabs";
+import { TabIntro, parseTxnTab } from "@/components/transactions/tab-intro";
 import { PlansView } from "@/components/plans/plans-view";
+import { CardsView } from "@/components/cards/cards-view";
 import { AddFirst } from "@/components/dashboard/add-first";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger, getTransactionExtras } from "@/lib/data/ledger";
@@ -27,16 +29,17 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   const currency = ref.profile.base_currency;
   const today = ref.today;
 
-  // Activity (the ledger) or Plans & EMIs (the commitments behind its installment rows)
-  const tab = sp.tab === "plans" ? "plans" : "activity";
-  if (tab === "plans") {
-    const pk = sp.pk === "spread" || sp.pk === "emi" ? sp.pk : "all";
+  // Activity (the ledger), Plans (paid-upfront spreads), EMIs (installment purchases) or Credit cards (balances and bills).
+  // Old `?tab=plans&pk=emi` links resolve to the EMIs tab.
+  const tab = parseTxnTab(sp.tab, sp.pk);
+  if (tab !== "activity") {
     return (
       <>
-        <DashboardHeader title="Transactions" info={HELP.transactions} addTransaction>
-          <TxnTabs tab="plans" kind={pk} />
+        <DashboardHeader title="Transactions" info={tab === "cards" ? HELP.cards : tab === "emis" ? HELP.emis : HELP.plans} addTransaction>
+          <TxnTabs tab={tab} />
         </DashboardHeader>
-        <PlansView kind={pk} />
+        <TabIntro tab={tab} />
+        {tab === "cards" ? <CardsView /> : <PlansView kind={tab === "emis" ? "emi" : "spread"} />}
       </>
     );
   }
@@ -133,7 +136,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
 
   // the list shows everything that matches the filters: posted rows by day, scheduled ones under "Upcoming"
   const monthAll = view === "month" ? rowsInMonths(matched, month, month) : [];
-  const extras = view === "month" && tab === "activity" ? await getTransactionExtras(monthAll.map((r) => r.txn_id)) : new Map();
+  const extras = view === "month" ? await getTransactionExtras(monthAll.map((r) => r.txn_id)) : new Map();
   const withLink = (r: (typeof all)[number]) => ({ ...r, external_url: r.txn_id ? extras.get(r.txn_id)?.external_url ?? null : null, notes: r.txn_id ? extras.get(r.txn_id)?.notes ?? null : null });
   const futureMonth = month > monthStart(today);
   const displayRows = monthAll.filter((r) => futureMonth || !r.is_scheduled).map(withLink);
@@ -209,8 +212,9 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   return (
     <>
       <DashboardHeader title="Transactions" info={HELP.transactions} addTransaction>
-        <TxnTabs tab="activity" kind="all" />
+        <TxnTabs tab="activity" />
       </DashboardHeader>
+      <TabIntro tab="activity" />
       <FilterBar view={view} month={month} year={year} today={today} filters={filters} descriptions={descriptions} sort={sort} />
 
       {view === "year" ? (

@@ -6,7 +6,7 @@ import { useAppData } from "@/components/app-data";
 import { buildSuggestIndex, suggest, type SuggestItem } from "@/lib/analytics/suggest";
 import { cn } from "@/lib/utils";
 
-type Go = (patch: Record<string, string | null>) => void;
+type Go = (patch: Record<string, string | null>, opts?: { replace?: boolean }) => void;
 
 function Highlight({ text, q }: { text: string; q: string }) {
   const needle = q.trim().toLowerCase();
@@ -35,15 +35,19 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
   const items = useMemo(() => suggest(index, q), [index, q]);
   const showList = open && items.length > 0;
 
-  const push = (patch: Record<string, string | null>) => {
+  // while typing, the first debounced search adds a history entry and later ones update it,
+  // so Back skips the half-typed words; a pick, Enter, clear or blur ends the run
+  const typing = useRef(false);
+  const push = (patch: Record<string, string | null>, fromTyping = false) => {
     if ("q" in patch) pushed.current = patch.q ?? "";
-    go(patch);
+    go(patch, { replace: fromTyping && typing.current });
+    typing.current = fromTyping;
   };
 
-  // debounced free-text search (unchanged behaviour)
+  // debounced free-text search
   useEffect(() => {
     if (q === pushed.current) return;
-    const t = setTimeout(() => push({ q: q || null }), 350);
+    const t = setTimeout(() => push({ q: q || null }, true), 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
@@ -121,6 +125,7 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
           setActive(-1);
         }}
         onFocus={() => setOpen(true)}
+        onBlur={() => (typing.current = false)}
         onKeyDown={onKeyDown}
         placeholder="Search merchant, category or amount"
         className="h-11 w-full rounded-full border border-border bg-surface-2 pl-10 pr-10 text-sm outline-none focus:border-accent"

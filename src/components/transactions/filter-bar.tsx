@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { Field, Select } from "@/components/ui/field";
@@ -10,6 +9,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/components/app-data";
 import { useParamHref } from "@/components/dashboard/dashboard-header";
+import { useBackSheet, useFilterNav } from "@/hooks/use-back-nav";
 import type { TxnFilters, TxnSort } from "@/lib/analytics/filters";
 import { SearchBox } from "@/components/transactions/search-box";
 import { PeriodPicker, type PeriodView } from "@/components/transactions/period-picker";
@@ -60,19 +60,18 @@ export function FilterBar({
   sort: TxnSort;
 }) {
   const app = useAppData();
-  const router = useRouter();
   const href = useParamHref();
-  const [more, setMore] = useState(false);
+  const go = useFilterNav();
+  const more = useBackSheet<true>();
   // The sheet edits a draft; nothing is applied (or fetched) until Done. Closing the sheet discards it.
   const [draft, setDraft] = useState<Draft>(() => draftOf(filters));
   const setD = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
   const openMore = () => {
     setDraft(draftOf(filters));
-    setMore(true);
+    more.show(true);
   };
   const applyDraft = () => {
-    setMore(false);
-    go({
+    const patch = {
       type: draft.type || null,
       cat: draft.cat || null,
       sub: draft.cat ? draft.sub || null : null,
@@ -83,9 +82,12 @@ export function FilterBar({
       receipt: draft.receipt ? "1" : null,
       plan: draft.plan ? "1" : null,
       sched: draft.sched ? "1" : null,
-    });
+    };
+    if (href(patch) === href({})) return more.hide(); // nothing changed: just close
+    // the sheet's history entry becomes the filtered page, so Done is one Back step
+    more.handOff();
+    go(patch, { replace: true });
   };
-  const go = (patch: Record<string, string | null>) => router.push(href(patch), { scroll: false });
 
   const chip = (label: string, clear: Record<string, null>) => (
     <button key={label} type="button" onClick={() => go(clear)} className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent">
@@ -149,7 +151,7 @@ export function FilterBar({
         </div>
       </div>
 
-      <Sheet open={more} onClose={() => setMore(false)} title="More filters">
+      <Sheet open={more.open} onClose={more.hide} title="More filters">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Type">

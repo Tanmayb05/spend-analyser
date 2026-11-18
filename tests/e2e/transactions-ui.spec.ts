@@ -39,12 +39,13 @@ test("transactions: labeled filters, period picker, Jan–Dec bars, year view, s
   }
   await page.getByRole("button", { name: "Done" }).click();
 
-  // Activity / Plans & EMIs switch
-  await page.getByRole("radio", { name: "Plans & EMIs" }).click();
+  // Activity / Plans / EMIs / Cards switch
+  await page.getByRole("radio", { name: "Plans" }).click();
   await expect(page).toHaveURL(/tab=plans/);
-  await expect(page.getByRole("radio", { name: "EMIs" })).toBeVisible();
+  await page.getByRole("radio", { name: "EMIs" }).click();
+  await expect(page).toHaveURL(/tab=emis/);
   await page.getByRole("radio", { name: "Activity" }).click();
-  await expect(page).not.toHaveURL(/tab=plans/);
+  await expect(page).not.toHaveURL(/tab=/);
 
   // expenses read −$42.50 in the list
   await expect(page.getByText("−$42.50").first()).toBeVisible();

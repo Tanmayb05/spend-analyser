@@ -1,34 +1,25 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/segmented";
-import { useParamHref } from "@/components/dashboard/dashboard-header";
+import { useBackNavScroll, useFilterNav } from "@/hooks/use-back-nav";
+import type { TxnTab } from "@/components/transactions/tab-intro";
 
-export type TxnTab = "activity" | "plans";
-export type PlanKindParam = "all" | "spread" | "emi";
-
-/** Page-level switch beside the title: the ledger, or the plans & EMIs that generate its installment rows. */
-export function TxnTabs({ tab, kind }: { tab: TxnTab; kind: PlanKindParam }) {
-  const router = useRouter();
-  const href = useParamHref();
-  const go = (patch: Record<string, string | null>) => router.push(href(patch), { scroll: false });
+/** Page-level switch beside the title: the ledger, paid-upfront plans, EMIs, or credit-card balances. */
+export function TxnTabs({ tab }: { tab: TxnTab }) {
+  const go = useFilterNav();
+  useBackNavScroll(); // mounted on every tab, so Back restores scroll across tabs and filters
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Segmented<TxnTab>
-        ariaLabel="Transactions view"
-        value={tab}
-        onChange={(v) => go(v === "plans" ? { tab: "plans" } : { tab: null, pk: null })}
-        options={[{ value: "activity", label: "Activity" }, { value: "plans", label: "Plans & EMIs" }]}
-      />
-      {tab === "plans" ? (
-        <Segmented<PlanKindParam>
-          ariaLabel="Plan type"
-          size="sm"
-          value={kind}
-          onChange={(v) => go({ pk: v === "all" ? null : v })}
-          options={[{ value: "all", label: "All" }, { value: "spread", label: "Plans" }, { value: "emi", label: "EMIs" }]}
-        />
-      ) : null}
-    </div>
+    <Segmented<TxnTab>
+      ariaLabel="Transactions view"
+      value={tab}
+      // `pk` is the retired plan-kind filter; drop it so old links don't linger in the URL
+      onChange={(v) => go(v === "activity" ? { tab: null, pk: null } : { tab: v, pk: null })}
+      options={[
+        { value: "activity", label: "Activity" },
+        { value: "plans", label: "Plans" },
+        { value: "emis", label: "EMIs" },
+        { value: "cards", label: "Cards" },
+      ]}
+    />
   );
 }

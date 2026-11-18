@@ -7,6 +7,7 @@ import { CheckSquare, Square, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LedgerItem, type LedgerRowWithLink } from "./ledger-item";
 import { TxnDetail } from "./txn-detail";
+import { useBackSheet } from "@/hooks/use-back-nav";
 import { useAppData } from "@/components/app-data";
 import { formatDay } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
@@ -49,7 +50,7 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [pending, start] = useTransition();
-  const [detail, setDetail] = useState<LedgerRowWithLink | null>(null);
+  const detail = useBackSheet<LedgerRowWithLink>(); // Back closes the detail sheet
 
   const groups: Group[] = groupRows(rows, sort).map((g) => ({
     key: g.key,
@@ -128,7 +129,7 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
           <div className="-mx-2 rounded-3xl">
             {g.rows.map((r, i) => {
               const k = `${r.txn_id ?? r.trip_id}-${r.installment_seq ?? 0}-${i}`;
-              if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={setDetail} />;
+              if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={detail.show} />;
               const on = r.txn_id ? picked.has(r.txn_id) : false;
               return (
                 <div key={k} className={cn("flex items-center gap-1 rounded-2xl", on && "bg-accent/10")}>
@@ -145,7 +146,7 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
         </section>
       ))}
 
-      <TxnDetail row={detail} onClose={() => setDetail(null)} />
+      <TxnDetail row={detail.value} onClose={detail.hide} />
 
       {selecting ? (
         <div role="toolbar" aria-label="Bulk actions" className="sticky bottom-24 z-30 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-3 p-3 shadow-xl lg:bottom-4">

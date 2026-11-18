@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui/empty";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { SERIES } from "@/components/charts/colors";
 import { PlanRow, type PlanView } from "@/components/plans/plan-row";
+import { AddPlanButton } from "@/components/plans/add-plan-button";
 import { getReferenceData } from "@/lib/data/reference";
 import { requireUser } from "@/lib/supabase/server";
 import { addMonths, formatMonth, monthStart } from "@/lib/dates";
@@ -10,7 +11,7 @@ import { formatMoney } from "@/lib/money";
 import { round2 } from "@/lib/utils";
 import { HELP } from "@/lib/help";
 
-export type PlanKindFilter = "all" | "spread" | "emi";
+export type PlanKind = "spread" | "emi";
 
 type Row = {
   kind: "spread" | "emi";
@@ -18,8 +19,11 @@ type Row = {
   installments: { seq: number; due_date: string; amount_base: number }[];
 };
 
-/** Plans & EMIs: stats, 12-month commitment chart, active and finished lists. Used by the Transactions "Plans & EMIs" tab. */
-export async function PlansView({ kind = "all" }: { kind?: PlanKindFilter }) {
+/**
+ * One kind of plan: stats, 12-month commitment chart, active and finished lists.
+ * Transactions → Plans shows `spread` (paid upfront, counted monthly); Transactions → EMIs shows `emi` (paid off in installments).
+ */
+export async function PlansView({ kind }: { kind: PlanKind }) {
   const ref = await getReferenceData();
   const { supabase } = await requireUser();
   const { data } = await supabase
@@ -27,7 +31,9 @@ export async function PlansView({ kind = "all" }: { kind?: PlanKindFilter }) {
     .select("kind, transactions(id, description, category_id, base_amount, merchants(name)), installments(seq, due_date, amount_base)")
     .returns<Row[]>();
   const today = ref.today;
-  const rowsAll = (data ?? []).filter((r) => kind === "all" || r.kind === kind);
+  const rowsAll = (data ?? []).filter((r) => r.kind === kind);
+  const emi = kind === "emi";
+  const noun = emi ? "EMIs" : "plans";
   const currency = ref.profile.base_currency;
 
   const plans: PlanView[] = rowsAll
@@ -72,9 +78,9 @@ export async function PlansView({ kind = "all" }: { kind?: PlanKindFilter }) {
         <>
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
-              ["Active plans", String(active.length)],
-              ["Still to pay", formatMoney(remaining, currency, { whole: true })],
-              ["Due next month", formatMoney(nextMonth, currency, { whole: true })],
+              [emi ? "Active EMIs" : "Active plans", String(active.length)],
+              [emi ? "Still to pay" : "Still to count", formatMoney(remaining, currency, { whole: true })],
+              [emi ? "Due next month" : "Counts next month", formatMoney(nextMonth, currency, { whole: true })],
               ["Finished", String(finished.length)],
             ].map(([k, v]) => (
               <Card key={k} className="p-4 sm:p-5">
@@ -86,20 +92,24 @@ export async function PlansView({ kind = "all" }: { kind?: PlanKindFilter }) {
 
           <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_1fr]">
             <Card className="flex min-w-0 flex-col">
-              <CardHeader title="How much is already committed?" subtitle="Installments due in the next 12 months" info={HELP.plansCommitted} />
+              <CardHeader
+                title={emi ? "How much is already committed?" : "How much is still to come?"}
+                subtitle={emi ? "EMI installments due in the next 12 months" : "Monthly parts of your plans over the next 12 months"}
+                info={emi ? HELP.emisCommitted : HELP.plansCommitted}
+              />
               {/* flex-1 wrapper: the chart fills the card's spare height instead of overflowing it (TrendBars is h-full) */}
               <div className="min-h-0 flex-1">
-                <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel="Committed" aColor={SERIES.spent} height={180} />
+                <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel={emi ? "Committed" : "Counts"} aColor={SERIES.spent} height={180} />
               </div>
               <Insight>
                 {peak && peak.a > 0
                   ? `Heaviest month: ${formatMonth(peak.month)} at ${formatMoney(peak.a, currency, { whole: true })}.${freeBy > 0 ? ` From ${formatMonth(months[freeBy])} nothing is committed yet.` : ""}`
-                  : "Nothing is committed for the next 12 months."}
+                  : `Nothing from your ${noun} lands in the next 12 months.`}
               </Insight>
             </Card>
             <Card className="min-w-0">
               <CardHeader title="Active" />
-              {active.length ? active.map((p) => <PlanRow key={p.txnId} p={p} />) : <p className="py-6 text-center text-sm text-muted">No active plans.</p>}
+              {active.length ? active.map((p) => <PlanRow key={p.txnId} p={p} />) : <p className="py-6 text-center text-sm text-muted">No active {noun}.</p>}
             </Card>
           </section>
 
@@ -107,7 +117,7 @@ export async function PlansView({ kind = "all" }: { kind?: PlanKindFilter }) {
             <Card className="mt-4">
               <details>
                 <summary className="card-title cursor-pointer list-none">
-                  Finished <span className="text-sm font-normal text-muted">· {finished.length} plans · tap to show</span>
+                  Finished <span className="text-sm font-normal text-muted">· {finished.length} {finished.length === 1 ? noun.slice(0, -1) : noun} · tap to show</span>
                 </summary>
                 <div className="mt-3">{finished.map((p) => <PlanRow key={p.txnId} p={p} />)}</div>
               </details>
@@ -115,7 +125,21 @@ export async function PlansView({ kind = "all" }: { kind?: PlanKindFilter }) {
           ) : null}
         </>
       ) : (
-        <EmptyState title={kind === "all" ? "No plans yet" : "Nothing here"} body={kind === "all" ? "When you add a big expense, turn on “Spread this cost” to split it over months. Your averages stay smooth and future months show what's already committed." : "No plans of this type yet."} />
+        <Card>
+          {emi ? (
+            <EmptyState
+              title="No EMIs yet"
+              body={<>Bought something on installments? Add the purchase, turn on <b className="font-medium text-text">Spread this cost</b> and choose <b className="font-medium text-text">Paying in EMIs</b>. Each installment counts in the month it&apos;s due, and you&apos;ll see what&apos;s left to pay here.</>}
+              action={<AddPlanButton kind="emi" />}
+            />
+          ) : (
+            <EmptyState
+              title="No plans yet"
+              body={<>Paid for something big in one go, like a laptop or a year of insurance? Add it, turn on <b className="font-medium text-text">Spread this cost</b> and keep <b className="font-medium text-text">Paid upfront</b>. It then counts a slice each month instead of all at once.</>}
+              action={<AddPlanButton kind="spread" />}
+            />
+          )}
+        </Card>
       )}
     </>
   );

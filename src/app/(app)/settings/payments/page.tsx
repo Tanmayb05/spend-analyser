@@ -17,8 +17,30 @@ export default async function Page() {
   }
   const items = ref.paymentMethods.map((p) => ({ id: p.id, name: p.name, archived: p.archived, is_self: "is_self" in p ? (p.is_self as boolean) : undefined, uses: uses.get(p.id) ?? 0 }));
   return (
-    <SettingsPage title="Payment methods" info={HELP.payments} description="Tap the star to pre-select a method on new transactions. Archived items stay on old transactions but are hidden from pickers. Deleting clears them from transactions.">
-      <ListEditor table="payment_methods" items={items} noun="payment method" defaultId={ref.profile.default_payment_method_id} />
+    <SettingsPage title="Payment methods" info={HELP.payments} description="Tap the star to pre-select a method on new transactions. Tap the card icon to track a credit card limit and bills. Archived items stay on old transactions but are hidden from pickers. Deleting clears them from transactions.">
+      <ListEditor
+        table="payment_methods"
+        items={items}
+        noun="payment method"
+        defaultId={ref.profile.default_payment_method_id}
+        currency={ref.profile.base_currency}
+        today={ref.today}
+        cards={Object.fromEntries(
+          ref.paymentMethods.map((p) => [
+            p.id,
+            {
+              id: p.id,
+              name: p.name,
+              is_credit_card: p.is_credit_card,
+              credit_limit: p.credit_limit === null ? null : Number(p.credit_limit),
+              statement_day: p.statement_day,
+              due_day: p.due_day,
+              opening_balance: Number(p.opening_balance),
+              tracking_from: p.tracking_from,
+            },
+          ]),
+        )}
+      />
     </SettingsPage>
   );
 }
