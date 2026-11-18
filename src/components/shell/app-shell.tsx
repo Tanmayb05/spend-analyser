@@ -11,6 +11,9 @@ import { signOut } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 import { MOBILE_PRIMARY, NAV, isActive } from "./nav";
 import { useCloseOverlays } from "@/hooks/use-close-overlays";
+import { NotificationsProvider } from "@/components/notifications/notifications-provider";
+import { NotificationBell } from "@/components/notifications/bell";
+import { NotificationPanel } from "@/components/notifications/notification-panel";
 
 export function AppShell({ children }: { children: ReactNode }) {
   useCloseOverlays();
@@ -19,6 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
+    <NotificationsProvider>
     <div className="min-h-dvh lg:flex lg:gap-4 lg:p-4">
       {/* Desktop sidebar */}
       <aside className="sticky top-4 z-40 hidden h-[calc(100dvh-2rem)] w-20 shrink-0 flex-col items-center rounded-[28px] border border-border bg-surface py-5 lg:flex">
@@ -34,7 +38,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Plus size={22} />
           <SideTip>Add transaction</SideTip>
         </button>
-        <nav className="mt-4 flex flex-1 flex-col items-center gap-2" aria-label="Main">
+        <div className="mt-2">
+          <NotificationBell variant="sidebar" tip={<SideTip>Notifications</SideTip>} />
+        </div>
+        <div className="mt-2 h-px w-8 bg-border" aria-hidden />
+        <nav className="mt-2 flex flex-1 flex-col items-center gap-2" aria-label="Main">
           {NAV.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -60,11 +68,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        {/* Mobile top bar: logo only (account lives under Settings) */}
-        <header className="px-4 pb-2 pt-4 lg:hidden">
+        {/* Mobile top bar: logo + notifications (account lives under Settings) */}
+        <header className="flex items-center justify-between px-4 pb-2 pt-4 lg:hidden">
           <Link href="/" aria-label="Overview" className="inline-flex">
             <Logo size={32} />
           </Link>
+          <NotificationBell variant="header" />
         </header>
 
         <main className="px-4 pb-28 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
@@ -112,7 +121,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </form>
         </div>
       </Sheet>
+      <NotificationPanel />
     </div>
+    </NotificationsProvider>
   );
 }
 

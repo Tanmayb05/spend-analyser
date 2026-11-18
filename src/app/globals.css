@@ -181,6 +181,15 @@ dialog::backdrop {
   backdrop-filter: blur(2px);
 }
 
+/* Left drawer (Sheet side="left"): slides up on phones; on desktop slides out from the sidebar, which stays uncovered */
+@keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheet-in-left { from { transform: translateX(-32px); opacity: 0; } to { transform: none; opacity: 1; } }
+dialog.sheet-left[open] { animation: sheet-up 220ms ease-out; }
+@media (min-width: 64rem) {
+  dialog.sheet-left[open] { animation-name: sheet-in-left; }
+  dialog.sheet-left::backdrop { left: 6.5rem; }
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
