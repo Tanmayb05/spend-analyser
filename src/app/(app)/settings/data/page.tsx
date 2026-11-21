@@ -2,7 +2,6 @@ import { Download } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { SettingsPage } from "@/components/settings/section";
 import { ImportCard } from "@/components/settings/import-card";
-import { DangerZone } from "@/components/settings/danger-zone";
 import { requireUser } from "@/lib/supabase/server";
 import { getReferenceData } from "@/lib/data/reference";
 import { HELP } from "@/lib/help";
@@ -37,13 +36,6 @@ export default async function DataPage() {
             </li>
           ))}
         </ul>
-      </Card>
-      <Card className="border-bad/30">
-        <CardHeader
-          title="Reset or delete"
-          subtitle="Back up first (Export above). None of these can be undone, and each one asks for your current password."
-        />
-        <DangerZone />
       </Card>
     </SettingsPage>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FileSpreadsheet, Upload } from "lucide-react";
@@ -85,7 +86,7 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
         <span className="font-medium">{fileName ?? "Choose a file"}</span>
         <span className="text-xs text-muted">Nothing is saved until you confirm</span>
       </button>
-      {hasTransactions && !report ? <p className="mt-3 text-xs text-muted">Importing adds rows to what you have. To start from scratch, use Reset or delete below.</p> : null}
+      {hasTransactions && !report ? <p className="mt-3 text-xs text-muted">Importing adds rows to what you have. To start from scratch, use <Link href="/settings/reset" className="text-accent underline-offset-4 hover:underline">Reset or delete</Link>.</p> : null}
       {error ? <p className="mt-3 rounded-inset bg-bad/10 px-4 py-3 text-sm text-bad">{error}</p> : null}
 
       {report ? (

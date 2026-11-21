@@ -12,8 +12,8 @@ export default function SecurityPage() {
       <PasswordForm />
       <SignOutAll />
       <Card>
-        <CardHeader title="Delete account" subtitle="Wipe your data or delete the account from Import & export, under Reset or delete. It asks for your password." />
-        <Link href="/settings/data" className="text-sm text-accent underline-offset-4 hover:underline">
+        <CardHeader title="Delete account" subtitle="Wipe your data or delete the account under Reset or delete. It asks for your password." />
+        <Link href="/settings/reset" className="text-sm text-accent underline-offset-4 hover:underline">
           Go to Reset or delete
         </Link>
       </Card>

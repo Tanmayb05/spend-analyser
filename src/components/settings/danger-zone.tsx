@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PasswordConfirm } from "./password-confirm";
-import { resetAccount } from "@/app/(app)/settings/data/actions";
+import { resetAccount } from "@/app/(app)/settings/reset/actions";
 import { deleteAccount } from "@/app/(app)/settings/actions";
 
 type Scope = "data" | "all" | "account";

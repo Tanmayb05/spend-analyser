@@ -24,6 +24,7 @@ const PAGES = [
   ["/settings/merchants", "Merchants"],
   ["/settings/ai", "AI"],
   ["/settings/data", "Import & export"],
+  ["/settings/reset", "Reset or delete"],
   ["/settings/security", "Security"],
 ] as const;
 

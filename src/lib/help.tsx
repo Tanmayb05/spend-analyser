@@ -267,7 +267,8 @@ export const HELP = {
       sees your whole history at once and can&apos;t change anything. Each question uses one of your monthly questions.
     </p>
   ),
-  data: <p>Bring in your spreadsheet, download everything you have, or start over. Wiping data or deleting the account asks for your current password.</p>,
+  data: <p>Bring in your spreadsheet, download everything you have, or find where to start over.</p>,
+  reset: <p>Wipe your data, wipe it together with your categories and payment methods, or delete the account. Each asks for your current password and cannot be undone.</p>,
   exporter: <p>XLSX and CSV are spreadsheets of your transactions. JSON is a complete backup of everything in your account.</p>,
 } satisfies Record<string, ReactNode>;
 

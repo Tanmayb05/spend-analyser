@@ -7,7 +7,7 @@ test.describe("reset or delete (password-gated)", () => {
     const email = TEST_USER.email.replace("@", `+opts-${info.project.name}@`);
     await createConfirmedUser(email, TEST_USER.password);
     await signIn(page, email, TEST_USER.password);
-    await page.goto("/settings/data");
+    await page.goto("/settings/reset");
 
     await expect(page.getByRole("radio", { name: /Wipe data only/ })).toBeChecked();
     await expect(page.getByRole("button", { name: "Wipe data", exact: true })).toBeDisabled();
@@ -31,7 +31,7 @@ test.describe("reset or delete (password-gated)", () => {
     await db.from("transactions").insert({ user_id: user.id, date: "2026-01-05", type: "expense", amount: 12, category_id: cat!.id });
 
     await signIn(page, email, TEST_USER.password);
-    await page.goto("/settings/data");
+    await page.goto("/settings/reset");
     await page.getByLabel("Type RESET to confirm").fill("RESET");
     await page.getByLabel("Current password").fill("WrongPass123");
     await page.getByRole("button", { name: "Wipe data", exact: true }).click();
@@ -57,7 +57,7 @@ test.describe("reset or delete (password-gated)", () => {
     await db.from("categories").update({ name: "Renamed" }).eq("user_id", user.id).eq("name", "Groceries");
 
     await signIn(page, email, TEST_USER.password);
-    await page.goto("/settings/data");
+    await page.goto("/settings/reset");
     await page.getByRole("radio", { name: /Wipe data and setup/ }).check();
     await page.getByLabel("Type RESET to confirm").fill("RESET");
     await page.getByLabel("Current password").fill(TEST_USER.password);
@@ -74,7 +74,7 @@ test.describe("reset or delete (password-gated)", () => {
     const user = await createConfirmedUser(email, TEST_USER.password);
 
     await signIn(page, email, TEST_USER.password);
-    await page.goto("/settings/data");
+    await page.goto("/settings/reset");
     await page.getByRole("radio", { name: /Delete account/ }).check();
     await page.getByLabel("Type DELETE to confirm").fill("DELETE");
     await page.getByLabel("Current password").fill("WrongPass123");
