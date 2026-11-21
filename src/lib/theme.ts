@@ -8,4 +8,4 @@ export function parseTheme(v: string | undefined | null): Theme {
 }
 
 /** Browser chrome colour (PWA / mobile address bar). Same values as --bg in globals.css. */
-export const THEME_COLOR = { dark: "#050506", light: "#f3f3f5" } as const;
+export const THEME_COLOR = { dark: "#161412", light: "#f2ece0" } as const;

@@ -3,8 +3,8 @@
 /*
  * Design tokens.
  * Colors are declared once as light-dark(<light>, <dark>). The theme only flips `color-scheme`:
- *   data-theme="dark"   -> dark (default, matches sample_UI.png)
- *   data-theme="light"  -> light
+ *   data-theme="dark"   -> dark (default; warm, softened so it is easy on the eyes)
+ *   data-theme="light"  -> light (warm beige)
  *   data-theme="system" -> follows the OS
  * Neutral ramp: bg < surface < surface-2 < surface-3, hairline --border. Three text roles: text, muted, faint.
  * One accent. Semantic colors (good/warn/bad) are toned down and only carry meaning.
@@ -21,25 +21,25 @@
 
 :root {
   /* neutral ramp */
-  --bg: light-dark(#f3f3f5, #050506);
-  --surface: light-dark(#ffffff, #121214);
-  --surface-2: light-dark(#f6f6f8, #1a1a1d);
-  --surface-3: light-dark(#ececf0, #232327);
-  --border: light-dark(#e3e3e8, #26262b);
+  --bg: light-dark(#f2ece0, #161412);
+  --surface: light-dark(#faf6ed, #1e1b18);
+  --surface-2: light-dark(#f6f0e4, #26231f);
+  --surface-3: light-dark(#e9e0cf, #2f2b26);
+  --border: light-dark(#ddd3c0, #38332d);
 
   /* text roles: primary, secondary (meta, captions), tertiary (placeholders, disabled). muted >= 5:1, faint ~4.5:1 */
-  --text: light-dark(#111114, #f5f5f7);
-  --muted: light-dark(#6b6b75, #8d8d96);
-  --faint: light-dark(#787883, #7a7a83);
+  --text: light-dark(#1e1a14, #e8e2d6);
+  --muted: light-dark(#665d50, #a9a193);
+  --faint: light-dark(#6f6658, #948c7e);
 
   /* the one accent; text on it reaches 4.5:1 */
-  --accent: light-dark(#3d6fe0, #6c9cff);
+  --accent: light-dark(#3363d2, #7aa5ff);
   --accent-fg: light-dark(#ffffff, #0b1020);
 
   /* semantic, toned down */
-  --good: light-dark(#1c7a3b, #3fae6a);
-  --warn: light-dark(#9a6700, #e0a526);
-  --bad: light-dark(#c93a3a, #e5605f);
+  --good: light-dark(#1a7436, #4fb97a);
+  --warn: light-dark(#8c5d00, #e0aa3a);
+  --bad: light-dark(#bc3434, #ec6f6d);
 
   /* transaction kinds. Plans and EMIs share the accent (no separate purple); trips stay a quiet orange. */
   --trip: light-dark(#e8590c, #ff8a3d);
@@ -53,9 +53,9 @@
   --income-lo: light-dark(#5fcf7c, #a7f0b5);
 
   /* charts: validated colour-blind palette c1-c8 (unchanged), plus neutral steps for "one accent, the rest neutral" */
-  --chart-muted: light-dark(#e2e2e8, #2c2c31);
-  --chart-n2: light-dark(#9a9aa5, #6e6e77);
-  --chart-n1: light-dark(#3a3a42, #d4d4da);
+  --chart-muted: light-dark(#e3d9c6, #35312b);
+  --chart-n2: light-dark(#9c9381, #7d7567);
+  --chart-n1: light-dark(#3d372d, #d2cbbd);
   --c1: light-dark(#2a78d6, #3987e5);
   --c2: light-dark(#eb6834, #d95926);
   --c3: light-dark(#1baf7a, #199e70);
@@ -64,7 +64,7 @@
   --c6: #008300;
   --c7: light-dark(#4a3aa7, #9085e9);
   --c8: light-dark(#e34948, #e66767);
-  --c-other: light-dark(#b4b4bc, #5c5c64);
+  --c-other: light-dark(#b8ae9b, #6a6358);
   --grid: var(--border);
 
   /* soft neutral shadow for floating popovers only; fully transparent on dark, where depth comes from surface steps */
