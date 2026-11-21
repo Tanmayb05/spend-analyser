@@ -1,5 +1,4 @@
 ===========================
-7. Fix AI in prod
 
 8. Create a system for Scanning the Receipts and somehow adding the data to new transactions or existing transactions
 
@@ -7,4 +6,12 @@
 
 10. Credit Score api.
 
+11. Light mode in beige.
 
+12. Improve Insights Page
+
+13. AI First Inputs
+
+14. AI Talking mode.
+
+15. 
