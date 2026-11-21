@@ -27,3 +27,7 @@ The user must be able to see every UI and backend change running locally **befor
 - Whether a migration was added and whether it has been applied locally.
 - A "before you ship" note: commit and push first, then `npx supabase db push` for any new migration. Migrations that are additive can go before the UI deploy. Destructive ones (drop/rename column) need a two-step deploy. Flag that explicitly if relevant.
 - Leave the working tree uncommitted so the user can review the diff.
+
+# UI style
+
+All new or changed UI must follow the "UI style" section in `AGENTS.md` (unslop pass): token-only colors/radius/spacing, one accent, hairline rules, `money`/`num-lg` figures for amounts, `shadow-pop` only, no gradients/glows/emoji/sparkle icons/uppercase-tracked labels/pulsing. Before finishing UI work, grep for leftovers: `rounded-2xl|rounded-3xl|uppercase tracking|animate-pulse|shadow-(lg|xl|2xl)|transition-all|text-\[\d+px\]`.
