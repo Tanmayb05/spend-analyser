@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { formatDay } from "@/lib/dates";
+import { ACCENT } from "./colors";
 import { niceTicks } from "./scale";
 
 /** Single-series price over time: 2px line, 8px markers, hover tooltip, one y-axis from 0. */
@@ -26,22 +27,22 @@ export function PriceLine({ points, currency }: { points: { date: string; price:
         {ticks.map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} style={{ stroke: "var(--grid)" }} strokeWidth={1} />
-            <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize={11} style={{ fill: "var(--faint)" }}>
+            <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize={12} fontFamily="var(--font-mono), ui-monospace, monospace" style={{ fill: "var(--faint)" }}>
               {formatMoney(t, currency, { whole: t >= 10 })}
             </text>
           </g>
         ))}
-        <path d={path} fill="none" strokeWidth={2} strokeLinejoin="round" style={{ stroke: "var(--c1)" }} />
+        <path d={path} fill="none" strokeWidth={2} strokeLinejoin="round" style={{ stroke: ACCENT }} />
         {points.map((p, i) => (
           <g key={i} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0}>
             <circle cx={x(p.date)} cy={y(p.price)} r={12} fill="transparent" />
-            <circle cx={x(p.date)} cy={y(p.price)} r={hover === i ? 6 : 4} strokeWidth={2} style={{ fill: "var(--c1)", stroke: "var(--surface)" }} />
+            <circle cx={x(p.date)} cy={y(p.price)} r={hover === i ? 6 : 4} strokeWidth={2} style={{ fill: ACCENT, stroke: "var(--surface)" }} />
           </g>
         ))}
       </svg>
       {h ? (
-        <div className="pointer-events-none absolute top-0 rounded-xl border border-border bg-surface-3 px-3 py-2 text-xs" style={{ left: `${Math.min(80, Math.max(5, (x(h.date) / W) * 100))}%` }}>
-          <p className="font-medium">{formatMoney(h.price, currency)}</p>
+        <div className="pointer-events-none absolute top-0 z-10 rounded-control border border-border bg-surface-3 px-3 py-2 text-xs shadow-pop" style={{ left: `${Math.min(80, Math.max(5, (x(h.date) / W) * 100))}%` }}>
+          <p className="money font-medium">{formatMoney(h.price, currency)}</p>
           <p className="text-muted">{formatDay(h.date)}{h.merchant ? ` · ${h.merchant}` : ""}</p>
         </div>
       ) : null}

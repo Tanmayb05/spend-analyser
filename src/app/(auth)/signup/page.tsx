@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Create account" };
 export default function SignupPage() {
   return (
     <>
-      <h1 className="text-2xl font-medium">Create your account</h1>
+      <h1 className="text-2xl font-medium">Create account</h1>
       <p className="mb-6 mt-1 text-sm text-muted">Free and open source. Your data stays yours.</p>
       <AuthForm
         action={signUp}
@@ -22,7 +22,7 @@ export default function SignupPage() {
         ]}
         footer={
           <p className="pt-2 text-center text-sm text-muted">
-            Already have an account? <Link href="/login" className="text-accent">Sign in</Link>
+            Already have an account? <Link href="/login" className="text-accent hover:underline">Log in</Link>
           </p>
         }
       />

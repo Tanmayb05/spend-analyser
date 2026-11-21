@@ -21,7 +21,7 @@ export function useParamHref() {
 }
 
 /**
- * Page title (with optional controls beside it, via children), plus (desktop only) an "Add New Transaction" button on the right.
+ * Page title (with optional controls beside it, via children), plus (desktop only) an "Add transaction" button on the right.
  * The month lives in the calendar card (`?m=`), scope in the calendar card. Mobile uses the bottom-nav "+" instead.
  */
 export function DashboardHeader({ title = "Overview", info, addTransaction = false, children }: { title?: string; info?: ReactNode; addTransaction?: boolean; children?: ReactNode }) {
@@ -34,7 +34,7 @@ export function DashboardHeader({ title = "Overview", info, addTransaction = fal
       </div>
       {addTransaction ? (
         <Button variant="accent" onClick={() => openTxnSheet()} className="hidden shrink-0 lg:inline-flex">
-          <Plus size={18} /> Add New Transaction
+          <Plus size={18} /> Add transaction
         </Button>
       ) : null}
     </div>

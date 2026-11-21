@@ -8,9 +8,10 @@ import type { LucideIcon } from "lucide-react";
 export const PANE_WIDTH = 280;
 /** How far the pane's contents travel while it slides in. */
 export const PANE_SLIDE = 20;
+/** Same values as --ease-ui and --dur-slow in globals.css (JS needs literals for inline transitions and WAAPI). */
 export const PANE_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const PANE_MS = 380;
-const FLIGHT_MS = 520;
+const PANE_MS = 320;
+const FLIGHT_MS = 320;
 
 type Flight = {
   href: string;
@@ -158,10 +159,10 @@ export function SettingsTransitionProvider({ children }: { children: ReactNode }
         <div
           ref={flyer}
           aria-hidden
-          className="pointer-events-none fixed z-50 grid place-items-center rounded-full"
+          className="pointer-events-none fixed z-50 grid place-items-center rounded-inset"
           style={{ left: flight.left, top: flight.top, width: flight.size, height: flight.size, transformOrigin: "top left", willChange: "transform" }}
         >
-          <Icon size={Math.round(flight.size / 2)} />
+          <Icon size={16} />
         </div>
       ) : null}
     </SettingsTransitionContext.Provider>

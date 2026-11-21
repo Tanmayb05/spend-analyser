@@ -14,7 +14,7 @@ import type { LedgerRowWithLink } from "./ledger-item";
 
 function Item({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5">
+    <div className="flex items-start justify-between gap-4 py-3">
       <dt className="shrink-0 text-sm text-muted">{label}</dt>
       <dd className="min-w-0 text-right text-sm">{children}</dd>
     </div>
@@ -36,13 +36,13 @@ export function TxnDetail({ row, onClose }: { row: LedgerRowWithLink | null; onC
   return (
     <Sheet open={Boolean(row)} onClose={onClose} title="Transaction">
       {row ? (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <p className="text-sm text-muted">{title}</p>
-            <p className={cn("num mt-1 text-3xl font-medium", income && "text-good")}>
+            <p className={cn("num-lg mt-1 text-3xl font-medium", income && "text-good")}>
               {formatMoney(income ? Math.abs(Number(row.amount)) : -Math.abs(Number(row.amount)), app.currency, { signed: true })}
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {row.is_scheduled ? <Badge tone="warn">Scheduled</Badge> : <Badge tone="good">Posted</Badge>}
               {row.installment_seq ? <Badge tone={row.plan_kind === "emi" ? "warn" : "accent"}>{row.plan_kind === "emi" ? "EMI" : "Spread"} {row.installment_seq}/{row.installment_count}</Badge> : null}
               {trip ? <Badge>{trip.name}</Badge> : null}
@@ -53,7 +53,7 @@ export function TxnDetail({ row, onClose }: { row: LedgerRowWithLink | null; onC
             <Item label="Date">{formatDay(row.entry_date)}</Item>
             <Item label="Category">
               <span className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: categoryColor(cat) }} />
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: categoryColor(cat) }} />
                 {sub ? `${cat?.name} › ${sub.name}` : cat?.name}
               </span>
             </Item>
@@ -72,7 +72,7 @@ export function TxnDetail({ row, onClose }: { row: LedgerRowWithLink | null; onC
             {row.external_url ? (
               <Item label="Link">
                 <a href={row.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
-                  Open <ExternalLink size={12} />
+                  Open <ExternalLink size={14} />
                 </a>
               </Item>
             ) : null}

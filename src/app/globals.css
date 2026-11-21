@@ -1,89 +1,82 @@
 @import "tailwindcss";
 
-/* Design tokens. Dark is the default (matches sample_UI.png); light is opt-in in Settings. */
-:root,
-:root[data-theme="dark"] {
-  --bg: #050506;
-  --surface: #121214;
-  --surface-2: #1a1a1d;
-  --surface-3: #232327;
-  --border: #26262b;
-  --text: #f5f5f7;
-  --muted: #8d8d96;
-  --faint: #5c5c64;
-  --accent: #6c9cff;
-  --accent-fg: #0b1020;
-  --good: #0ca30c;
-  --warn: #fab219;
-  --bad: #d03b3b;
-  --trip: #ff8a3d;
-  --plan: #b794f6;
-  /* calendar heat ramps: pink -> red (expenses), lavender -> purple (EMI), mint -> green (income and refunds) */
-  --expense: #f0425a; --expense-lo: #ff9ec4;
-  --plan-lo: #dccbff; --plan-hi: #8b5cf6;
-  --income: #22c55e; --income-lo: #a7f0b5;
-  --chart-muted: #2c2c31;
-  --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500;
-  --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767;
-  --c-other: #5c5c64;
-  --grid: #26262b;
+/*
+ * Design tokens.
+ * Colors are declared once as light-dark(<light>, <dark>). The theme only flips `color-scheme`:
+ *   data-theme="dark"   -> dark (default, matches sample_UI.png)
+ *   data-theme="light"  -> light
+ *   data-theme="system" -> follows the OS
+ * Neutral ramp: bg < surface < surface-2 < surface-3, hairline --border. Three text roles: text, muted, faint.
+ * One accent. Semantic colors (good/warn/bad) are toned down and only carry meaning.
+ */
+:root {
   color-scheme: dark;
 }
-
 :root[data-theme="light"] {
-  --bg: #f3f3f5;
-  --surface: #ffffff;
-  --surface-2: #f6f6f8;
-  --surface-3: #ececf0;
-  --border: #e3e3e8;
-  --text: #111114;
-  --muted: #6b6b75;
-  --faint: #a0a0aa;
-  --accent: #3d6fe0;
-  --accent-fg: #ffffff;
-  --good: #006300;
-  --warn: #b07800;
-  --bad: #d03b3b;
-  --trip: #e8590c;
-  --plan: #7c3aed;
-  --expense: #d62839; --expense-lo: #f27aa6;
-  --plan-lo: #b9a0f7; --plan-hi: #6d28d9;
-  --income: #15803d; --income-lo: #5fcf7c;
-  --chart-muted: #e2e2e8;
-  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100;
-  --c5: #e87ba4; --c6: #008300; --c7: #4a3aa7; --c8: #e34948;
-  --c-other: #b4b4bc;
-  --grid: #e1e0d9;
   color-scheme: light;
 }
+:root[data-theme="system"] {
+  color-scheme: light dark;
+}
 
-@media (prefers-color-scheme: light) {
-  :root[data-theme="system"] {
-    --bg: #f3f3f5;
-    --surface: #ffffff;
-    --surface-2: #f6f6f8;
-    --surface-3: #ececf0;
-    --border: #e3e3e8;
-    --text: #111114;
-    --muted: #6b6b75;
-    --faint: #a0a0aa;
-    --accent: #3d6fe0;
-    --accent-fg: #ffffff;
-    --good: #006300;
-    --warn: #b07800;
-    --bad: #d03b3b;
-    --trip: #e8590c;
-    --plan: #7c3aed;
-  --expense: #d62839; --expense-lo: #f27aa6;
-  --plan-lo: #b9a0f7; --plan-hi: #6d28d9;
-  --income: #15803d; --income-lo: #5fcf7c;
-    --chart-muted: #e2e2e8;
-    --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100;
-    --c5: #e87ba4; --c6: #008300; --c7: #4a3aa7; --c8: #e34948;
-    --c-other: #b4b4bc;
-    --grid: #e1e0d9;
-    color-scheme: light;
-  }
+:root {
+  /* neutral ramp */
+  --bg: light-dark(#f3f3f5, #050506);
+  --surface: light-dark(#ffffff, #121214);
+  --surface-2: light-dark(#f6f6f8, #1a1a1d);
+  --surface-3: light-dark(#ececf0, #232327);
+  --border: light-dark(#e3e3e8, #26262b);
+
+  /* text roles: primary, secondary (meta, captions), tertiary (placeholders, disabled). muted >= 5:1, faint ~4.5:1 */
+  --text: light-dark(#111114, #f5f5f7);
+  --muted: light-dark(#6b6b75, #8d8d96);
+  --faint: light-dark(#787883, #7a7a83);
+
+  /* the one accent; text on it reaches 4.5:1 */
+  --accent: light-dark(#3d6fe0, #6c9cff);
+  --accent-fg: light-dark(#ffffff, #0b1020);
+
+  /* semantic, toned down */
+  --good: light-dark(#1c7a3b, #3fae6a);
+  --warn: light-dark(#9a6700, #e0a526);
+  --bad: light-dark(#c93a3a, #e5605f);
+
+  /* transaction kinds. Plans and EMIs share the accent (no separate purple); trips stay a quiet orange. */
+  --trip: light-dark(#e8590c, #ff8a3d);
+  --plan: var(--accent);
+  /* calendar heat ramps: pink -> red (expenses), pale blue -> accent blue (EMI and spread), mint -> green (income and refunds) */
+  --expense: light-dark(#d62839, #f0425a);
+  --expense-lo: light-dark(#f27aa6, #ff9ec4);
+  --plan-lo: light-dark(#b3c8f5, #cfe0ff);
+  --plan-hi: light-dark(#2a55b8, #4a82f0);
+  --income: light-dark(#15803d, #22c55e);
+  --income-lo: light-dark(#5fcf7c, #a7f0b5);
+
+  /* charts: validated colour-blind palette c1-c8 (unchanged), plus neutral steps for "one accent, the rest neutral" */
+  --chart-muted: light-dark(#e2e2e8, #2c2c31);
+  --chart-n2: light-dark(#9a9aa5, #6e6e77);
+  --chart-n1: light-dark(#3a3a42, #d4d4da);
+  --c1: light-dark(#2a78d6, #3987e5);
+  --c2: light-dark(#eb6834, #d95926);
+  --c3: light-dark(#1baf7a, #199e70);
+  --c4: light-dark(#eda100, #c98500);
+  --c5: light-dark(#e87ba4, #d55181);
+  --c6: #008300;
+  --c7: light-dark(#4a3aa7, #9085e9);
+  --c8: light-dark(#e34948, #e66767);
+  --c-other: light-dark(#b4b4bc, #5c5c64);
+  --grid: var(--border);
+
+  /* soft neutral shadow for floating popovers only; fully transparent on dark, where depth comes from surface steps */
+  --shadow-color: light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0));
+
+  /* motion: one easing curve, three durations (hover/press, popovers and menus, sheets and entrances) */
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* where page content starts to the right of the app shell sidebar: 16 page padding + 240 sidebar + 16 gap. Sheet (left drawer) docks here. */
+  --sidebar-offset: 17rem;
 }
 
 @theme inline {
@@ -107,17 +100,16 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-display), var(--font-geist-sans);
-  --radius-card: 1.5rem;
 
   /* Type scale (~1.2 ratio, 16px body). Semantic roles:
-     xs  12/16 captions, chart labels, badges
+     xs  12/16 captions, chart labels, badges, labels (.text-label)
      sm  14/20 UI text, buttons, secondary text
      base 16/24 body
      lg  18/26 small card heading
      xl  22/28 card / section heading (.card-title)
      2xl 28/36 page heading, KPI numbers
      3xl 32/40 hero numbers
-     No text-4xl and no arbitrary text-[Npx]: add a role here instead. */
+     No text-4xl and no arbitrary text-[Npx]: add a role here instead. Weights 400 and 500, 600 at most. */
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
   --text-sm: 0.875rem;
@@ -134,6 +126,32 @@
   --text-3xl--line-height: 2.5rem;
 }
 
+/*
+ * Tokens that must exist as variables and as utilities.
+ *  radius: rounded-control (inputs, buttons, rows), rounded-inset (blocks inside a card), rounded-card, rounded-panel (sheets, popovers' parents).
+ *          Nested radius = outer - padding, never below 4. Pills (rounded-full) only for tiny status chips, dots and avatars.
+ *  spacing: 4px grid. p-compact 16 (sidebar, compact panels), p-card 20 / p-card-lg 24 (cards), p-page 24 / p-page-lg 32 (page edges).
+ *  motion: ease-ui is the only easing curve; every transition-* utility picks it and --dur-fast up automatically.
+ */
+@theme static {
+  --radius-control: 0.625rem;
+  --radius-inset: 0.5rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+
+  --spacing-compact: 1rem;
+  --spacing-card: 1.25rem;
+  --spacing-card-lg: 1.5rem;
+  --spacing-page: 1.5rem;
+  --spacing-page-lg: 2rem;
+
+  --shadow-pop: 0 4px 12px var(--shadow-color);
+
+  --ease-ui: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 html,
 body {
   background: var(--bg);
@@ -145,8 +163,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Anything clickable shows the pointing hand (Tailwind's reset sets buttons back to the default arrow) */
 @layer base {
+  /* Anything clickable shows the pointing hand (Tailwind's reset sets buttons back to the default arrow) */
   button:not(:disabled),
   select:not(:disabled),
   summary,
@@ -167,27 +185,55 @@ body {
   [aria-disabled="true"] {
     cursor: not-allowed;
   }
+
+  /* One visible keyboard focus ring everywhere. Components may override the offset; inputs use a ring instead. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* One icon stroke across the app (lucide icons) */
+  svg.lucide {
+    stroke-width: 1.5;
+  }
 }
 
-/* Big numbers line up */
+/* Figures line up. Large display figures can add .num-lg for the tighter tracking that only suits big type. */
 .num {
+  font-variant-numeric: tabular-nums;
+}
+.num-lg {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
-/* Bottom sheet / dialog */
+/* Signature: ruled-ledger numerals. Money amounts only: mono, tabular, set right-aligned in their column with a hairline row rule. */
+@utility money {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* Sentence-case label above a figure or a column. Replaces `uppercase tracking-wide`. Set the colour (text-muted / text-faint) at the call site. */
+@utility text-label {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Bottom sheet / dialog scrim: flat, no blur */
 dialog::backdrop {
-  background: rgb(0 0 0 / 0.6);
-  backdrop-filter: blur(2px);
+  background: rgb(0 0 0 / 0.5);
 }
 
 /* Left drawer (Sheet side="left"): slides up on phones; on desktop slides out from the sidebar, which stays uncovered */
-@keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes sheet-in-left { from { transform: translateX(-32px); opacity: 0; } to { transform: none; opacity: 1; } }
-dialog.sheet-left[open] { animation: sheet-up 220ms ease-out; }
+@keyframes sheet-up { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheet-in-left { from { transform: translateX(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
+dialog.sheet-left[open] { animation: sheet-up var(--dur-slow) var(--ease-ui); }
 @media (min-width: 64rem) {
   dialog.sheet-left[open] { animation-name: sheet-in-left; }
-  dialog.sheet-left::backdrop { left: 6.5rem; }
+  dialog.sheet-left::backdrop { left: calc(var(--sidebar-offset) - 1rem); }
 }
 
 input[type="number"]::-webkit-inner-spin-button,
@@ -206,9 +252,9 @@ input[type="number"]::-webkit-outer-spin-button {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-[data-settings-grid] { transition: opacity 220ms ease-out; }
+[data-settings-grid] { transition: opacity var(--dur-base) var(--ease-ui); }
 [data-launching] [data-settings-grid] { opacity: 0; }
-[data-launched] [data-settings-page] { animation: settings-page-in 380ms 40ms ease-out both; }
+[data-launched] [data-settings-page] { animation: settings-page-in var(--dur-slow) 40ms var(--ease-ui) both; }
 
 /* Respect the OS "reduce motion" setting: no transitions or animations. */
 @media (prefers-reduced-motion: reduce) {
@@ -222,12 +268,12 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 }
 
-/* Card headings: bold display face, tight tracking, full-strength colour, so the eye lands on the title first. Size = --text-xl (22px). */
+/* Card headings: display face at weight 500, full-strength colour. Size = --text-xl (22px). */
 @utility card-title {
   font-size: var(--text-xl);
   font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   line-height: var(--text-xl--line-height);
   color: var(--text);
 }

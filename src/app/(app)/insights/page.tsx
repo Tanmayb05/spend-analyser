@@ -84,17 +84,17 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   return (
     <>
       <InfoTitle as="h1" info={HELP.insights} className="text-2xl font-medium" panelClassName="max-w-xl">Insights</InfoTitle>
-      <p className="mb-5 mt-1 text-sm text-muted">What stands out in your money, in plain words.</p>
+      <p className="mb-5 mt-1 text-sm text-muted">What stands out in your money, in plain words</p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-full border border-border bg-surface-2 p-1 text-sm">
-          <Link href={link({ m: addMonths(month, -1).slice(0, 7) })} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3" aria-label="Previous month">‹</Link>
+        <div className="flex items-center rounded-control border border-border bg-surface-2 p-1 text-sm">
+          <Link href={link({ m: addMonths(month, -1).slice(0, 7) })} className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)-4px)] transition-colors duration-(--dur-fast) hover:bg-surface-3" aria-label="Previous month">‹</Link>
           <span className="min-w-36 text-center font-medium">{formatMonth(month)}</span>
-          <Link href={link({ m: addMonths(month, 1).slice(0, 7) })} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3" aria-label="Next month">›</Link>
+          <Link href={link({ m: addMonths(month, 1).slice(0, 7) })} className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)-4px)] transition-colors duration-(--dur-fast) hover:bg-surface-3" aria-label="Next month">›</Link>
         </div>
-        <div className="inline-flex rounded-full border border-border bg-surface-2 p-1">
+        <div className="inline-flex rounded-control border border-border bg-surface-2 p-1">
           {(["month", "quarter", "year"] as const).map((s) => (
-            <Link key={s} href={link({ scope: s })} className={cn("rounded-full px-3.5 py-1.5 text-sm font-medium", scopeName === s ? "bg-text text-bg" : "text-muted")}>
+            <Link key={s} href={link({ scope: s })} className={cn("rounded-[calc(var(--radius-control)-4px)] px-3.5 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast)", scopeName === s ? "bg-surface-3 text-text ring-1 ring-inset ring-text/10" : "text-muted hover:text-text")}>
               {s === "month" ? "This month" : s === "quarter" ? "3 months" : "12 months"}
             </Link>
           ))}
@@ -115,14 +115,14 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
         </Card>
         <Card>
           <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" info={HELP.quickInsights} />
-          <ul className="space-y-3">
+          <ul className="divide-y divide-border">
             {rules.map((i) => (
-              <li key={i.id} className="flex gap-3 text-sm leading-relaxed">
+              <li key={i.id} className="flex gap-3 py-3 text-sm leading-relaxed first:pt-0 last:pb-0">
                 <span className={cn("mt-2 h-2 w-2 shrink-0 rounded-full", TONE[i.tone])} aria-hidden />
                 {i.text}
               </li>
             ))}
-            {!rules.length ? <li className="text-sm text-muted">Nothing unusual this month.</li> : null}
+            {!rules.length ? <li className="text-sm text-muted">Nothing unusual this month</li> : null}
           </ul>
         </Card>
         <AnalysisPanel

@@ -3,6 +3,7 @@ import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty";
 import { CardTile, UtilMeter } from "./card-tile";
+import { StatStrip } from "./stat-strip";
 import { getReferenceData } from "@/lib/data/reference";
 import { getCardData } from "@/lib/data/cards";
 import { overallUtilization, utilBand } from "@/lib/cards";
@@ -23,7 +24,7 @@ export async function CardsView() {
         <EmptyState
           title="No credit cards yet"
           body="Mark a payment method as a credit card and add its limit. You'll see what you owe, your next bill and how much of your limit you're using."
-          action={<Link href="/settings/payments" className="inline-flex h-11 items-center rounded-full bg-accent px-5 text-sm text-accent-fg">Set up a card</Link>}
+          action={<Link href="/settings/payments" className="inline-flex h-11 items-center rounded-control bg-accent px-4 text-sm font-medium text-accent-fg hover:opacity-90">Set up a card</Link>}
         />
       </Card>
     );
@@ -38,26 +39,22 @@ export async function CardsView() {
 
   return (
     <>
-      <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          ["Owed on cards", money(owed)],
-          ["Total limit", all.limit ? money(all.limit) : "—"],
-          ["Bills to pay", bills.length ? money(bills.reduce((a, b) => a + b.remaining, 0)) : "None"],
-          ["Next due", nextBill ? formatDay(nextBill.due) : "—"],
-        ].map(([k, v]) => (
-          <Card key={k} className="p-4 sm:p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">{k}</p>
-            <p className="num mt-2 text-2xl font-medium sm:text-3xl">{v}</p>
-          </Card>
-        ))}
-      </section>
+      <StatStrip
+        className="mt-4"
+        stats={[
+          { label: "Owed on cards", value: money(owed), money: true },
+          { label: "Total limit", value: all.limit ? money(all.limit) : "—", money: Boolean(all.limit) },
+          { label: "Bills to pay", value: bills.length ? money(bills.reduce((a, b) => a + b.remaining, 0)) : "None", money: bills.length > 0 },
+          { label: "Next due", value: nextBill ? formatDay(nextBill.due) : "—" },
+        ]}
+      />
 
       {all.utilization !== null && band ? (
         <Card className="mt-4">
           <CardHeader title="Overall utilization" info={HELP.cardUtilization} action={<Badge tone={band.tone}>{band.label}</Badge>} />
           <div className="flex items-baseline justify-between gap-3">
             <p className="num text-3xl font-medium">{formatPercent(all.utilization)}</p>
-            <p className="num text-sm text-muted">{money(all.outstanding)} of {money(all.limit)}</p>
+            <p className="money text-sm text-muted">{money(all.outstanding)} of {money(all.limit)}</p>
           </div>
           <UtilMeter value={all.utilization} className="mt-3" />
           <Insight>

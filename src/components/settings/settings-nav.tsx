@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SIDE_ROW, SIDE_ROW_ACTIVE, SIDE_ROW_IDLE } from "@/components/shell/nav";
 import { SETTINGS_GROUPS } from "./nav";
 import { PANE_SLIDE, PANE_WIDTH, useSettingsTransition } from "./settings-transition";
 
@@ -18,14 +20,14 @@ export function SettingsNav() {
       className="hidden shrink-0 overflow-x-clip lg:block"
       style={{ width: paneOpen ? PANE_WIDTH : 0, transition: paneTransition }}
     >
-      {/* same panel as the main sidebar: bordered surface, rounded, ink-on-light active item */}
+      {/* same panel as the main sidebar: bordered surface, hairline active row (SIDE_ROW) */}
       <div
-        className="sticky top-4 max-h-[calc(100dvh-2rem)] w-64 space-y-5 overflow-y-auto rounded-[28px] border border-border bg-surface p-3"
+        className="sticky top-4 max-h-[calc(100dvh-2rem)] w-64 space-y-6 overflow-y-auto rounded-card border border-border bg-surface p-compact"
         style={{ opacity: paneOpen ? 1 : 0, transform: paneOpen ? "none" : `translateX(-${PANE_SLIDE}px)`, transition: paneTransition }}
       >
         {SETTINGS_GROUPS.map((group) => (
           <section key={group.title} aria-labelledby={`settings-group-${group.id}`}>
-            <h2 id={`settings-group-${group.id}`} className="mb-1.5 px-3 text-xs font-medium uppercase tracking-wide text-faint">
+            <h2 id={`settings-group-${group.id}`} className="text-label mb-2 px-2 text-faint">
               {group.title}
             </h2>
             <ul className="space-y-1">
@@ -36,15 +38,12 @@ export function SettingsNav() {
                     <Link
                       href={href}
                       aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "flex h-11 items-center gap-3 rounded-2xl px-3 text-sm transition focus-visible:outline-2 focus-visible:outline-accent",
-                        active ? "bg-text font-medium text-bg" : "text-muted hover:bg-surface-3 hover:text-text",
-                      )}
+                      className={cn(SIDE_ROW, "px-2", active ? SIDE_ROW_ACTIVE : SIDE_ROW_IDLE)}
                     >
-                      {/* circle holder: the Settings-home circle lands here (hidden until it arrives) */}
+                      {/* tile holder: the Settings-home tile lands here (hidden until it arrives); same size as the home tile */}
                       <span
                         data-settings-icon={href}
-                        className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-3", active ? "text-text" : "text-muted")}
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-inset bg-surface-3"
                         style={flyingHref === href ? { visibility: "hidden" } : undefined}
                       >
                         <Icon size={16} />
@@ -64,8 +63,8 @@ export function SettingsNav() {
 
 export function SettingsBack() {
   return (
-    <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-text lg:hidden">
-      ← Settings
+    <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-text lg:hidden">
+      <ChevronLeft size={16} aria-hidden /> Settings
     </Link>
   );
 }

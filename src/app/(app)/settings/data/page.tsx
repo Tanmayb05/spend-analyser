@@ -16,20 +16,20 @@ export default async function DataPage() {
   const { count } = await supabase.from("transactions").select("id", { count: "exact", head: true });
 
   const exports = [
-    { href: "/api/export?format=xlsx", label: "Excel (.xlsx)", desc: "Same columns as your tracker. Re-importable." },
-    { href: "/api/export?format=csv", label: "CSV", desc: "For any spreadsheet or tool." },
-    { href: "/api/export?format=json", label: "Full backup (.json)", desc: "Every table: categories, budgets, plans, receipts." },
+    { href: "/api/export?format=xlsx", label: "Excel (.xlsx)", desc: "Same columns as your tracker, re-importable" },
+    { href: "/api/export?format=csv", label: "CSV", desc: "For any spreadsheet or tool" },
+    { href: "/api/export?format=json", label: "Full backup (.json)", desc: "Every table: categories, budgets, plans, receipts" },
   ];
 
   return (
     <SettingsPage title="Import & export" info={HELP.data} description={`${count ?? 0} transactions in your account.`}>
       <ImportCard hasTransactions={(count ?? 0) > 0} currency={ref.profile.base_currency} />
       <Card>
-        <CardHeader title="Export" subtitle="Download your data any time." info={HELP.exporter} />
+        <CardHeader title="Export" subtitle="Download your data any time" info={HELP.exporter} />
         <ul className="grid gap-2 sm:grid-cols-3">
           {exports.map((e) => (
             <li key={e.href}>
-              <a href={e.href} download className="flex h-full flex-col gap-1 rounded-2xl border border-border bg-surface-2 p-4 hover:bg-surface-3">
+              <a href={e.href} download className="flex h-full flex-col gap-1 rounded-control border border-border bg-surface-2 p-compact transition-colors hover:bg-surface-3">
                 <span className="flex items-center gap-2 font-medium">
                   <Download size={16} /> {e.label}
                 </span>

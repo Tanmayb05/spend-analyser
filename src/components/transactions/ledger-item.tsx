@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, ExternalLink, Plane, Repeat } from "lucide-react";
+import { ExternalLink, Plane } from "lucide-react";
 import { useAppData } from "@/components/app-data";
 import { Badge } from "@/components/ui/badge";
 import { categoryColor } from "@/components/charts/colors";
@@ -27,16 +27,16 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
   const uncounted = showKind && trip?.include_mode === "excluded";
 
   return (
-    <div className="relative flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-surface-2">
+    <div className="relative flex min-h-14 w-full items-center gap-3 rounded-control px-2 py-2 text-left transition-colors hover:bg-surface-2">
       <button
         type="button"
         disabled={!row.txn_id}
         onClick={() => row.txn_id && (onOpen ? onOpen(row) : app.openTxnSheet({ id: row.txn_id }))}
-        className="absolute inset-0 z-0 rounded-2xl disabled:cursor-default"
+        className="absolute inset-0 z-0 rounded-control disabled:cursor-default focus-visible:outline-offset-0"
         aria-label={row.txn_id ? `Edit ${title}` : undefined}
       />
-      <span className="pointer-events-none relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-3">
-        <span className="h-3 w-3 rounded-[4px]" style={{ background: categoryColor(cat) }} />
+      <span className="pointer-events-none relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-inset bg-surface-3">
+        <span className="h-3 w-3 rounded-sm" style={{ background: categoryColor(cat) }} />
       </span>
       <span className="pointer-events-none relative z-10 min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{title}</span>
@@ -51,16 +51,15 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
               rel="noopener noreferrer"
               aria-label={`Open link for ${title}`}
               title="Open related link"
-              className="pointer-events-auto inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 py-0.5 font-medium text-accent transition hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-accent"
+              className="pointer-events-auto inline-flex shrink-0 items-center gap-1 font-medium text-accent transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-accent"
             >
-              <ExternalLink size={11} />
+              <ExternalLink size={14} />
               <span className="hidden sm:inline">Link</span>
             </a>
           ) : null}
           {row.installment_seq ? (
             showKind ? (
-              <span className="inline-flex shrink-0 items-center gap-0.5 text-plan">
-                <Repeat size={11} />
+              <span className="shrink-0 text-plan">
                 {row.installment_seq}/{row.installment_count}
               </span>
             ) : (
@@ -68,44 +67,40 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
             )
           ) : null}
           {showKind && (income || refund) ? (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-income/15 px-2 py-0.5 font-medium text-income">{income ? "Income" : "Refund"}</span>
+            <Badge tone="good" className="shrink-0">{income ? "Income" : "Refund"}</Badge>
           ) : null}
           {showKind ? (
             trip ? (
               <span className="inline-flex min-w-0 shrink-0 items-center gap-1 rounded-full bg-trip/15 px-2 py-0.5 font-medium text-trip">
-                <Plane size={11} className="shrink-0" />
                 <span className="max-w-32 truncate">Trip: {trip.name}</span>
               </span>
             ) : (
               row.plan_kind ? (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-plan/15 px-2 py-0.5 font-medium text-plan">
+                <Badge tone="accent" className="shrink-0">
                   {row.plan_kind === "emi" ? "EMI" : row.installment_seq ? "Spread" : "Paid upfront"}
-                </span>
+                </Badge>
               ) : income || refund ? null : (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-expense/15 px-2 py-0.5 font-medium text-expense">Regular</span>
+                <Badge className="shrink-0">Regular</Badge>
               )
             )
           ) : trip ? (
-            <span className="inline-flex shrink-0 items-center gap-0.5">
-              <Plane size={11} />
+            <span className="inline-flex shrink-0 items-center gap-1">
+              <Plane size={14} />
               {trip.name}
             </span>
           ) : null}
           {uncounted ? <span className="shrink-0 text-faint">not counted</span> : null}
           {row.is_scheduled ? (
-            <Badge tone="warn" className="shrink-0 px-2 py-0">
-              <CalendarClock size={11} />
-              Scheduled
-            </Badge>
+            <Badge tone="warn" className="shrink-0">Scheduled</Badge>
           ) : null}
         </span>
       </span>
       {right ?? (
         <span className="pointer-events-none relative z-10 shrink-0 text-right">
-          <span className={cn("num block text-sm font-medium", income && "text-good", refund && "text-good", uncounted && "text-muted line-through decoration-faint")}>
+          <span className={cn("money block text-sm font-medium", income && "text-good", refund && "text-good", uncounted && "text-muted line-through decoration-faint")}>
             {formatMoney(income || refund ? Math.abs(Number(row.amount)) : -Math.abs(Number(row.amount)), app.currency, { signed: true })}
           </span>
-          {foreign && !row.installment_seq ? <span className="num block text-xs text-faint">{formatMoney(Number(row.orig_amount), row.orig_currency!)}</span> : null}
+          {foreign && !row.installment_seq ? <span className="money block text-xs text-faint">{formatMoney(Number(row.orig_amount), row.orig_currency!)}</span> : null}
         </span>
       )}
     </div>
@@ -115,8 +110,7 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
 /** "EMI 2/12" badge; links to that plan in the Plans or EMIs tab. */
 export function PlanBadge({ row }: { row: LedgerRow }) {
   const badge = (
-    <Badge tone={row.plan_kind === "emi" ? "warn" : "accent"} className="px-2 py-0">
-      <Repeat size={11} />
+    <Badge tone={row.plan_kind === "emi" ? "warn" : "accent"}>
       {row.plan_kind === "emi" ? "EMI" : "Spread"} {row.installment_seq}/{row.installment_count}
     </Badge>
   );

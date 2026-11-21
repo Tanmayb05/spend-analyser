@@ -32,22 +32,25 @@ type Day = {
   top: { kind: Kind; amount: number } | null;
 };
 
-/** Heat scale: a day's spend picks one of 8 shades of its own colour (upper bound in the base currency, mix % of the colour over the card). */
+/**
+ * Heat scale: a day's spend picks one of 8 shades of its own colour (upper bound in the base currency, mix % of the colour over the card).
+ * Kept quiet: the strongest shade tops out near 60%, so the donut stays the loudest thing on the page.
+ */
 const SHADES = [
-  { max: 10, label: "0–10", pct: 10 },
-  { max: 25, label: "11–25", pct: 18 },
-  { max: 50, label: "26–50", pct: 27 },
-  { max: 100, label: "51–100", pct: 37 },
-  { max: 200, label: "101–200", pct: 48 },
-  { max: 400, label: "201–400", pct: 59 },
-  { max: 600, label: "401–600", pct: 70 },
-  { max: Infinity, label: "600+", pct: 82 },
+  { max: 10, label: "0–10", pct: 8 },
+  { max: 25, label: "11–25", pct: 14 },
+  { max: 50, label: "26–50", pct: 21 },
+  { max: 100, label: "51–100", pct: 28 },
+  { max: 200, label: "101–200", pct: 36 },
+  { max: 400, label: "201–400", pct: 44 },
+  { max: 600, label: "401–600", pct: 52 },
+  { max: Infinity, label: "600+", pct: 60 },
 ] as const;
-const DARK_FROM = 5; // shades from here on are strong enough to need the on-accent text colour
+const STRONG_FROM = 4; // shades from here on get full-strength ink for the figures, since muted text loses contrast on them
 /** Each kind's colour ramp: shade 1 is `lo`, shade 8 is `hi` (all are CSS tokens, so they follow the theme). */
 const RAMP: Record<Kind, { lo: string; hi: string }> = {
   regular: { lo: "--expense-lo", hi: "--expense" }, // pink -> red
-  plan: { lo: "--plan-lo", hi: "--plan-hi" }, // lavender -> purple
+  plan: { lo: "--plan-lo", hi: "--plan-hi" }, // pale blue -> accent blue
   trip: { lo: "--trip", hi: "--trip" },
   in: { lo: "--income-lo", hi: "--income" }, // mint -> green
 };
@@ -75,7 +78,7 @@ function longDay(d: string) {
 
 /**
  * The dashboard's main control. Owns month navigation (the `?m=` param is the single source of truth for the
- * whole page) and shows activity by day: pink to red = regular spending, purple = EMI or spread purchase, orange = trip,
+ * whole page) and shows activity by day: pink to red = regular spending, blue = EMI or spread purchase, orange = trip,
  * green = income or refund, several = split bar. Darker = bigger amount.
  * Selecting a day lists its transactions underneath.
  */
@@ -221,7 +224,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
           const tint = day ? cellKind(day) : null;
           const net = day ? netOf(day) : 0;
           const shade = day && tint ? shadeOf(Math.abs(net)) : 0;
-          const strong = !!tint && shade >= DARK_FROM;
+          const strong = !!tint && shade >= STRONG_FROM;
           const kinds = day ? KINDS.filter((k) => day.has[k]).map((k) => KIND_NAME[k]) : [];
           const spoken = day ? [day.spent > 0 ? `${formatMoney(day.spent, currency)} spent` : "", day.inflow > 0 ? `${formatMoney(day.inflow, currency)} received` : "", day.inflow > 0 && day.gross > 0 ? `net ${formatMoney(net, currency, { signed: true })}` : ""].filter(Boolean) : [];
           return (
@@ -236,15 +239,17 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
               // heat: 8 shades of the day's own colour (regular / EMI / trip / income) by amount
               style={tint ? { background: heat(tint, shade) } : undefined}
               className={cn(
-                "flex h-14 flex-col items-center justify-between rounded-xl px-0.5 py-1.5 text-sm outline-none transition motion-reduce:transition-none sm:h-[4.5rem] lg:h-20",
-                "hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
-                isSel && "ring-2 ring-accent ring-offset-1 ring-offset-surface",
+                "flex h-14 flex-col items-center justify-between rounded-control px-0.5 py-1.5 text-sm outline-none transition-[background-color,filter] motion-reduce:transition-none sm:h-18 lg:h-20",
+                "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
+                // selected = ring around the whole tile (ink, so it also reads on blue EMI tiles)
+                isSel && "ring-2 ring-text ring-offset-1 ring-offset-surface",
                 !tint && (isSel ? "bg-surface-3" : "bg-surface-2 hover:bg-surface-3"),
-                tint && (strong ? "hover:brightness-110" : "hover:brightness-95"),
+                tint && "hover:brightness-110",
               )}
             >
-              <span className={cn("grid h-6 min-w-6 place-items-center rounded-full px-1 leading-none", isToday ? (strong ? "bg-accent-fg font-medium text-text" : "bg-accent font-medium text-accent-fg") : strong ? "font-medium text-accent-fg" : "text-text")}>{n}</span>
-              <span className={cn("num max-w-full truncate text-xs leading-none max-sm:hidden", strong ? "text-accent-fg/80" : "text-muted")}>{day && tint ? formatMoney(net, currency, { compact: true, signed: true }) : " "}</span>
+              {/* today = a ring round the date, never a fill, so it cannot be mistaken for an EMI tile */}
+              <span className={cn("grid h-6 min-w-6 place-items-center rounded-full px-1 leading-none text-text", isToday && "font-medium ring-1 ring-text")}>{n}</span>
+              <span className={cn("money max-w-full truncate text-xs leading-none max-sm:hidden", strong ? "text-text" : "text-muted")}>{day && tint ? formatMoney(net, currency, { compact: true, signed: true }) : " "}</span>
               <span className="flex h-1 w-7 gap-px overflow-hidden rounded-full" aria-hidden>
                 {day?.has.regular ? <span className="flex-1 bg-expense" /> : null}
                 {day?.has.plan ? <span className="flex-1 bg-plan" /> : null}
@@ -262,32 +267,32 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
         <li className="inline-flex items-center gap-1.5"><span className="h-1 w-5 rounded-full bg-trip" />Trip</li>
         <li className="inline-flex items-center gap-1.5"><span className="h-1 w-5 rounded-full bg-income" />Income / refund</li>
         <li className="inline-flex items-center gap-1.5"><span className="flex h-1 w-5 gap-px overflow-hidden rounded-full"><span className="flex-1 bg-expense" /><span className="flex-1 bg-plan" /><span className="flex-1 bg-trip" /><span className="flex-1 bg-income" /></span>Mixed</li>
-        <li className="inline-flex items-center gap-1.5"><span className="grid h-5 w-5 place-items-center rounded-full bg-accent text-xs leading-none font-medium text-accent-fg">{Number(today.slice(8, 10))}</span>Today</li>
+        <li className="inline-flex items-center gap-1.5"><span className="num grid h-5 w-5 place-items-center rounded-full text-xs leading-none font-medium text-text ring-1 ring-text">{Number(today.slice(8, 10))}</span>Today</li>
         <li className="ml-auto inline-flex items-center gap-1.5" aria-hidden>
           less
           {SHADES.map((s, i) => (
-            <span key={s.label} title={`${s.label} net`} className="h-2.5 w-2.5 rounded-[3px]" style={{ background: heat("regular", i) }} />
+            <span key={s.label} title={`${s.label} net`} className="h-2.5 w-2.5 rounded-sm" style={{ background: heat("regular", i) }} />
           ))}
           more
         </li>
       </ul>
 
       <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-xl bg-surface-2 px-3 py-2.5">
+        <div className="rounded-inset bg-surface-2 px-3 py-2.5">
           <dt className="text-muted">Daily average</dt>
-          <dd className="num mt-1 truncate text-base font-medium text-text">{elapsed ? formatMoney(monthTotal / elapsed, currency, { whole: true }) : "–"}</dd>
+          <dd className="money mt-1 truncate text-base text-text">{elapsed ? formatMoney(monthTotal / elapsed, currency, { whole: true }) : "–"}</dd>
           <dd className="mt-0.5 truncate text-faint">{daysWithSpend} active {daysWithSpend === 1 ? "day" : "days"}</dd>
         </div>
         {busiest ? (
-          <button type="button" onClick={() => setSelected(busiest[0])} className="rounded-xl bg-surface-2 px-3 py-2.5 text-left outline-none transition hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent">
+          <button type="button" onClick={() => setSelected(busiest[0])} className="rounded-inset bg-surface-2 px-3 py-2.5 text-left outline-none transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent">
             <span className="block text-muted">Busiest day</span>
-            <span className="num mt-1 block truncate text-base font-medium text-text">{formatMoney(busiest[1].spent, currency, { whole: true })}</span>
+            <span className="money mt-1 block truncate text-base text-text">{formatMoney(busiest[1].spent, currency, { whole: true })}</span>
             <span className="mt-0.5 block truncate text-faint">{parseISO(busiest[0]).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
           </button>
         ) : (
-          <div className="rounded-xl bg-surface-2 px-3 py-2.5">
+          <div className="rounded-inset bg-surface-2 px-3 py-2.5">
             <dt className="text-muted">Busiest day</dt>
-            <dd className="num mt-1 text-base font-medium text-text">–</dd>
+            <dd className="money mt-1 text-base text-text">–</dd>
           </div>
         )}
       </dl>
@@ -297,20 +302,20 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
           <>
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="text-sm font-medium">{longDay(selected)}</h3>
-              <p className="num text-sm text-muted">
-                Total spent <span className="ml-1 text-lg font-medium text-text">{formatMoney(sel?.spent ?? 0, currency)}</span>
+              <p className="text-sm text-muted">
+                Total spent <span className="money ml-1 text-lg text-text">{formatMoney(sel?.spent ?? 0, currency)}</span>
                 {sel && sel.inflow > 0 ? (
                   <>
                     <span className="mx-2 text-faint" aria-hidden>·</span>
-                    Received <span className="ml-1 text-lg font-medium text-income">{formatMoney(sel.inflow, currency)}</span>
+                    Received <span className="money ml-1 text-lg text-income">{formatMoney(sel.inflow, currency)}</span>
                     <span className="mx-2 text-faint" aria-hidden>·</span>
-                    Net <span className={cn("ml-1 text-lg font-medium", netOf(sel) >= 0 ? "text-income" : "text-text")}>{formatMoney(netOf(sel), currency, { signed: true })}</span>
+                    Net <span className={cn("money ml-1 text-lg", netOf(sel) >= 0 ? "text-income" : "text-text")}>{formatMoney(netOf(sel), currency, { signed: true })}</span>
                   </>
                 ) : null}
               </p>
             </div>
             {sel ? (
-              <div className="mt-2 divide-y divide-border/60">
+              <div className="mt-2 divide-y divide-border">
                 {sel.rows.map((r, i) => (
                   <LedgerItem key={`${r.txn_id}-${r.installment_seq}-${i}`} row={r} showDate={false} showKind />
                 ))}
@@ -321,11 +326,11 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
           </>
         ) : (
           <p className="py-2 text-sm text-muted">
-            <span className="num mr-1 text-lg font-medium text-text">{formatMoney(monthTotal, currency, { whole: true })}</span>
+            <span className="money mr-1 text-lg text-text">{formatMoney(monthTotal, currency, { whole: true })}</span>
             spent
             {monthIn > 0 ? (
               <>
-                {" "}and <span className="num mx-1 text-lg font-medium text-income">{formatMoney(monthIn, currency, { whole: true })}</span> received
+                {" "}and <span className="money mx-1 text-lg text-income">{formatMoney(monthIn, currency, { whole: true })}</span> received
               </>
             ) : null}{" "}
             in {formatMonth(month)}. Pick a day to see its transactions.

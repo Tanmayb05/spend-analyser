@@ -57,26 +57,26 @@ export function Sheet({
       }}
       className={cn(
         side === "bottom"
-          ? ["m-0 mt-auto w-full max-w-none rounded-t-[28px] border border-border bg-surface p-0 text-text", "sm:m-auto sm:max-w-lg sm:rounded-[28px]"]
+          ? ["m-0 mt-auto w-full max-w-none rounded-t-panel border border-border bg-surface p-0 text-text", "sm:m-auto sm:max-w-lg sm:rounded-panel"]
           : [
-              "sheet-left m-0 mt-auto h-[92dvh] max-h-none w-full max-w-none rounded-t-[28px] border border-border bg-surface p-0 text-text",
-              // desktop: sidebar is lg:p-4 + w-20 + lg:gap-4, so the panel starts where page content does
-              "lg:my-4 lg:ml-28 lg:mr-0 lg:h-[calc(100dvh-2rem)] lg:w-[420px] lg:rounded-[28px] lg:shadow-2xl",
+              "sheet-left m-0 mt-auto h-[92dvh] max-h-none w-full max-w-none rounded-t-panel border border-border bg-surface p-0 text-text",
+              // desktop: the panel starts where page content does (--sidebar-offset, set by the app shell)
+              "lg:my-4 lg:ml-(--sidebar-offset) lg:mr-0 lg:h-[calc(100dvh-2rem)] lg:w-105 lg:rounded-panel",
             ],
         className,
       )}
     >
       <div className={cn("flex flex-col", side === "bottom" ? "max-h-[92dvh]" : "h-full")}>
-        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-card py-4">
           <h2 className="text-lg font-medium">{title}</h2>
           <div className="flex items-center gap-1">
             {actions}
-            <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3">
+            <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-control transition-colors hover:bg-surface-3">
               <X size={18} />
             </button>
           </div>
         </div>
-        <div className={cn("overflow-y-auto px-5 py-5 pb-safe", side === "left" && "flex-1")}>{children}</div>
+        <div className={cn("overflow-y-auto px-card pt-card pb-safe", side === "left" && "flex-1")}>{children}</div>
       </div>
     </dialog>
   );

@@ -15,11 +15,12 @@ export type AttentionItem = {
   href: string;
 };
 
+/** Budget bars are neutral until a budget is near or over: only a problem gets a colour. */
 const BAR = {
   over: "bg-bad",
   near: "bg-warn",
-  ok: "bg-accent",
-  none: "bg-faint",
+  ok: "bg-(--chart-n2)",
+  none: "bg-(--chart-n2)",
 } as const;
 
 const COLS_WITH_BUDGET = "grid-cols-[minmax(0,1fr)_auto_4.25rem_4.25rem] @max-[17rem]:grid-cols-[minmax(0,1fr)_4.25rem_4.25rem]";
@@ -70,7 +71,7 @@ export function SpendDonut({
     <div className="@container flex min-h-0 flex-1 flex-col">
       {/* the ring takes the card's width (with padding) and soaks up spare height when the card is stretched */}
       <div className="flex flex-1 items-center justify-center px-4 py-3">
-        <div className="relative aspect-square w-full max-w-72">
+        <div className="relative aspect-square w-full max-w-96">
           <svg
             viewBox="0 0 200 200"
             className="h-full w-full -rotate-90"
@@ -102,7 +103,7 @@ export function SpendDonut({
                     opacity={hover && hover !== s.key ? 0.4 : 1}
                     onMouseEnter={() => setHover(s.key)}
                     onMouseLeave={() => setHover(null)}
-                    className="cursor-pointer transition-all motion-reduce:transition-none"
+                    className="cursor-pointer transition-opacity motion-reduce:transition-none"
                     style={{ stroke: s.color }}
                   />
                 );
@@ -111,7 +112,7 @@ export function SpendDonut({
               })}
           </svg>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="num text-3xl font-medium">
+            <span className="num-lg text-3xl">
               {money(focus?.value ?? total)}
             </span>
             <span className="max-w-[60%] truncate text-xs text-muted">
@@ -132,7 +133,7 @@ export function SpendDonut({
         <div
           role="row"
           className={cn(
-            "grid items-center gap-x-2 px-2 pb-1.5 text-xs font-medium uppercase tracking-wide text-faint",
+            "grid items-center gap-x-2 px-2 pb-1.5 text-label text-faint",
             showBudget ? COLS_WITH_BUDGET : COLS_NO_BUDGET,
           )}
         >
@@ -163,7 +164,7 @@ export function SpendDonut({
               >
                 <span role="cell" className="flex min-w-0 items-center gap-2">
                   <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
                     style={{ background: s.color }}
                     aria-hidden
                   />
@@ -172,13 +173,13 @@ export function SpendDonut({
                   </span>
                   {status === "over" ? (
                     <CircleAlert
-                      size={13}
+                      size={16}
                       className="shrink-0 text-bad"
                       aria-label="Over budget"
                     />
                   ) : status === "near" ? (
                     <AlertTriangle
-                      size={13}
+                      size={16}
                       className="shrink-0 text-warn"
                       aria-label="Near budget limit"
                     />
@@ -194,7 +195,7 @@ export function SpendDonut({
                 <span
                   role="cell"
                   className={cn(
-                    "num text-right",
+                    "money text-right",
                     status === "over" && "text-bad",
                     status === "near" && "text-warn",
                   )}
@@ -204,7 +205,7 @@ export function SpendDonut({
                 {showBudget ? (
                   <span
                     role="cell"
-                    className="num text-right text-muted"
+                    className="money text-right text-muted"
                     title={s.budgetNote}
                   >
                     {s.budget && s.budget > 0 ? (
@@ -226,7 +227,7 @@ export function SpendDonut({
                   <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-3">
                     <div
                       className={cn(
-                        "h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none",
+                        "h-full rounded-full",
                         BAR[status],
                       )}
                       style={{ width: `${Math.min(100, ratio * 100)}%` }}
@@ -241,7 +242,7 @@ export function SpendDonut({
               </>
             );
             const cls = cn(
-              "block rounded-xl px-2 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent",
+              "block rounded-control px-2 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent",
               s.href && "hover:bg-surface-2",
               hover === s.key && "bg-surface-2",
             );
@@ -277,16 +278,16 @@ export function SpendDonut({
               key={a.key}
               href={a.href}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium transition hover:brightness-125",
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium transition-opacity hover:opacity-80",
                 a.status === "over"
                   ? "bg-bad/15 text-bad"
                   : "bg-warn/15 text-warn",
               )}
             >
               {a.status === "over" ? (
-                <CircleAlert size={12} />
+                <CircleAlert size={16} />
               ) : (
-                <AlertTriangle size={12} />
+                <AlertTriangle size={16} />
               )}
               {a.label} {Math.round(a.ratio * 100)}%
             </Link>

@@ -109,7 +109,7 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
 
   return (
     <div ref={root} className="relative min-w-48 flex-1">
-      <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
+      <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
       <input
         role="combobox"
         aria-label="Search"
@@ -127,15 +127,15 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
         onFocus={() => setOpen(true)}
         onBlur={() => (typing.current = false)}
         onKeyDown={onKeyDown}
-        placeholder="Search merchant, category or amount"
-        className="h-11 w-full rounded-full border border-border bg-surface-2 pl-10 pr-10 text-sm outline-none focus:border-accent"
+        placeholder="Search"
+        className="h-10.5 w-full rounded-control border border-border bg-surface-2 pl-10 pr-10 text-sm outline-none transition-colors placeholder:text-faint focus:border-accent"
       />
       {q ? (
         <button
           type="button"
           aria-label="Clear search"
           onClick={() => { setQ(""); setOpen(false); setActive(-1); push({ q: null }); }}
-          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-faint hover:text-text"
+          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-inset text-faint transition-colors hover:text-text"
         >
           <X size={16} />
         </button>
@@ -145,7 +145,7 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
           id={listId}
           role="listbox"
           aria-label="Search suggestions"
-          className="absolute inset-x-0 top-full z-20 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-border bg-surface-2 p-1.5 shadow-xl"
+          className="absolute inset-x-0 top-full z-20 mt-2 max-h-80 overflow-y-auto rounded-control border border-border bg-surface-2 p-1 shadow-pop"
         >
           {items.map((item, i) => (
             <li key={`${item.kind}-${item.text}`} role="presentation">
@@ -158,9 +158,9 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => pick(item)}
-                className={cn("flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm", i === active ? "bg-surface-3 text-text" : "text-muted")}
+                className={cn("flex cursor-pointer items-center gap-3 rounded-sm px-3 py-2 text-sm", i === active ? "bg-surface-3 text-text" : "text-muted")}
               >
-                {item.kind === "merchant" ? <Store size={15} className="shrink-0 text-faint" /> : <TextCursorInput size={15} className="shrink-0 text-faint" />}
+                {item.kind === "merchant" ? <Store size={16} className="shrink-0 text-faint" /> : <TextCursorInput size={16} className="shrink-0 text-faint" />}
                 <span className="min-w-0 flex-1 truncate">
                   <Highlight text={item.text} q={q} />
                 </span>
@@ -175,5 +175,5 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-faint">{children}</p>;
+  return <p className="px-3 pb-1 pt-2 text-label text-faint">{children}</p>;
 }

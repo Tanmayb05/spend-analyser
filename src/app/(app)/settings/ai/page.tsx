@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SettingsPage } from "@/components/settings/section";
@@ -26,24 +27,31 @@ export default async function AiSettingsPage() {
             ? `Provider: ${AI.label}. Using ${AI.models.fast} for entry/receipts and ${AI.models.smart} for analysis.`
             : `Set ${AI.keyEnv} on the server (see .env.example) to enable smart entry, receipt reading and deep analysis. Everything else works without it.`}
         </p>
-        <Link href="/settings/ai/usage" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
-          See every call: tokens, time and cost →
+        <Link href="/settings/ai/usage" className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
+          See every call: tokens, time and cost <ArrowRight size={16} aria-hidden />
         </Link>
       </Card>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {meters.map((m) => (
-          <Card key={m.label}>
-            <p className="text-xs uppercase tracking-wide text-muted">{m.label}</p>
-            <p className="num mt-2 text-3xl font-medium">
-              {m.left}
-              <span className="text-lg text-muted"> / {m.limit} left</span>
-            </p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-3">
-              <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (m.used / Math.max(m.limit, 1)) * 100)}%` }} />
-            </div>
-            <p className="mt-3 text-sm text-muted">{m.desc}</p>
-          </Card>
-        ))}
+      <div className="rounded-card border border-border bg-surface">
+        <div className="px-card pt-card">
+          <CardHeader title="Monthly limits" />
+        </div>
+        <ul className="divide-y divide-border border-t border-border">
+          {meters.map((m) => (
+            <li key={m.label} className="px-card py-4">
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="text-label text-muted">{m.label}</p>
+                <p className="num text-xl font-medium">
+                  {m.left}
+                  <span className="text-sm text-muted"> / {m.limit} left</span>
+                </p>
+              </div>
+              <div className="mt-2 h-1 overflow-hidden rounded-inset bg-surface-3">
+                <div className="h-full rounded-inset bg-accent" style={{ width: `${Math.min(100, (m.used / Math.max(m.limit, 1)) * 100)}%` }} />
+              </div>
+              <p className="mt-2 text-sm text-muted">{m.desc}</p>
+            </li>
+          ))}
+        </ul>
       </div>
       <Card>
         <CardHeader title={`What is sent to ${AI.label}`} />

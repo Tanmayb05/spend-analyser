@@ -81,7 +81,7 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
             </Select>
           </Field>
           {currencyChanged && txnCount > 0 ? (
-            <div className="rounded-2xl bg-warn/10 p-4 text-sm text-warn">
+            <div className="rounded-inset bg-warn/10 p-compact text-sm text-warn">
               <p>All {txnCount} transactions will be converted to {v.base_currency} using each day&apos;s exchange rate. Original amounts are kept.</p>
               <label className="mt-3 flex items-center gap-2 text-text">
                 <input type="checkbox" checked={convertBudgets} onChange={(e) => setConvertBudgets(e.target.checked)} className="h-5 w-5 accent-[var(--accent)]" />
@@ -89,7 +89,7 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
               </label>
             </div>
           ) : null}
-          <Field label="Spread new purchases over (months, default)" htmlFor="dsm">
+          <Field label="Spread over (months)" htmlFor="dsm" hint="Pre-filled when you spread a purchase over several months">
             <Input id="dsm" type="number" min={1} max={120} value={v.default_spread_months} onChange={(e) => set("default_spread_months", Number(e.target.value))} />
           </Field>
         </div>
@@ -101,6 +101,7 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
           <div>
             <p className="mb-2 text-sm text-muted">Week starts on</p>
             <Segmented
+              ariaLabel="Week starts on"
               value={String(v.week_start) as "0" | "1"}
               onChange={(w) => set("week_start", Number(w))}
               options={[
@@ -118,6 +119,7 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
           <div>
             <p className="mb-2 text-sm text-muted">Theme</p>
             <Segmented
+              ariaLabel="Theme"
               value={v.theme}
               onChange={(t) => set("theme", t)}
               options={[
@@ -127,7 +129,7 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
               ]}
             />
           </div>
-          <Field label="Timezone" htmlFor="tz" hint="Decides what counts as 'today' and which payments are still scheduled.">
+          <Field label="Timezone" htmlFor="tz" hint="Decides what counts as 'today' and which payments are still scheduled">
             <Select id="tz" value={v.timezone} onChange={(e) => set("timezone", e.target.value)}>
               {extra.map((z) => (
                 <option key={z} value={z}>{z === deviceZone ? `This device (${cityOf(z)})` : cityOf(z)}</option>

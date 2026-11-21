@@ -7,11 +7,11 @@ import { toast } from "sonner";
 import {
   AlarmClock,
   BellOff,
-  Bot,
   CalendarClock,
   Check,
   ChevronDown,
   CreditCard,
+  Cpu,
   Flag,
   Gauge,
   Lightbulb,
@@ -21,7 +21,7 @@ import {
   Plane,
   ReceiptText,
   TriangleAlert,
-  Wand2,
+  ListChecks,
   X,
   type LucideProps,
 } from "lucide-react";
@@ -50,8 +50,8 @@ const ICON: Record<NoticeKind, ComponentType<LucideProps>> = {
   "emi-upcoming": CalendarClock,
   "next-month-committed": AlarmClock,
   "ai-flags": Flag,
-  "tidy-backlog": Wand2,
-  "ai-allowance": Bot,
+  "tidy-backlog": ListChecks,
+  "ai-allowance": Cpu,
   "ai-errors": TriangleAlert,
   trip: Plane,
 };
@@ -79,7 +79,7 @@ function PanelTitle() {
   return (
     <span className="flex items-center gap-2">
       Notifications
-      {unread ? <span className="rounded-full bg-surface-3 px-2 py-0.5 text-xs font-medium text-muted">{unread} new</span> : null}
+      {unread ? <span className="rounded-full bg-surface-3 px-2 py-0.5 text-label text-muted">{unread} new</span> : null}
     </span>
   );
 }
@@ -92,7 +92,7 @@ function MarkAllRead() {
     <button
       type="button"
       onClick={() => markRead(notices.filter((n) => !n.read && !n.hidden).map((n) => n.id))}
-      className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted hover:bg-surface-3 hover:text-text"
+      className="inline-flex h-9 items-center gap-1.5 rounded-control px-3 text-label text-muted hover:bg-surface-3 hover:text-text"
     >
       <Check size={14} /> Mark all read
     </button>
@@ -103,7 +103,7 @@ function PanelSkeleton() {
   return (
     <div className="grid gap-2" aria-busy="true" aria-label="Loading notifications">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface-2" />
+        <div key={i} className="h-20 rounded-card bg-surface-2" />
       ))}
     </div>
   );
@@ -155,7 +155,7 @@ function PanelBody() {
         <div className="grid grid-cols-1 gap-5">
           {sections.map((s) => (
             <section key={s.key} aria-label={s.title}>
-              <h3 className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-faint">{s.title}</h3>
+              <h3 className="mb-2 px-1 text-label text-faint">{s.title}</h3>
               <ul className="grid grid-cols-1 gap-2">
                 {s.items.map((n) => (n.hidden ? <HiddenRow key={n.id} n={n} /> : <NoticeRow key={n.id} n={n} today={today} />))}
               </ul>
@@ -170,7 +170,7 @@ function PanelBody() {
 function HiddenRow({ n }: { n: ListedNotice }) {
   const { restore } = useNotifications();
   return (
-    <li className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-dashed border-border px-3 py-2.5 text-xs text-muted">
+    <li className="flex min-w-0 items-center justify-between gap-3 rounded-card border border-dashed border-border px-3 py-2.5 text-xs text-muted">
       <span className="min-w-0 truncate">
         {n.hidden === "snoozed" ? "Snoozed for 3 days" : "Dismissed"}: {n.title}
       </span>
@@ -217,10 +217,10 @@ function NoticeRow({ n, today }: { n: ListedNotice; today: string }) {
   const showAction = n.action && !(n.action.kind === "write-review" && review);
 
   return (
-    <li className={cn("relative rounded-2xl border transition", n.read ? "border-transparent bg-surface-2/50" : "border-border bg-surface-2")}>
+    <li className={cn("relative rounded-card border transition-colors", n.read ? "border-transparent bg-surface-2/50" : "border-border bg-surface-2")}>
       <div className="flex gap-3 p-3">
-        <span className={cn("mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl", TONE[n.tone])}>
-          <Icon size={17} />
+        <span className={cn("mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-inset", TONE[n.tone])}>
+          <Icon size={18} />
         </span>
         <button type="button" onClick={go} className="min-w-0 flex-1 text-left">
           <span className="flex items-start gap-2">
@@ -229,16 +229,16 @@ function NoticeRow({ n, today }: { n: ListedNotice; today: string }) {
           </span>
           {n.detail && !(isReview && review) ? <span className="mt-0.5 block text-xs leading-relaxed text-muted">{n.detail}</span> : null}
           {isReview && review ? <span className="mt-0.5 block text-xs leading-relaxed text-muted">{review.headline}</span> : null}
-          <span className="mt-1.5 flex items-center gap-1.5 text-[11px] text-faint">
+          <span className="mt-1.5 flex items-center gap-1.5 text-xs text-faint">
             {relativeDays(n.at, today)} · {GROUP_LABEL[n.group]}
-            {isReview ? <ChevronDown size={12} className={cn("transition", expanded && "rotate-180")} /> : null}
+            {isReview ? <ChevronDown size={12} className={cn("transition-transform", expanded && "rotate-180")} /> : null}
           </span>
         </button>
         <RowMenu read={!!n.read} onRead={() => markRead([n.id])} onSnooze={() => hide(n.id, { snoozeDays: 3 })} onDismiss={() => hide(n.id, "dismiss")} />
       </div>
 
       {isReview && expanded ? (
-        <div className="mx-3 mb-3 rounded-xl border border-border bg-surface p-3 text-sm">
+        <div className="mx-3 mb-3 rounded-inset border border-border bg-surface p-3 text-sm">
           {review ? (
             <>
               <p className="font-medium">{review.headline}</p>
@@ -254,11 +254,11 @@ function NoticeRow({ n, today }: { n: ListedNotice; today: string }) {
       ) : null}
 
       {showAction ? (
-        <div className="-mt-1 flex gap-2 px-3 pb-3 pl-[60px]">
+        <div className="-mt-1 flex gap-2 px-3 pb-3 pl-15">
           <Button
             size="sm"
             variant={n.tone === "bad" ? "accent" : "outline"}
-            className="h-8 text-xs"
+            className="h-9"
             onClick={runAction}
             disabled={writing || (n.action!.kind === "write-review" && (n.review?.left ?? 0) <= 0)}
           >
@@ -271,17 +271,17 @@ function NoticeRow({ n, today }: { n: ListedNotice; today: string }) {
 }
 
 function RowMenu({ read, onRead, onSnooze, onDismiss }: { read: boolean; onRead: () => void; onSnooze: () => void; onDismiss: () => void }) {
-  const item = "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-surface-3";
+  const item = "flex w-full items-center gap-2 rounded-inset px-2.5 py-2 text-left text-xs hover:bg-surface-3";
   const close = (e: React.MouseEvent) => ((e.currentTarget.closest("details") as HTMLDetailsElement).open = false);
   return (
     <details data-overlay className="relative shrink-0 self-start">
       <summary
         aria-label="More options"
-        className="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-full text-muted hover:bg-surface-3 hover:text-text [&::-webkit-details-marker]:hidden"
+        className="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-control text-muted hover:bg-surface-3 hover:text-text [&::-webkit-details-marker]:hidden"
       >
         <MoreHorizontal size={16} />
       </summary>
-      <div className="absolute right-0 top-9 z-10 w-40 rounded-xl border border-border bg-surface p-1 shadow-xl">
+      <div className="absolute right-0 top-9 z-10 w-40 rounded-control border border-border bg-surface p-1 shadow-pop">
         {!read ? (
           <button type="button" className={item} onClick={(e) => (close(e), onRead())}>
             <Check size={14} /> Mark read

@@ -1,5 +1,20 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/**
+ * twMerge knows only Tailwind's own scale. The project tokens in globals.css (@theme static) have to be
+ * registered here, otherwise `cn("p-card", "p-0")` keeps both classes and the override silently loses.
+ */
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      spacing: ["compact", "card", "card-lg", "page", "page-lg"],
+      radius: ["control", "inset", "card", "panel"],
+      text: ["label"],
+      shadow: ["pop"],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

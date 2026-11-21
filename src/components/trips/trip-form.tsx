@@ -23,7 +23,7 @@ export function ModePicker({ value, onChange }: { value: TripMode; onChange: (m:
           role="radio"
           aria-checked={value === m}
           onClick={() => onChange(m)}
-          className={cn("rounded-2xl border p-3 text-left transition", value === m ? "border-accent bg-accent/10" : "border-border bg-surface-2 hover:bg-surface-3")}
+          className={cn("rounded-control border p-3 text-left transition-colors duration-(--dur-fast)", value === m ? "border-accent bg-surface-3" : "border-border bg-surface-2 hover:bg-surface-3")}
         >
           <span className="block text-sm font-medium">{MODE_COPY[m].title}</span>
           <span className="mt-1 block text-xs text-muted">{MODE_COPY[m].body}</span>
@@ -93,7 +93,7 @@ export function TripForm({ trip, onDone }: { trip?: Trip; onDone?: (id?: string)
         <ModePicker value={v.include_mode} onChange={(m) => setV({ ...v, include_mode: m })} />
       </div>
       {v.include_mode === "lump_sum" ? (
-        <div className="grid grid-cols-2 gap-3 rounded-2xl bg-surface-2 p-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 rounded-inset bg-surface-2 p-3 sm:grid-cols-3">
           <Field label="Category" htmlFor="lc">
             <Select id="lc" value={v.lump_category_id} onChange={(e) => setV({ ...v, lump_category_id: e.target.value })}>
               <option value="">Choose…</option>

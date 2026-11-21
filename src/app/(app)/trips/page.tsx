@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Plane } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty";
@@ -44,20 +43,19 @@ export default async function TripsPage() {
             const ratio = t.budget ? spent / Number(t.budget) : null;
             return (
               <Link key={t.id} href={`/trips/${t.id}`}>
-                <Card className="h-full transition hover:bg-surface-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-surface-3 text-muted"><Plane size={18} /></span>
-                    <Badge tone={t.include_mode === "excluded" ? "neutral" : "accent"}>{MODE_COPY[t.include_mode].title}</Badge>
+                <Card className="h-full transition-colors duration-(--dur-fast) hover:bg-surface-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 truncate text-lg font-medium">{t.name}</p>
+                    <Badge tone="neutral" className="shrink-0">{MODE_COPY[t.include_mode].title}</Badge>
                   </div>
-                  <p className="mt-4 truncate text-lg font-medium">{t.name}</p>
-                  <p className="text-xs text-muted">{start ? `${formatDay(start)}${end && end !== start ? ` – ${formatDay(end)}` : ""}` : "No dates yet"}</p>
-                  <p className="num mt-4 text-3xl font-medium">{formatMoney(spent, currency, { whole: true })}</p>
+                  <p className="mt-1 text-sm text-muted">{start ? `${formatDay(start)}${end && end !== start ? ` – ${formatDay(end)}` : ""}` : "No dates yet"}</p>
+                  <p className="num-lg mt-5 text-3xl font-medium">{formatMoney(spent, currency, { whole: true })}</p>
                   <p className="mt-1 text-sm text-muted">
-                    {days ? `${formatMoney(spent / days, currency, { whole: true })}/day · ${days} days` : `${s?.count ?? 0} expenses`}
+                    {days ? <><span className="money">{formatMoney(spent / days, currency, { whole: true })}</span>/day · {days} days</> : `${s?.count ?? 0} expenses`}
                   </p>
                   {ratio != null ? (
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
-                      <div className={`h-full rounded-full ${ratio > 1 ? "bg-bad" : ratio > 0.8 ? "bg-warn" : "bg-accent"}`} style={{ width: `${Math.min(100, ratio * 100)}%` }} />
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-inset bg-surface-3">
+                      <div className={`h-full rounded-inset ${ratio > 1 ? "bg-bad" : "bg-accent"}`} style={{ width: `${Math.min(100, ratio * 100)}%` }} />
                     </div>
                   ) : null}
                 </Card>

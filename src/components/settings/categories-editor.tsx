@@ -45,7 +45,7 @@ export function CategoriesEditor({ categories, subcategories, uses }: { categori
           subtitle={kind === "expense" ? "Everyday = controllable day-to-day spending. Turn it off for fixed costs like rent or tuition." : undefined}
           action={
             <Button size="sm" variant="outline" onClick={() => setEditing(kind === "expense" ? "new-expense" : "new-income")}>
-              <Plus size={14} /> Add
+              <Plus size={16} /> Add
             </Button>
           }
         />
@@ -53,10 +53,10 @@ export function CategoriesEditor({ categories, subcategories, uses }: { categori
           {list.map((c, i) => (
             <li key={c.id} className="flex items-center gap-2 py-2">
               <div className="flex flex-col">
-                <button type="button" aria-label={`Move ${c.name} up`} disabled={i === 0} onClick={() => move(list, i, -1)} className="text-faint hover:text-text disabled:opacity-20"><ArrowUp size={14} /></button>
-                <button type="button" aria-label={`Move ${c.name} down`} disabled={i === list.length - 1} onClick={() => move(list, i, 1)} className="text-faint hover:text-text disabled:opacity-20"><ArrowDown size={14} /></button>
+                <button type="button" aria-label={`Move ${c.name} up`} disabled={i === 0} onClick={() => move(list, i, -1)} className="text-faint hover:text-text disabled:opacity-20"><ArrowUp size={16} /></button>
+                <button type="button" aria-label={`Move ${c.name} down`} disabled={i === list.length - 1} onClick={() => move(list, i, 1)} className="text-faint hover:text-text disabled:opacity-20"><ArrowDown size={16} /></button>
               </div>
-              <button type="button" onClick={() => setEditing(c)} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-2 py-2 text-left hover:bg-surface-2">
+              <button type="button" onClick={() => setEditing(c)} className="flex min-w-0 flex-1 items-center gap-3 rounded-control px-2 py-2 text-left transition-colors hover:bg-surface-2">
                 <span className="h-3.5 w-3.5 shrink-0 rounded-[4px]" style={{ background: categoryColor(c) }} />
                 <span className={cn("min-w-0 flex-1", c.archived && "text-faint line-through")}>
                   <span className="block truncate font-medium">{c.name}</span>
@@ -147,7 +147,7 @@ function CategoryForm({
           ]}
         />
         {v.kind === "expense" ? (
-          <label className="flex items-start justify-between gap-3 rounded-2xl bg-surface-2 p-4">
+          <label className="flex items-start justify-between gap-3 rounded-inset bg-surface-2 p-compact">
             <span>
               <span className="block font-medium">Everyday spending</span>
               <span className="block text-sm text-muted">Everyday costs you control (groceries, dining). Turn off for fixed costs (rent, tuition, travel).</span>
@@ -166,17 +166,17 @@ function CategoryForm({
                 title={usedSlots.get(s) ? `Also used by ${usedSlots.get(s)}` : undefined}
                 aria-label={`Color ${s}${usedSlots.get(s) ? ` (used by ${usedSlots.get(s)})` : ""}`}
                 aria-pressed={v.color === s}
-                className={cn("relative h-9 w-9 rounded-xl ring-offset-2 ring-offset-[var(--surface)]", v.color === s && "ring-2 ring-text")}
+                className={cn("relative h-9 w-9 rounded-control ring-offset-2 ring-offset-[var(--surface)]", v.color === s && "ring-2 ring-text")}
                 style={{ background: `var(--${s})` }}
               >
                 {usedSlots.get(s) ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-surface bg-text" /> : null}
               </button>
             ))}
-            <button type="button" onClick={() => setV({ ...v, color: null })} aria-pressed={v.color === null} className={cn("h-9 rounded-xl border border-border px-3 text-xs text-muted", v.color === null && "ring-2 ring-text")}>
+            <button type="button" onClick={() => setV({ ...v, color: null })} aria-pressed={v.color === null} className={cn("h-9 rounded-control border border-border px-3 text-xs text-muted", v.color === null && "ring-2 ring-text")}>
               Neutral
             </button>
           </div>
-          <p className="mt-2 text-xs text-faint">8 colour-blind-safe colours. A dot means another category already uses it.</p>
+          <p className="mt-2 text-xs text-faint">8 colour-blind-safe colours. A dot means another category already uses it</p>
         </div>
         <Field label="What belongs here (optional)" htmlFor="cd">
           <Textarea id="cd" value={v.description} onChange={(e) => setV({ ...v, description: e.target.value })} className="min-h-16" />
@@ -201,9 +201,9 @@ function CategoryForm({
                     </form>
                   ) : (
                     <>
-                      <span className="flex-1 rounded-xl bg-surface-2 px-3 py-2 text-sm">{s.name}</span>
-                      <Button size="icon" variant="ghost" aria-label={`Rename ${s.name}`} onClick={() => setEditSub({ id: s.id, name: s.name })}><Pencil size={14} /></Button>
-                      <Button size="icon" variant="ghost" className="text-bad" aria-label={`Delete ${s.name}`} onClick={() => a.run(() => deleteSubcategory(s.id))}><Trash2 size={14} /></Button>
+                      <span className="flex-1 rounded-control bg-surface-2 px-3 py-2 text-sm">{s.name}</span>
+                      <Button size="icon" variant="ghost" aria-label={`Rename ${s.name}`} onClick={() => setEditSub({ id: s.id, name: s.name })}><Pencil size={16} /></Button>
+                      <Button size="icon" variant="ghost" className="text-bad" aria-label={`Delete ${s.name}`} onClick={() => a.run(() => deleteSubcategory(s.id))}><Trash2 size={16} /></Button>
                     </>
                   )}
                 </li>
@@ -211,7 +211,7 @@ function CategoryForm({
             </ul>
             <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); a.run(() => saveSubcategory({ category_id: category.id, name: newSub }), () => setNewSub("")); }}>
               <Input placeholder="New subcategory" value={newSub} onChange={(e) => setNewSub(e.target.value)} className="h-10" aria-label="New subcategory" />
-              <Button type="submit" size="sm" disabled={!newSub.trim()}><Plus size={14} /></Button>
+              <Button type="submit" size="sm" disabled={!newSub.trim()}><Plus size={16} /></Button>
             </form>
           </div>
 
@@ -219,7 +219,7 @@ function CategoryForm({
             <Button variant="outline" className="w-full" onClick={() => a.run(() => setCategoryArchived(category.id, !category.archived), onDone)}>
               {category.archived ? "Restore category" : "Archive (hide from pickers, keep history)"}
             </Button>
-            <div className="rounded-2xl border border-bad/30 p-4">
+            <div className="rounded-inset border border-bad/30 p-compact">
               <p className="text-sm font-medium">Delete category</p>
               {uses > 0 ? (
                 <Field label={`${uses} transactions use it. Move them to:`} className="mt-2">
@@ -231,7 +231,7 @@ function CategoryForm({
                   </Select>
                 </Field>
               ) : (
-                <p className="mt-1 text-xs text-muted">Not used by any transaction.</p>
+                <p className="mt-1 text-xs text-muted">Not used by any transaction</p>
               )}
               <Button
                 variant="danger"

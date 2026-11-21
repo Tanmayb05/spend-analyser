@@ -19,16 +19,16 @@ export function ProfileForms({ name, email }: { name: string; email: string }) {
           <Field label="Display name" htmlFor="dn" className="flex-1">
             <Input id="dn" value={n} onChange={(x) => setN(x.target.value)} autoComplete="name" />
           </Field>
-          <Button type="submit" disabled={a.pending || n === name}>Save</Button>
+          <Button type="submit" size="lg" disabled={a.pending || n === name}>Save</Button>
         </form>
       </Card>
       <Card>
-        <CardHeader title="Email" subtitle="We'll send a confirmation link to both the old and new address." />
+        <CardHeader title="Email" subtitle="We'll send a confirmation link to both the old and new address" />
         <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(ev) => { ev.preventDefault(); a.run(() => updateEmail(e)); }}>
           <Field label="Email" htmlFor="em" className="flex-1">
             <Input id="em" type="email" value={e} onChange={(x) => setE(x.target.value)} autoComplete="email" />
           </Field>
-          <Button type="submit" disabled={a.pending || e === email}>Change email</Button>
+          <Button type="submit" size="lg" disabled={a.pending || e === email}>Change email</Button>
         </form>
       </Card>
     </>

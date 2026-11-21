@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, ExternalLink, FileUp, Link2, Trash2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, FileUp, Link2, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
@@ -62,7 +62,7 @@ export function ReceiptFlow({ onDone }: { onDone: () => void }) {
   return (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed text-muted">
-        AI reads the shop, date, total and every line item. You check everything before it&apos;s saved, and the items are kept on the Items page so you can track prices over time.
+        Reads the shop, date, total and every line item from the file. You check everything before it&apos;s saved, and the items are kept on the Items page so you can track prices over time.
       </p>
       <input
         ref={fileInput}
@@ -76,9 +76,9 @@ export function ReceiptFlow({ onDone }: { onDone: () => void }) {
         type="button"
         disabled={pending}
         onClick={() => fileInput.current?.click()}
-        className="flex w-full flex-col items-center gap-2 rounded-3xl border border-dashed border-border px-6 py-8 text-center hover:bg-surface-2 disabled:opacity-50"
+        className="flex w-full flex-col items-center gap-2 rounded-card border border-dashed border-border px-6 py-8 text-center transition-colors hover:bg-surface-2 disabled:opacity-50"
       >
-        <FileUp className="text-accent" />
+        <FileUp size={18} className="text-accent" />
         <span className="font-medium">Upload or take a photo</span>
         <span className="text-xs text-muted">PDF, JPG, PNG, WEBP or HEIC · up to 10 MB</span>
       </button>
@@ -101,7 +101,11 @@ export function ReceiptFlow({ onDone }: { onDone: () => void }) {
           </div>
         </Field>
       </form>
-      {stage ? <p className="animate-pulse text-center text-sm text-muted">{stage}</p> : null}
+      {stage ? (
+        <p role="status" className="flex items-center justify-center gap-2 text-sm text-muted">
+          <Loader2 size={16} className="animate-spin" /> {stage}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -164,7 +168,7 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
         <p className="text-sm text-muted">{draft.items.length} items found. Check and fix anything wrong.</p>
         {draft.fileUrl ? (
           <a href={draft.fileUrl} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-1 text-sm text-accent">
-            View file <ExternalLink size={14} />
+            View file <ExternalLink size={16} />
           </a>
         ) : null}
       </div>
@@ -177,7 +181,7 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
           </Select>
         </Field>
         <Field label="Total paid" htmlFor="rt">
-          <Input id="rt" type="number" inputMode="decimal" step="0.01" value={draft.total} onChange={(e) => set("total", Number(e.target.value))} className="num text-right" />
+          <Input id="rt" type="number" inputMode="decimal" step="0.01" value={draft.total} onChange={(e) => set("total", Number(e.target.value))} className="money text-right" />
         </Field>
       </div>
       <p className="text-xs text-muted">
@@ -186,8 +190,8 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
         {draft.discount ? ` · savings ${formatMoney(draft.discount, draft.currency)}` : ""}
       </p>
       {mismatch ? (
-        <p className="flex items-center gap-2 rounded-2xl bg-warn/10 px-3 py-2 text-xs text-warn">
-          <AlertTriangle size={14} /> Items add up to {formatMoney(itemsSum, draft.currency)} but the subtotal says {formatMoney(expected, draft.currency)}. A line may be missing.
+        <p className="flex items-center gap-2 rounded-inset border border-border bg-surface-2 px-3 py-2 text-xs text-warn">
+          <AlertTriangle size={16} className="shrink-0" /> Items add up to {formatMoney(itemsSum, draft.currency)} but the subtotal says {formatMoney(expected, draft.currency)}. A line may be missing.
         </p>
       ) : null}
 
@@ -220,9 +224,9 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
         <p className="text-xs text-muted">Tax and savings are shared across categories in proportion to their items.</p>
       )}
 
-      <ul className="max-h-80 space-y-2 overflow-y-auto">
+      <ul className="max-h-80 divide-y divide-border overflow-y-auto rounded-control border border-border">
         {draft.items.map((it, idx) => (
-          <li key={idx} className="rounded-2xl bg-surface-2 p-3">
+          <li key={idx} className="p-3">
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <input
@@ -244,10 +248,10 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
                 step="0.01"
                 value={it.total_price}
                 onChange={(e) => setItem(idx, { total_price: Number(e.target.value) })}
-                className="num w-20 rounded-lg bg-surface-3 px-2 py-1 text-right text-sm outline-none"
+                className="money w-24 rounded-inset bg-surface-3 px-2 py-1 text-right text-sm outline-none focus:ring-2 focus:ring-accent/30"
               />
-              <button type="button" aria-label={`Remove item ${idx + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((_, i) => i !== idx) })} className="p-1 text-faint hover:text-bad">
-                <Trash2 size={14} />
+              <button type="button" aria-label={`Remove item ${idx + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((_, i) => i !== idx) })} className="p-1 text-faint transition-colors hover:text-bad">
+                <Trash2 size={16} />
               </button>
             </div>
             {mode === "split" ? (
@@ -255,7 +259,7 @@ function ReceiptReview({ draft, onChange, onDone }: { draft: ReceiptDraft; onCha
                 aria-label={`Item ${idx + 1} category`}
                 value={it.category_id}
                 onChange={(e) => setItem(idx, { category_id: e.target.value, subcategory_id: "" })}
-                className="mt-2 h-8 w-full rounded-lg border border-border bg-surface-3 px-2 text-xs"
+                className="mt-2 h-8 w-full rounded-inset border border-border bg-surface-3 px-2 text-xs"
               >
                 <option value="">Category…</option>
                 {expenseCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

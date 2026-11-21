@@ -1,8 +1,9 @@
 import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { TrendBars } from "@/components/charts/trend-bars";
-import { SERIES } from "@/components/charts/colors";
+import { ACCENT } from "@/components/charts/colors";
 import { PlanRow, type PlanView } from "@/components/plans/plan-row";
+import { StatStrip } from "@/components/cards/stat-strip";
 import { AddPlanButton } from "@/components/plans/add-plan-button";
 import { getReferenceData } from "@/lib/data/reference";
 import { requireUser } from "@/lib/supabase/server";
@@ -76,19 +77,14 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
     <>
       {plans.length ? (
         <>
-          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {[
-              [emi ? "Active EMIs" : "Active plans", String(active.length)],
-              [emi ? "Still to pay" : "Still to count", formatMoney(remaining, currency, { whole: true })],
-              [emi ? "Due next month" : "Counts next month", formatMoney(nextMonth, currency, { whole: true })],
-              ["Finished", String(finished.length)],
-            ].map(([k, v]) => (
-              <Card key={k} className="p-4 sm:p-5">
-                <p className="text-xs uppercase tracking-wide text-muted">{k}</p>
-                <p className="num mt-2 text-2xl font-medium sm:text-3xl">{v}</p>
-              </Card>
-            ))}
-          </section>
+          <StatStrip
+            stats={[
+              { label: emi ? "Active EMIs" : "Active plans", value: String(active.length) },
+              { label: emi ? "Still to pay" : "Still to count", value: formatMoney(remaining, currency, { whole: true }), money: true },
+              { label: emi ? "Due next month" : "Counts next month", value: formatMoney(nextMonth, currency, { whole: true }), money: true },
+              { label: "Finished", value: String(finished.length) },
+            ]}
+          />
 
           <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_1fr]">
             <Card className="flex min-w-0 flex-col">
@@ -99,7 +95,7 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
               />
               {/* flex-1 wrapper: the chart fills the card's spare height instead of overflowing it (TrendBars is h-full) */}
               <div className="min-h-0 flex-1">
-                <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel={emi ? "Committed" : "Counts"} aColor={SERIES.spent} height={180} />
+                <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel={emi ? "Committed" : "Counts"} aColor={ACCENT} height={180} />
               </div>
               <Insight>
                 {peak && peak.a > 0
@@ -109,7 +105,7 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
             </Card>
             <Card className="min-w-0">
               <CardHeader title="Active" />
-              {active.length ? active.map((p) => <PlanRow key={p.txnId} p={p} />) : <p className="py-6 text-center text-sm text-muted">No active {noun}.</p>}
+              {active.length ? active.map((p) => <PlanRow key={p.txnId} p={p} />) : <p className="py-6 text-center text-sm text-muted">No active {noun}</p>}
             </Card>
           </section>
 

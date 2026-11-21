@@ -3,7 +3,7 @@
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,7 @@ function Shell({ title, subtitle, info, count, ready, left, pending, onSuggest, 
         action={
           ready ? (
             <Button variant="accent" size="sm" onClick={onSuggest} disabled={pending || left <= 0}>
-              <Sparkles size={15} /> {pending ? "Working…" : "Suggest"}
+              {pending ? "Working…" : "Suggest"}
             </Button>
           ) : null
         }
@@ -67,7 +67,7 @@ function Shell({ title, subtitle, info, count, ready, left, pending, onSuggest, 
 function ReviewList({ children, footer }: { children: ReactNode; footer: ReactNode }) {
   return (
     <div className="mt-4 space-y-3">
-      <ul className="max-h-112 divide-y divide-border overflow-y-auto rounded-2xl border border-border">{children}</ul>
+      <ul className="max-h-112 divide-y divide-border overflow-y-auto rounded-control border border-border">{children}</ul>
       <div className="flex flex-wrap gap-2">{footer}</div>
     </div>
   );
@@ -87,7 +87,7 @@ function Row({ checked, onChange, label, children }: { checked: boolean; onChang
 const Change = ({ from, to }: { from: ReactNode; to: ReactNode }) => (
   <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
     <span className="line-through decoration-faint">{from}</span>
-    <ArrowRight size={12} />
+    <ArrowRight size={16} />
     <span className="font-medium text-text">{to}</span>
   </span>
 );

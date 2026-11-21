@@ -34,7 +34,7 @@ export function AuthForm({
   if (state.ok && hideOnSuccess) {
     return (
       <div className="space-y-4">
-        <p className="rounded-2xl bg-good/10 px-4 py-3 text-sm text-good">{state.message}</p>
+        <p className="rounded-inset bg-good/10 px-4 py-3 text-sm text-good">{state.message}</p>
         {footer}
       </div>
     );
@@ -57,7 +57,7 @@ export function AuthForm({
         </Field>
       ))}
       {state.message ? (
-        <p role="status" className={cn("rounded-2xl px-4 py-3 text-sm", state.ok ? "bg-good/10 text-good" : "bg-bad/10 text-bad")}>
+        <p role="status" className={cn("rounded-inset px-4 py-3 text-sm", state.ok ? "bg-good/10 text-good" : "bg-bad/10 text-bad")}>
           {state.message}
         </p>
       ) : null}

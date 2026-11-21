@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Card, CardHeader, Insight } from "@/components/ui/card";
+import { ChevronLeft } from "lucide-react";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatStrip } from "@/components/cards/stat-strip";
 import { TripHeaderActions } from "@/components/trips/trip-actions";
 import { MODE_COPY } from "@/lib/trip-modes";
 import { TxnList } from "@/components/transactions/txn-list";
@@ -43,11 +45,10 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
   // each part gets its own color: Flights / Stay / Food are fixed, the rest rotate (not the parent category's single color)
   const colors = tripPartColors(mergedParts.map((p) => p.label));
   const merged = mergedParts.map((p) => ({ ...p, color: colors.get(p.label)! }));
-  const top = merged[0];
 
   return (
     <>
-      <Link href="/trips" className="text-sm text-muted hover:text-text">← Trips</Link>
+      <Link href="/trips" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text"><ChevronLeft size={16} />Trips</Link>
       <div className="mb-5 mt-2 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-medium">{trip.name}</h1>
@@ -56,24 +57,19 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
         <TripHeaderActions trip={trip} />
       </div>
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          ["Total spent", formatMoney(total, currency, { whole: true })],
-          ["Per day", days ? formatMoney(total / days, currency, { whole: true }) : "–"],
-          ["Expenses", String(s?.count ?? 0)],
-          ["Budget", trip.budget ? `${formatPercent(total / Number(trip.budget))} of ${formatMoney(Number(trip.budget), currency, { whole: true })}` : "Not set"],
-        ].map(([k, v]) => (
-          <Card key={k} className="p-4 sm:p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">{k}</p>
-            <p className="num mt-2 truncate text-2xl font-medium sm:text-3xl">{v}</p>
-          </Card>
-        ))}
-      </section>
+      <StatStrip
+        stats={[
+          { label: "Total spent", value: formatMoney(total, currency, { whole: true }), money: true },
+          { label: "Per day", value: days ? formatMoney(total / days, currency, { whole: true }) : "–", money: days > 0 },
+          { label: "Expenses", value: String(s?.count ?? 0) },
+          { label: "Budget", value: trip.budget ? `${formatPercent(total / Number(trip.budget))} of ${formatMoney(Number(trip.budget), currency, { whole: true })}` : "Not set" },
+        ]}
+      />
 
       <section className="mt-4 grid gap-4 xl:grid-cols-[380px_1fr]">
         <div className="space-y-4">
           <Card>
-            <CardHeader title="Counted in monthly spending?" info={HELP.tripMode} action={<Badge tone={trip.include_mode === "excluded" ? "neutral" : "accent"}>{MODE_COPY[trip.include_mode].title}</Badge>} />
+            <CardHeader title="Counted in monthly spending?" info={HELP.tripMode} action={<Badge tone="neutral" className="shrink-0 whitespace-nowrap">{MODE_COPY[trip.include_mode].title}</Badge>} />
             <p className="text-sm text-muted">{MODE_COPY[trip.include_mode].body}</p>
             {trip.include_mode === "lump_sum" ? (
               <p className="mt-2 text-sm text-muted">
@@ -81,13 +77,13 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
                 {trip.lump_spread_months && trip.lump_spread_months > 1 ? `, spread over ${trip.lump_spread_months} months` : ""}.
               </p>
             ) : null}
-            <p className="mt-3 text-xs text-faint">Change it with Edit.</p>
+            <p className="mt-3 text-xs text-faint">Change it with Edit</p>
           </Card>
           <Card>
             <CardHeader title="Where did the trip money go?" info={HELP.tripBreakdown} />
             {merged.length ? (
               <>
-                <div className="flex h-3 gap-[2px] overflow-hidden rounded-full">
+                <div className="flex h-2 gap-px overflow-hidden rounded-inset">
                   {merged.map((p) => (
                     <div key={p.label} style={{ width: `${(p.value / total) * 100}%`, background: p.color }} title={p.label} />
                   ))}
@@ -95,22 +91,21 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
                 <ul className="mt-4 space-y-2 text-sm">
                   {merged.map((p) => (
                     <li key={p.label} className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: p.color }} />
+                      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} />
                       <span className="flex-1">{p.label}</span>
                       <span className="num text-muted">{formatPercent(p.value / total)}</span>
-                      <span className="num w-20 text-right">{formatMoney(p.value, currency, { whole: true })}</span>
+                      <span className="money w-20 text-right">{formatMoney(p.value, currency, { whole: true })}</span>
                     </li>
                   ))}
                 </ul>
-                {top ? <Insight>{top.label} was the biggest part of this trip ({formatPercent(top.value / total)}).</Insight> : null}
               </>
             ) : (
-              <p className="text-sm text-muted">No expenses yet.</p>
+              <p className="text-sm text-muted">No expenses yet</p>
             )}
           </Card>
         </div>
         <Card className="min-w-0">
-          {rows.length ? <TxnList rows={rows} /> : <p className="py-10 text-center text-sm text-muted">No expenses tagged with this trip yet.</p>}
+          {rows.length ? <TxnList rows={rows} /> : <p className="py-10 text-center text-sm text-muted">No expenses tagged with this trip yet</p>}
         </Card>
       </section>
     </>

@@ -57,6 +57,9 @@ test("every page renders with real data", async ({ page }, info) => {
   await page.goto("/");
   await page.getByRole("heading", { level: 1, name: "Overview" }).click();
   await expect(page.getByText(/Big costs .* are smoothed/)).toBeVisible();
+  // the Overview panel floats over the first KPI cards, so close it before opening the next one
+  await page.keyboard.press("Escape");
+  await expect(page.getByText(/Big costs .* are smoothed/)).toBeHidden();
   const spent = page.getByRole("group", { name: "Total spend", exact: true });
   await spent.locator("summary").click();
   await expect(spent.getByText(/expenses minus refunds/)).toBeVisible();
@@ -121,13 +124,14 @@ test("trip counting modes change monthly totals", async ({ page }, info) => {
   await expect(page.getByText("Added")).toBeVisible();
 
   await page.goto("/?m=2026-10");
-  await expect(page.getByText("No transactions yet")).toBeVisible(); // excluded trip: nothing counted
+  // excluded trip: nothing counted (the month still shows the calendar, not the new-account empty state)
+  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByText("$0", { exact: true })).toBeVisible();
   await page.goto("/trips");
   await expect(page.getByText("$300").first()).toBeVisible();
 
   // switch to lump sum
   await page.getByText("Goa").click();
-  await page.getByRole("button", { name: "Edit" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).click();
   await page.getByRole("radio", { name: /One lump sum/ }).click();
   await page.getByRole("button", { name: "Save trip" }).click();
   await expect(page.getByText("Trip saved")).toBeVisible();

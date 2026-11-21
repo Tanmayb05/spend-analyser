@@ -7,6 +7,13 @@ export function categoryColor(c?: Pick<Category, "color"> | null): string {
 
 export const SERIES = { spent: "var(--c1)", income: "var(--c3)" } as const;
 
+/**
+ * "One accent per chart": the series that matters takes ACCENT, the rest sit on the neutral steps (strong to quiet).
+ * The categorical palette c1-c8 stays for charts that must tell many series apart (c7 is the one purple-ish slot, last in rotation).
+ */
+export const ACCENT = "var(--accent)";
+export const NEUTRAL = { strong: "var(--chart-n1)", mid: "var(--chart-n2)", quiet: "var(--chart-muted)" } as const;
+
 /** Trip costs are mostly Flights, Stay and Food, so those three always get their own fixed, distinct colors. */
 const TRIP_FIXED: Record<string, string> = { flights: "var(--c1)", flight: "var(--c1)", stay: "var(--c2)", food: "var(--c3)" };
 /** Everything else takes the remaining palette slots (c6, a green close to Food's c3, goes last), then falls back to neutral. */

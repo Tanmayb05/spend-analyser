@@ -25,6 +25,8 @@ test.describe("workbook import", () => {
     await expect(page.getByText("No transactions yet")).toBeVisible();
 
     await page.goto("/settings/data");
+    // wait for hydration: a file set before it is dropped (the change handler is not attached yet)
+    await page.waitForLoadState("networkidle");
     await page.getByLabel("Choose file to import").setInputFiles("Expense_Tracker.xlsx");
     await expect(page.getByText("EMI plans", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Import \d+ transactions/ })).toBeVisible();

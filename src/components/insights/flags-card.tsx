@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, ScanSearch, TrendingUp, X } from "lucide-react";
+import { ScanSearch, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/money";
@@ -40,34 +40,30 @@ export function FlagsCard({ flags, ready, left, info }: { flags: FlagView[]; rea
         action={
           ready ? (
             <Button size="sm" variant="outline" onClick={scan} disabled={pending || left <= 0}>
-              <ScanSearch size={15} /> {pending ? "Checking…" : "Check now"}
+              <ScanSearch size={16} /> {pending ? "Checking…" : "Check now"}
             </Button>
           ) : null
         }
       />
       {flags.length ? (
-        <ul className="space-y-2">
-          {flags.map((f) => {
-            const Icon = f.kind === "duplicate" ? Copy : TrendingUp;
-            return (
-              <li key={f.id} className="flex items-start gap-3 rounded-2xl bg-surface-2 p-3">
-                <Icon size={16} className="mt-0.5 shrink-0 text-warn" aria-hidden />
-                <div className="min-w-0 flex-1 text-sm">
-                  <Link href={f.href} className="flex items-baseline justify-between gap-3 hover:underline">
-                    <span className="truncate font-medium">{f.label}</span>
-                    <span className="num shrink-0">{formatMoney(f.amount, f.currency)}</span>
-                  </Link>
-                  <p className="text-xs text-faint">
-                    {formatDay(f.date)} · {f.kind === "duplicate" ? "Possible duplicate" : "Unusually large"}
-                  </p>
-                  <p className="mt-1 leading-relaxed text-muted">{f.reason}</p>
-                </div>
-                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label={`Dismiss ${f.label}`} onClick={() => dismiss(f.id)} disabled={pending}>
-                  <X size={15} />
-                </Button>
-              </li>
-            );
-          })}
+        <ul className="divide-y divide-border border-y border-border">
+          {flags.map((f) => (
+            <li key={f.id} className="flex items-start gap-3 py-3">
+              <div className="min-w-0 flex-1 text-sm">
+                <Link href={f.href} className="flex items-baseline justify-between gap-3 hover:underline">
+                  <span className="truncate font-medium">{f.label}</span>
+                  <span className="money shrink-0">{formatMoney(f.amount, f.currency)}</span>
+                </Link>
+                <p className="text-label mt-0.5 text-muted">
+                  {formatDay(f.date)} · {f.kind === "duplicate" ? "Possible duplicate" : "Unusually large"}
+                </p>
+                <p className="mt-1 leading-relaxed text-muted">{f.reason}</p>
+              </div>
+              <Button size="icon" variant="ghost" className="-mr-2 h-8 w-8 shrink-0" aria-label={`Dismiss ${f.label}`} onClick={() => dismiss(f.id)} disabled={pending}>
+                <X size={16} />
+              </Button>
+            </li>
+          ))}
         </ul>
       ) : (
         <p className="text-sm text-muted">

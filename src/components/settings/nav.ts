@@ -1,4 +1,4 @@
-import { Activity, Bot,Database, FolderTree, PiggyBank, Shield, SlidersHorizontal, Store, User, Users, Wallet, Wand2 } from "lucide-react";
+import { Activity, Cpu, Database, FolderTree, ListChecks, PiggyBank, Shield, SlidersHorizontal, Store, User, Users, Wallet } from "lucide-react";
 
 /**
  * Settings pages grouped under headings. Headings are labels only (not pages); each item is the real page.
@@ -29,7 +29,7 @@ export const SETTINGS_GROUPS = [
     title: "App",
     items: [
       { href: "/settings/preferences", label: "Preferences", desc: "Currency, number format, theme, defaults", icon: SlidersHorizontal },
-      { href: "/settings/ai", label: "AI", desc: "AI provider, usage and limits", icon: Bot },
+      { href: "/settings/ai", label: "AI", desc: "AI provider, usage and limits", icon: Cpu },
       { href: "/settings/ai/usage", label: "AI usage", desc: "Calls, tokens, time and cost per feature", icon: Activity },
     ],
   },
@@ -38,7 +38,7 @@ export const SETTINGS_GROUPS = [
     title: "Data",
     items: [
       { href: "/settings/data", label: "Import & export", desc: "Excel / CSV in and out", icon: Database },
-      { href: "/settings/tidy", label: "AI tidy-up", desc: "Fix categories, merchants, item names", icon: Wand2 },
+      { href: "/settings/tidy", label: "AI tidy-up", desc: "Fix categories, merchants, item names", icon: ListChecks },
     ],
   },
 ] as const;

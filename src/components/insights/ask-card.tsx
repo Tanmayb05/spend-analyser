@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
-import { MessageCircleQuestion, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
@@ -41,27 +41,23 @@ export function AskCard({ ready, left, limit, info, examples }: { ready: boolean
   return (
     <Card>
       <CardHeader
-        title={
-          <span className="inline-flex items-center gap-2">
-            <MessageCircleQuestion size={18} className="text-accent" /> Ask your data
-          </span>
-        }
+        title="Ask your data"
         subtitle={`${remaining} of ${limit} questions left this month`}
         info={info}
       />
       {turns.length ? (
         <ul className="mb-4 space-y-3" aria-live="polite">
           {turns.map((t, i) => (
-            <li key={i} className={cn("max-w-[90%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed", t.role === "user" ? "ml-auto bg-text text-bg" : "bg-surface-2")}>
+            <li key={i} className={cn("max-w-[90%] whitespace-pre-wrap rounded-inset px-4 py-2.5 text-sm leading-relaxed", t.role === "user" ? "ml-auto bg-text text-bg" : "bg-surface-2")}>
               {t.content}
             </li>
           ))}
-          {pending ? <li className="w-fit animate-pulse rounded-2xl bg-surface-2 px-4 py-2.5 text-sm text-muted">Looking at your numbers…</li> : null}
+          {pending ? <li className="w-fit rounded-inset bg-surface-2 px-4 py-2.5 text-sm text-muted">Looking at your numbers…</li> : null}
         </ul>
       ) : (
         <div className="mb-4 flex flex-wrap gap-2">
           {examples.map((e) => (
-            <button key={e} type="button" onClick={() => ask(e)} disabled={pending || remaining <= 0} className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-left text-xs text-muted hover:bg-surface-3">
+            <button key={e} type="button" onClick={() => ask(e)} disabled={pending || remaining <= 0} className="rounded-control border border-border bg-surface-2 px-3 py-1.5 text-left text-xs text-muted transition-colors duration-(--dur-fast) hover:bg-surface-3 hover:text-text">
               {e}
             </button>
           ))}

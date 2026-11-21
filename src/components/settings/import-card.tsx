@@ -66,7 +66,7 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
 
   return (
     <Card>
-      <CardHeader title="Import" info={HELP.importer} subtitle="Your Expense Tracker workbook, or any .xlsx / .csv with Date, Type, Category, Amount columns." />
+      <CardHeader title="Import" info={HELP.importer} subtitle="Your Expense Tracker workbook, or any .xlsx / .csv with Date, Type, Category, Amount columns" />
       <input
         ref={input}
         type="file"
@@ -78,13 +78,13 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
       <button
         type="button"
         onClick={() => input.current?.click()}
-        className="flex w-full flex-col items-center gap-2 rounded-3xl border border-dashed border-border px-6 py-8 text-center hover:bg-surface-2"
+        className="flex w-full flex-col items-center gap-2 rounded-card border border-dashed border-border px-6 py-8 text-center transition-colors hover:bg-surface-2"
       >
         {fileName ? <FileSpreadsheet className="text-accent" /> : <Upload className="text-muted" />}
         <span className="font-medium">{fileName ?? "Choose a file"}</span>
-        <span className="text-xs text-muted">Nothing is saved until you confirm.</span>
+        <span className="text-xs text-muted">Nothing is saved until you confirm</span>
       </button>
-      {error ? <p className="mt-3 rounded-2xl bg-bad/10 px-4 py-3 text-sm text-bad">{error}</p> : null}
+      {error ? <p className="mt-3 rounded-inset bg-bad/10 px-4 py-3 text-sm text-bad">{error}</p> : null}
 
       {report ? (
         <div className="mt-5 space-y-4">
@@ -99,14 +99,14 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
               ["Expenses", formatMoney(report.stats.totals.expense, currency, { whole: true })],
               ["Income", formatMoney(report.stats.totals.income, currency, { whole: true })],
             ].map(([k, v]) => (
-              <div key={k as string} className="rounded-2xl bg-surface-2 p-3">
+              <div key={k as string} className="rounded-inset bg-surface-2 p-3">
                 <dt className="text-xs text-muted">{k}</dt>
                 <dd className="num mt-1 text-lg font-medium">{v}</dd>
               </div>
             ))}
           </dl>
           {report.stats.skipped.length ? (
-            <details className="rounded-2xl bg-warn/10 px-4 py-3 text-sm text-warn">
+            <details className="rounded-inset bg-warn/10 px-4 py-3 text-sm text-warn">
               <summary>{report.stats.skipped.length} rows will be skipped</summary>
               <ul className="mt-2 space-y-1">
                 {report.stats.skipped.slice(0, 20).map((s) => (
@@ -134,7 +134,7 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
               <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} className="mt-0.5 h-5 w-5 accent-[var(--accent)]" />
               <span>
                 Replace the default categories with the ones from this workbook
-                <span className="block text-xs text-muted">Recommended for a fresh account.</span>
+                <span className="block text-xs text-muted">Recommended for a fresh account</span>
               </span>
             </label>
           ) : null}

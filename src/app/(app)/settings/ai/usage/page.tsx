@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty";
 import { SettingsPage } from "@/components/settings/section";
 import { CALL_RANGES, getCallLog, parseRange } from "@/lib/ai/call-log";
 import { FEATURE_LABEL, type Bucket, type DayPoint } from "@/lib/ai/call-stats";
@@ -35,8 +36,8 @@ export default async function AiUsagePage({ searchParams }: PageProps<"/settings
             scroll={false}
             aria-current={r.value === range ? "page" : undefined}
             className={cn(
-              "inline-flex h-9 items-center rounded-full border px-3.5 text-sm font-medium transition",
-              r.value === range ? "border-text bg-text text-bg" : "border-border text-muted hover:text-text",
+              "inline-flex h-9 items-center rounded-control border px-3 text-sm font-medium transition-colors",
+              r.value === range ? "border-border bg-surface-3 text-text ring-1 ring-inset ring-text/10" : "border-border text-muted hover:text-text",
             )}
           >
             {r.label}
@@ -45,14 +46,12 @@ export default async function AiUsagePage({ searchParams }: PageProps<"/settings
       </nav>
 
       {t.calls === 0 ? (
-        <Card>
-          <p className="text-sm text-muted">No AI calls in this period. Use Smart Add, a receipt scan, analysis, tidy-up or Ask your data and they will show up here.</p>
-        </Card>
+        <EmptyState title="No AI calls in this period" body="Use Smart Add, a receipt scan, analysis, tidy-up or Ask your data and they will show up here." />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Stat label="Calls" value={String(t.calls)} sub={`${t.ok} ok · ${t.errors} failed · ${t.blocked} blocked`} />
-            <Stat label="Estimated cost" value={usd(t.costUsd)} sub={t.unpriced ? `${t.unpriced} call(s) on an unpriced model not included` : "at list prices"} />
+            <Stat label="Estimated cost" money value={usd(t.costUsd)} sub={t.unpriced ? `${t.unpriced} call(s) on an unpriced model not included` : "at list prices"} />
             <Stat label="Tokens" value={`${tokens(t.tokensIn)} / ${tokens(t.tokensOut)}`} sub={`in / out${t.cacheRead ? ` · ${tokens(t.cacheRead)} cached` : ""}${t.reasoning ? ` · ${tokens(t.reasoning)} reasoning` : ""}`} />
             <Stat label="Time taken" value={secs(t.p50Ms)} sub={`typical · slowest 5%: ${secs(t.p95Ms)} · success ${pct(t.successPct)}`} />
           </div>
@@ -89,11 +88,11 @@ export default async function AiUsagePage({ searchParams }: PageProps<"/settings
           ) : null}
 
           <Card>
-            <CardHeader title="Recent calls" subtitle={`Last ${log.recent.length} in this period.`} />
-            <div className="-mx-5 overflow-x-auto px-5">
+            <CardHeader title="Recent calls" subtitle={`Last ${log.recent.length} in this period`} />
+            <div className="-mx-card overflow-x-auto px-card">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-faint">
+                  <tr className="text-label text-left text-faint">
                     <th className="py-2 pr-3 font-medium">When</th>
                     <th className="py-2 pr-3 font-medium">Feature</th>
                     <th className="py-2 pr-3 font-medium">Model</th>
@@ -106,7 +105,7 @@ export default async function AiUsagePage({ searchParams }: PageProps<"/settings
                 <tbody>
                   {log.recent.map((r) => (
                     <tr key={r.id} className="border-t border-border">
-                      <td className="num py-2 pr-3 whitespace-nowrap text-muted">{new Date(r.created_at).toISOString().slice(0, 16).replace("T", " ")}</td>
+                      <td className="num whitespace-nowrap py-2 pr-3 text-muted">{new Date(r.created_at).toISOString().slice(0, 16).replace("T", " ")}</td>
                       <td className="py-2 pr-3">{FEATURE_LABEL[r.feature]}</td>
                       <td className="py-2 pr-3 text-muted">{r.model ?? "–"}</td>
                       <td className="py-2 pr-3">
@@ -114,13 +113,13 @@ export default async function AiUsagePage({ searchParams }: PageProps<"/settings
                       </td>
                       <td className="num py-2 pr-3 text-right">{r.status === "blocked" ? "–" : secs(r.latency_ms)}</td>
                       <td className="num py-2 pr-3 text-right">{r.tokens_in == null ? "–" : `${tokens(r.tokens_in)} / ${tokens(r.tokens_out ?? 0)}`}</td>
-                      <td className="num py-2 text-right">{r.cost_usd == null ? "–" : usd(Number(r.cost_usd))}</td>
+                      <td className="money py-2 text-right">{r.cost_usd == null ? "–" : usd(Number(r.cost_usd))}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            {log.truncated ? <p className="mt-3 text-xs text-faint">This period has more than 5,000 calls; totals cover the latest 5,000.</p> : null}
+            {log.truncated ? <p className="mt-3 text-xs text-faint">This period has more than 5,000 calls; totals cover the latest 5,000</p> : null}
           </Card>
 
           <p className="text-xs text-faint">
@@ -132,11 +131,11 @@ export default async function AiUsagePage({ searchParams }: PageProps<"/settings
   );
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
+function Stat({ label, value, sub, money }: { label: string; value: string; sub: string; money?: boolean }) {
   return (
     <Card>
-      <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
-      <p className="num mt-2 text-2xl font-medium">{value}</p>
+      <p className="text-label text-muted">{label}</p>
+      <p className={cn(money ? "money" : "num", "mt-2 text-2xl font-medium")}>{value}</p>
       <p className="mt-1 text-xs text-muted">{sub}</p>
     </Card>
   );
@@ -144,10 +143,10 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
 
 function BucketTable({ rows, label, first }: { rows: Bucket[]; label: (k: string) => string; first: string }) {
   return (
-    <div className="-mx-5 overflow-x-auto px-5">
+    <div className="-mx-card overflow-x-auto px-card">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
-          <tr className="text-left text-xs uppercase tracking-wide text-faint">
+          <tr className="text-label text-left text-faint">
             <th className="py-2 pr-3 font-medium">{first}</th>
             <th className="py-2 pr-3 text-right font-medium">Calls</th>
             <th className="py-2 pr-3 text-right font-medium">Success</th>
@@ -172,8 +171,8 @@ function BucketTable({ rows, label, first }: { rows: Bucket[]; label: (k: string
               <td className="num py-2 pr-3 text-right">
                 {tokens(b.tokensIn)} / {tokens(b.tokensOut)}
               </td>
-              <td className="num py-2 pr-3 text-right">{usd(b.costUsd)}</td>
-              <td className="num py-2 text-right">{b.ok + b.errors ? usd(b.costUsd / (b.ok + b.errors)) : "–"}</td>
+              <td className="money py-2 pr-3 text-right">{usd(b.costUsd)}</td>
+              <td className="money py-2 text-right">{b.ok + b.errors ? usd(b.costUsd / (b.ok + b.errors)) : "–"}</td>
             </tr>
           ))}
         </tbody>
@@ -190,12 +189,12 @@ function DayBars({ days }: { days: DayPoint[] }) {
   const labelEvery = Math.ceil(days.length / 8);
   return (
     <div>
-      <div className="mb-4 flex gap-4 text-xs text-muted">
+      <div className="mb-6 flex gap-4 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: "var(--c1)" }} /> ok
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: "var(--accent)" }} /> ok
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: "var(--c4)" }} /> failed
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: "var(--bad)" }} /> failed
         </span>
       </div>
       <div className="flex gap-2">
@@ -217,11 +216,11 @@ function DayBars({ days }: { days: DayPoint[] }) {
                   key={d.day}
                   title={`${d.day}: ${d.calls} call(s), ${d.errors} failed, ${usd(d.costUsd)}`}
                   aria-label={`${d.day}: ${d.calls} calls, ${d.errors} failed, ${usd(d.costUsd)}`}
-                  className="flex h-full min-w-0 flex-1 flex-col justify-end px-[2px]"
+                  className="flex h-full min-w-0 flex-1 flex-col justify-end px-0.5"
                 >
                   <div className="mx-auto flex w-full max-w-4 flex-col justify-end" style={{ height: `${(d.calls / top) * 100}%` }}>
-                    {d.errors ? <div className="w-full rounded-t-[3px]" style={{ height: `${(d.errors / Math.max(d.calls, 1)) * 100}%`, background: "var(--c4)" }} /> : null}
-                    <div className={cn("w-full flex-1", !d.errors && "rounded-t-[3px]")} style={{ background: "var(--c1)", minHeight: d.calls > d.errors ? 2 : 0 }} />
+                    {d.errors ? <div className="w-full rounded-t-sm" style={{ height: `${(d.errors / Math.max(d.calls, 1)) * 100}%`, background: "var(--bad)" }} /> : null}
+                    <div className={cn("w-full flex-1", !d.errors && "rounded-t-sm")} style={{ background: "var(--accent)", minHeight: d.calls > d.errors ? 2 : 0 }} />
                   </div>
                 </div>
               ))}

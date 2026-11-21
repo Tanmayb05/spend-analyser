@@ -99,8 +99,8 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
           router.push(v === "year" ? href({ view: "year", y: month.slice(0, 4) }) : href({ view: null, y: null, m: monthForYear(year, month, today).slice(0, 7) }), { scroll: false });
         }}
       />}
-      <div ref={root} className="relative flex items-center rounded-full border border-border bg-surface-2 p-1">
-        <Link href={prev} scroll={false} aria-label={`Previous ${noun}`} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3">
+      <div ref={root} className="relative flex h-10.5 items-center rounded-control border border-border bg-surface-2 p-1">
+        <Link href={prev} scroll={false} aria-label={`Previous ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3">
           <ChevronLeft size={18} />
         </Link>
         <button
@@ -110,12 +110,12 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
           aria-expanded={open}
           aria-controls={panelId}
           onClick={openPanel}
-          className="flex h-9 min-w-36 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium hover:bg-surface-3"
+          className="flex h-8 min-w-36 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors hover:bg-surface-3"
         >
-          <CalendarDays size={15} className="text-faint" />
+          <CalendarDays size={16} className="text-faint" />
           {label}
         </button>
-        <Link href={next} scroll={false} aria-label={`Next ${noun}`} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-3">
+        <Link href={next} scroll={false} aria-label={`Next ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3">
           <ChevronRight size={18} />
         </Link>
 
@@ -124,14 +124,14 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
             id={panelId}
             role="dialog"
             aria-label={view === "month" ? "Choose month" : "Choose year"}
-            className="absolute left-0 top-full z-30 mt-2 w-72 rounded-3xl border border-border bg-surface-2 p-3 shadow-xl"
+            className="absolute left-0 top-full z-30 mt-2 w-72 rounded-card border border-border bg-surface-2 p-3 shadow-pop"
           >
             <div className="mb-2 flex items-center justify-between">
               <button
                 type="button"
                 aria-label={view === "month" ? "Previous year" : "Earlier years"}
                 onClick={() => (view === "month" ? setPickYear((y) => y - 1) : setWinStart((s) => s - YEAR_WINDOW))}
-                className="grid h-8 w-8 place-items-center rounded-full hover:bg-surface-3"
+                className="grid h-8 w-8 place-items-center rounded-inset transition-colors hover:bg-surface-3"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -140,7 +140,7 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
                 type="button"
                 aria-label={view === "month" ? "Next year" : "Later years"}
                 onClick={() => (view === "month" ? setPickYear((y) => y + 1) : setWinStart((s) => s + YEAR_WINDOW))}
-                className="grid h-8 w-8 place-items-center rounded-full hover:bg-surface-3"
+                className="grid h-8 w-8 place-items-center rounded-inset transition-colors hover:bg-surface-3"
               >
                 <ChevronRight size={16} />
               </button>
@@ -161,8 +161,8 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
                         onClick={() => setOpen(false)}
                         aria-current={selected ? "date" : undefined}
                         className={cn(
-                          "grid h-10 place-items-center rounded-2xl text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                          selected ? "bg-text font-medium text-bg" : "text-muted hover:bg-surface-3 hover:text-text",
+                          "grid h-10 place-items-center rounded-inset text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                          selected ? "bg-surface-3 font-medium text-text ring-1 ring-inset ring-text/10" : "text-muted hover:bg-surface-3 hover:text-text",
                           !selected && ym === thisMonth && "ring-1 ring-inset ring-accent text-text",
                         )}
                       >
@@ -182,8 +182,8 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
                         onClick={() => setOpen(false)}
                         aria-current={selected ? "date" : undefined}
                         className={cn(
-                          "num grid h-10 place-items-center rounded-2xl text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                          selected ? "bg-text font-medium text-bg" : "text-muted hover:bg-surface-3 hover:text-text",
+                          "num grid h-10 place-items-center rounded-inset text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                          selected ? "bg-surface-3 font-medium text-text ring-1 ring-inset ring-text/10" : "text-muted hover:bg-surface-3 hover:text-text",
                           !selected && y === todayYear && "ring-1 ring-inset ring-accent text-text",
                         )}
                       >
@@ -198,7 +198,7 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
                 href={view === "month" ? monthHref(today) : yearHref(todayYear)}
                 scroll={false}
                 onClick={() => setOpen(false)}
-                className="rounded-full px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/10"
+                className="rounded-inset px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-surface-3"
               >
                 {view === "month" ? "This month" : "This year"}
               </Link>

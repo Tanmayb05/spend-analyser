@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { Card, CardHeader, Insight } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { PriceLine } from "@/components/charts/price-line";
 import { ReadReceiptButton } from "@/components/insights/read-receipt-button";
@@ -58,6 +58,14 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
   const sel = selected ? groups.get(selected) : null;
   const history = sel ? [...sel].sort((a, b) => (a.purchased_at ?? "").localeCompare(b.purchased_at ?? "")) : [];
 
+  const priceNote = (() => {
+    if (history.length < 2) return "";
+    const f = unitPrice(history[0]);
+    const l = unitPrice(history.at(-1)!);
+    const ch = f > 0 ? (l - f) / f : 0;
+    return Math.abs(ch) < 0.01 ? " · price unchanged" : ` · price ${ch > 0 ? "up" : "down"} ${formatPercent(Math.abs(ch))} since first purchase`;
+  })();
+
   return (
     <>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -73,37 +81,48 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
           <Card className="min-w-0">
             <form className="relative mb-3">
               <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
-              <input name="q" defaultValue={q} placeholder={`Search ${groups.size} items`} aria-label="Search items" className="h-11 w-full rounded-full border border-border bg-surface-2 pl-10 pr-4 text-sm outline-none focus:border-accent" />
+              <input name="q" defaultValue={q} placeholder={`Search ${groups.size} items`} aria-label="Search items" className="h-11 w-full rounded-control border border-border bg-surface-2 pl-10 pr-4 text-sm outline-none transition-colors duration-(--dur-fast) focus:border-accent" />
             </form>
+            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-x-3 border-b border-border px-2 pb-2 text-label text-faint sm:grid-cols-[minmax(0,1fr)_6rem_4rem_5.5rem]">
+              <span>Item</span>
+              <span className="text-right">Last price</span>
+              <span className="hidden text-right sm:block">Change</span>
+              <span className="hidden text-right sm:block">Spent</span>
+            </div>
             <ul className="divide-y divide-border">
-              {items.slice(0, 200).map((i) => (
-                <li key={i.name}>
-                  <Link href={`?${new URLSearchParams({ ...(q ? { q } : {}), item: i.name })}`} scroll={false} className={cn("flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-surface-2", selected === i.name && "bg-surface-2")}>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{i.name}</span>
-                      <span className="block truncate text-xs text-muted">
-                        {i.category ? `${i.category} · ` : ""}bought {i.times}× · last {i.lastDate ? formatDay(i.lastDate) : "?"}
-                      </span>
-                    </span>
-                    <span className="text-right text-sm">
-                      <span className="num block font-medium">{formatMoney(i.lastPrice, currency)}</span>
-                      {i.change != null && Math.abs(i.change) >= 0.01 ? (
-                        <span className={cn("num block text-xs", i.change > 0 ? "text-bad" : "text-good")}>
-                          {i.change > 0 ? "▲" : "▼"} {formatPercent(Math.abs(i.change))}
+              {items.slice(0, 200).map((i) => {
+                const moved = i.change != null && Math.abs(i.change) >= 0.01;
+                const change = moved ? `${i.change! > 0 ? "+" : "−"}${formatPercent(Math.abs(i.change!))}` : "–";
+                const tone = moved ? (i.change! > 0 ? "text-bad" : "text-good") : "text-faint";
+                return (
+                  <li key={i.name}>
+                    <Link
+                      href={`?${new URLSearchParams({ ...(q ? { q } : {}), item: i.name })}`}
+                      scroll={false}
+                      className={cn("grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-x-3 rounded-control px-2 py-3 transition-colors duration-(--dur-fast) hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_6rem_4rem_5.5rem]", selected === i.name && "bg-surface-3 ring-1 ring-inset ring-text/10")}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">{i.name}</span>
+                        <span className="block truncate text-xs text-muted">
+                          {i.category ? `${i.category} · ` : ""}bought {i.times}× · last {i.lastDate ? formatDay(i.lastDate) : "?"}
                         </span>
-                      ) : (
-                        <span className="block text-xs text-faint">{formatMoney(i.spent, currency, { whole: true })} total</span>
-                      )}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      </span>
+                      <span className="text-right text-sm">
+                        <span className="money block">{formatMoney(i.lastPrice, currency)}</span>
+                        <span className={cn("num block text-xs sm:hidden", tone)}>{change}</span>
+                      </span>
+                      <span className={cn("num hidden text-right text-sm sm:block", tone)}>{change}</span>
+                      <span className="money hidden text-right text-sm sm:block">{formatMoney(i.spent, currency, { whole: true })}</span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </Card>
           <div className="space-y-4">
             {sel && history.length ? (
               <Card>
-                <CardHeader title={selected!} subtitle={`${history.length} purchases · ${formatMoney(round2(history.reduce((a, r) => a + Number(r.total_price ?? 0), 0)), currency)} total`} />
+                <CardHeader title={selected!} subtitle={`${history.length} purchases · ${formatMoney(round2(history.reduce((a, r) => a + Number(r.total_price ?? 0), 0)), currency)} total${priceNote}`} />
                 {history.length > 1 ? (
                   <PriceLine points={history.filter((h) => h.purchased_at).map((h) => ({ date: h.purchased_at!, price: unitPrice(h), merchant: h.merchants?.name }))} currency={currency} />
                 ) : null}
@@ -114,23 +133,13 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
                         {h.purchased_at ? formatDay(h.purchased_at) : "?"}
                         <span className="text-muted">{h.merchants?.name ? ` · ${h.merchants.name}` : ""}</span>
                       </span>
-                      <span className="num text-muted">
+                      <span className="money shrink-0 whitespace-nowrap text-muted">
                         {h.quantity ? `${h.quantity}${h.unit ? ` ${h.unit}` : ""} × ` : ""}
                         <span className="text-text">{formatMoney(unitPrice(h), currency)}</span>
                       </span>
                     </li>
                   ))}
                 </ul>
-                {history.length > 1 ? (
-                  <Insight>
-                    {(() => {
-                      const f = unitPrice(history[0]);
-                      const l = unitPrice(history.at(-1)!);
-                      const ch = f > 0 ? (l - f) / f : 0;
-                      return Math.abs(ch) < 0.01 ? "The price has stayed the same." : `The price ${ch > 0 ? "went up" : "dropped"} ${formatPercent(Math.abs(ch))} since your first purchase (${formatMoney(f, currency)} → ${formatMoney(l, currency)}).`;
-                    })()}
-                  </Insight>
-                ) : null}
               </Card>
             ) : (
               <Card>

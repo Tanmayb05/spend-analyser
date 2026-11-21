@@ -1,8 +1,11 @@
 "use client";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
-/** Pill radio group. The selected pill slides between options (the global reduced-motion rule turns the slide off). */
+/**
+ * Radio group as a segmented control: a raised surface step with a hairline marks the selected option and slides between options
+ * (the global reduced-motion rule turns the slide off). Radius is nested: outer control radius minus the 4px padding.
+ */
 export function Segmented<T extends string>({
   value,
   options,
@@ -46,12 +49,12 @@ export function Segmented<T extends string>({
   }, [box]);
 
   return (
-    <div ref={root} role="radiogroup" aria-label={ariaLabel} className={cn("relative inline-flex rounded-full border border-border bg-surface-2 p-1", className)}>
+    <div ref={root} role="radiogroup" aria-label={ariaLabel} style={{ "--seg-radius": "calc(var(--radius-control) - 4px)" } as CSSProperties} className={cn("relative inline-flex rounded-control border border-border bg-surface-2 p-1", className)}>
       {box ? (
         <span
           aria-hidden
-          className={cn("pointer-events-none absolute inset-y-1 rounded-full bg-text", animate && "transition-[left,width] duration-200 ease-out")}
-          style={{ left: box.left, width: box.width }}
+          className={cn("pointer-events-none absolute inset-y-1 left-0 rounded-(--seg-radius) bg-surface-3 ring-1 ring-inset ring-text/10", animate && "transition-[transform,width] duration-(--dur-base)")}
+          style={{ transform: `translateX(${box.left}px)`, width: box.width }}
         />
       ) : null}
       {options.map((o) => (
@@ -62,9 +65,9 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "relative z-10 rounded-full px-3.5 font-medium transition-colors",
+            "relative z-10 rounded-(--seg-radius) px-3 font-medium transition-colors",
             size === "sm" ? "h-8 text-xs" : "h-9 text-sm",
-            value === o.value ? (box ? "text-bg" : "bg-text text-bg") : "text-muted hover:text-text",
+            value === o.value ? (box ? "text-text" : "bg-surface-3 text-text") : "text-muted hover:text-text",
           )}
         >
           {o.label}

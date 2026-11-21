@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { ChevronRight, Search } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Sheet } from "@/components/ui/sheet";
@@ -32,11 +31,11 @@ export function MerchantsEditor({ stats }: { stats: Record<string, Stat> }) {
         <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
         <Input aria-label="Search merchants" placeholder={`Search ${app.merchants.length} merchants`} value={q} onChange={(e) => setQ(e.target.value)} className="pl-10" />
       </div>
-      <Card className="p-2 sm:p-2">
+      <div className="rounded-card border border-border bg-surface p-2">
         <ul>
           {list.map((m) => (
             <li key={m.id}>
-              <button type="button" onClick={() => setEditing(m)} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-surface-2">
+              <button type="button" onClick={() => setEditing(m)} className="flex w-full items-center gap-3 rounded-control px-3 py-3 text-left transition-colors hover:bg-surface-2">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{m.name}</span>
                   <span className="block truncate text-xs text-muted">
@@ -45,16 +44,16 @@ export function MerchantsEditor({ stats }: { stats: Record<string, Stat> }) {
                   </span>
                 </span>
                 <span className="text-right text-xs text-muted">
-                  <span className="num block text-sm text-text">{formatMoney(stats[m.id]?.total ?? 0, app.currency, { whole: true })}</span>
+                  <span className="money block text-sm text-text">{formatMoney(stats[m.id]?.total ?? 0, app.currency, { whole: true })}</span>
                   {stats[m.id]?.count ?? 0} txns
                 </span>
                 <ChevronRight size={16} className="text-faint" />
               </button>
             </li>
           ))}
-          {!list.length ? <li className="px-3 py-6 text-center text-sm text-muted">No merchants found.</li> : null}
+          {!list.length ? <li className="px-3 py-6 text-center text-sm text-muted">No merchants found</li> : null}
         </ul>
-      </Card>
+      </div>
       <Sheet open={!!editing} onClose={() => setEditing(null)} title={editing ? editing.name : ""}>
         {editing ? <MerchantForm key={editing.id} merchant={editing} uses={stats[editing.id]?.count ?? 0} onDone={() => setEditing(null)} /> : null}
       </Sheet>
@@ -81,7 +80,7 @@ function MerchantForm({ merchant, uses, onDone }: { merchant: Merchant; uses: nu
           <Input id="mn" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Default category" htmlFor="mc" hint="Pre-filled when you pick this merchant.">
+          <Field label="Default category" htmlFor="mc" hint="Pre-filled when you pick this merchant">
             <Select id="mc" value={v.cat} onChange={(e) => setV({ ...v, cat: e.target.value, sub: "" })}>
               <option value="">None</option>
               {app.categories.map((c) => (

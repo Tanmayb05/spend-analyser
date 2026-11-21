@@ -12,7 +12,10 @@ export function AddFirst() {
       <Button onClick={() => openTxnSheet()}>
         <Plus size={18} /> Add a transaction
       </Button>
-      <Link href="/settings/data" className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-surface-2 px-4 text-sm font-medium hover:bg-surface-3">
+      <Link
+        href="/settings/data"
+        className="inline-flex h-11 items-center gap-2 rounded-control border border-border bg-surface-2 px-4 text-sm font-medium transition-colors hover:bg-surface-3"
+      >
         <Upload size={18} /> Import Excel / CSV
       </Link>
     </div>

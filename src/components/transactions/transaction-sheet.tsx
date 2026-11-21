@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, Copy, ExternalLink, Trash2 } from "lucide-react";
+import { ChevronDown, Copy, ExternalLink, Loader2, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -310,12 +310,17 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
     });
   }
 
-  if (loading) return <div className="h-80 animate-pulse rounded-3xl bg-surface-2" />;
+  if (loading)
+    return (
+      <p role="status" className="flex h-40 items-center justify-center gap-2 text-sm text-muted">
+        <Loader2 size={16} className="animate-spin" /> Loading transaction
+      </p>
+    );
 
   return (
-    <form onSubmit={submit} className="space-y-5" noValidate>
+    <form onSubmit={submit} className="space-y-6" noValidate>
       {!editId ? <SmartAdd onPresets={applyPresets} onReceipt={onReceipt} /> : null}
-      {queue.length ? <p className="rounded-2xl bg-accent/10 px-4 py-2 text-sm text-accent">{queue.length} more after this one</p> : null}
+      {queue.length ? <p className="rounded-inset border border-border bg-surface-2 px-4 py-2 text-sm text-text">{queue.length} more after this one</p> : null}
       <Segmented
         ariaLabel="Type"
         className="w-full [&>button]:flex-1"
@@ -347,7 +352,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
             value={v.amount}
             onChange={(e) => set("amount", e.target.value)}
             className={cn(
-              "num h-16 min-w-0 flex-1 rounded-2xl border bg-surface-2 px-4 text-right text-3xl font-medium outline-none focus:border-accent",
+              "money h-16 min-w-0 flex-1 rounded-control border bg-surface-2 px-4 text-right text-3xl font-medium outline-none transition-colors placeholder:text-faint focus:border-accent",
               errors.amount ? "border-bad" : "border-border",
             )}
           />
@@ -372,7 +377,8 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
         <Field label="Date" htmlFor="date" error={errors.date}>
           <Input id="date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} />
         </Field>
@@ -386,7 +392,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         </Field>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <Field label="Category" htmlFor="category" error={errors.category_id}>
           <Select id="category" value={v.category_id} onChange={(e) => setV((s) => ({ ...s, category_id: e.target.value, subcategory_id: "" }))}>
             <option value="">Choose…</option>
@@ -410,9 +416,9 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
           href={linkHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-2xl border border-border bg-surface-2 px-4 py-3 transition hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
+          className="flex items-center gap-3 rounded-control border border-border bg-surface-2 px-4 py-3 transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
         >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-inset bg-surface-3 text-accent">
             <ExternalLink size={18} />
           </span>
           <span className="min-w-0 flex-1">
@@ -423,9 +429,11 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         </a>
       ) : null}
 
+      </div>
+
       {/* Spread / EMI */}
       {v.type === "expense" ? (
-        <div className="rounded-3xl border border-border bg-surface-2 p-4">
+        <div className="rounded-card border border-border bg-surface-2 p-compact">
           <label className="flex cursor-pointer items-center justify-between gap-3">
             <span>
               <span className="block font-medium">Spread this cost</span>
@@ -435,7 +443,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
           </label>
 
           {v.spread ? (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <Segmented
                 size="sm"
                 className="w-full [&>button]:flex-1"
@@ -446,7 +454,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
                   { value: "emi", label: "Paying in EMIs" },
                 ]}
               />
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 <Field label="Months" htmlFor="pm">
                   <Input
                     id="pm"
@@ -480,12 +488,12 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
               <p className="text-sm text-muted">
                 {schedule.length
                   ? `${formatMoney(baseTotal, app.currency)} → ${formatMoney(schedule[0].amount, app.currency)}/mo · ${formatMonth(monthStart(schedule[0].due))} – ${formatMonth(monthStart(schedule[schedule.length - 1].due))}`
-                  : "Enter an amount and number of months."}
+                  : "Enter an amount and number of months"}
               </p>
               <p className="text-xs text-faint">
                 {v.plan_kind === "spread"
-                  ? "Paid upfront: you pay it all now, but it counts a bit each month."
-                  : "EMI: each installment counts in the month it's due."}
+                  ? "Paid upfront: you pay it all now, but it counts a bit each month"
+                  : "EMI: each installment counts in the month it's due"}
               </p>
             </div>
           ) : null}
@@ -494,7 +502,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
 
       {/* Bi-weekly income */}
       {v.type === "income" && !editId ? (
-        <div className="rounded-3xl border border-border bg-surface-2 p-4">
+        <div className="rounded-card border border-border bg-surface-2 p-compact">
           <label className="flex cursor-pointer items-center justify-between gap-3">
             <span>
               <span className="block font-medium">Repeats bi-weekly</span>
@@ -503,14 +511,14 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
             <input type="checkbox" className="h-6 w-6 accent-[var(--accent)]" checked={v.repeat} onChange={(e) => set("repeat", e.target.checked)} />
           </label>
           {v.repeat ? (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <Field label="Number of paychecks" htmlFor="rc" error={errors.repeat} hint={`26 is a full year. Up to ${MAX_BIWEEKLY}.`}>
                 <Input id="rc" type="number" inputMode="numeric" min={2} max={MAX_BIWEEKLY} value={v.repeat_count} onChange={(e) => set("repeat_count", e.target.value)} />
               </Field>
               <p className="text-sm text-muted">
                 {paychecks.length
                   ? `${paychecks.length} × ${formatMoney(baseTotal, app.currency)} · ${formatDay(paychecks[0])} – ${formatDay(paychecks[paychecks.length - 1])}`
-                  : "Enter a whole number of paychecks."}
+                  : "Enter a whole number of paychecks"}
               </p>
             </div>
           ) : null}
@@ -518,16 +526,16 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
       ) : null}
 
       {/* More details */}
-      <button type="button" onClick={() => setMore((m) => !m)} className="flex w-full items-center justify-between text-sm text-muted">
+      <button type="button" onClick={() => setMore((m) => !m)} className="flex w-full items-center justify-between rounded-control py-1 text-sm text-muted transition-colors hover:text-text">
         More details (link, payment, trip, notes)
-        <ChevronDown size={18} className={cn("transition", more && "rotate-180")} />
+        <ChevronDown size={18} className={cn("transition-transform duration-(--dur-fast)", more && "rotate-180")} />
       </button>
       {more ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <Field label="Description" htmlFor="desc">
             <Input id="desc" value={v.description} onChange={(e) => set("description", e.target.value)} placeholder="What was it for?" />
           </Field>
-          <Field label="Link" htmlFor="external-url" error={errors.external_url} hint="Add a receipt, order, booking, or other related webpage.">
+          <Field label="Link" htmlFor="external-url" error={errors.external_url} hint="Add a receipt, order, booking or other related webpage">
             <div className="flex gap-2">
               <Input
                 id="external-url"
@@ -546,14 +554,14 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
                   rel="noopener noreferrer"
                   aria-label="Open link"
                   title="Open link"
-                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-text transition hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
+                  className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-control border border-border bg-surface-2 text-text transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <ExternalLink size={18} />
                 </a>
               ) : null}
             </div>
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <Field label="Payment" htmlFor="pay">
               <Select id="pay" value={v.payment_method_id} onChange={(e) => set("payment_method_id", e.target.value)}>
                 <option value="">—</option>

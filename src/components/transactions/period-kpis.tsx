@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { InfoTitle } from "@/components/ui/info-title";
 import { HELP } from "@/lib/help";
 import { formatMoney, formatPercent } from "@/lib/money";
@@ -14,9 +15,9 @@ function DeltaPill({ delta, goodWhenUp }: { delta: Delta; goodWhenUp: boolean })
   const up = v > 0;
   const good = v === 0 ? null : up === goodWhenUp;
   return (
-    <span className={cn("rounded-full px-2 py-0.5 font-medium", good === null ? "bg-surface-3 text-muted" : good ? "bg-good/15 text-good" : "bg-bad/15 text-bad")}>
+    <Badge tone={good === null ? "neutral" : good ? "good" : "bad"}>
       {up ? "▲" : "▼"} {formatPercent(Math.abs(v))} {delta.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -68,15 +69,15 @@ export function PeriodKpiStrip({
   ];
   return (
     <Card aria-label={`Totals for ${period}`}>
-      <InfoTitle as="p" info={HELP.filteredTotal} className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+      <InfoTitle as="p" info={HELP.filteredTotal} className="mb-4 text-label text-muted">
         Totals · {period}
-        {basis ? <span className="ml-2 rounded-full bg-surface-3 px-2 py-0.5 text-xs normal-case tracking-normal text-muted">{basis}</span> : null}
+        {basis ? <Badge className="ml-2">{basis}</Badge> : null}
       </InfoTitle>
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border">
         {items.map((i) => (
-          <div key={i.key} className="min-w-0">
+          <div key={i.key} className="min-w-0 sm:px-card sm:first:pl-0 sm:last:pr-0">
             <dt className="text-sm text-muted">{i.label}</dt>
-            <dd className={cn("num mt-1 truncate text-3xl font-medium", i.tone)} title={i.hint}>{i.value}</dd>
+            <dd className={cn("num-lg mt-1 truncate text-3xl font-medium", i.tone)} title={i.hint}>{i.value}</dd>
             {i.sub ? <p className="mt-0.5 text-xs text-muted">{i.sub}</p> : null}
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
               <DeltaPill delta={i.delta} goodWhenUp={i.goodWhenUp} />
@@ -124,15 +125,15 @@ export function IncomeKpiStrip({
   ];
   return (
     <Card aria-label={`Income totals for ${period}`}>
-      <InfoTitle as="p" info={HELP.filteredTotal} className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+      <InfoTitle as="p" info={HELP.filteredTotal} className="mb-4 text-label text-muted">
         Income · {period}
-        {basis ? <span className="ml-2 rounded-full bg-surface-3 px-2 py-0.5 text-xs normal-case tracking-normal text-muted">{basis}</span> : null}
+        {basis ? <Badge className="ml-2">{basis}</Badge> : null}
       </InfoTitle>
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border">
         {items.map((i) => (
-          <div key={i.key} className="min-w-0">
+          <div key={i.key} className="min-w-0 sm:px-card sm:first:pl-0 sm:last:pr-0">
             <dt className="text-sm text-muted">{i.label}</dt>
-            <dd className="num mt-1 truncate text-3xl font-medium text-good">{i.value}</dd>
+            <dd className="num-lg mt-1 truncate text-3xl font-medium text-good">{i.value}</dd>
             {i.sub ? <p className="mt-0.5 text-xs text-muted">{i.sub}</p> : null}
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
               <DeltaPill delta={i.delta} goodWhenUp />

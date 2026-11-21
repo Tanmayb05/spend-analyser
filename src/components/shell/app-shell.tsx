@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { LogOut, Menu, Plus } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { useAppData } from "@/components/app-data";
 import { signOut } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
-import { MOBILE_PRIMARY, NAV, isActive } from "./nav";
+import { MOBILE_PRIMARY, NAV, SIDE_ROW, SIDE_ROW_ACTIVE, SIDE_ROW_IDLE, isActive } from "./nav";
 import { useCloseOverlays } from "@/hooks/use-close-overlays";
 import { NotificationsProvider } from "@/components/notifications/notifications-provider";
 import { NotificationBell } from "@/components/notifications/bell";
@@ -25,47 +26,36 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
   return (
     <NotificationsProvider source={notices}>
     <div className="min-h-dvh lg:flex lg:gap-4 lg:p-4">
-      {/* Desktop sidebar */}
-      <aside className="sticky top-4 z-40 hidden h-[calc(100dvh-2rem)] w-20 shrink-0 flex-col items-center rounded-[28px] border border-border bg-surface py-5 lg:flex">
-        <Link href="/" aria-label="Overview">
-          <Logo size={44} />
+      {/* Desktop sidebar: 240 wide, so content starts at 16 + 240 + 16 = --sidebar-offset (17rem) */}
+      <aside className="sticky top-4 z-40 hidden h-[calc(100dvh-2rem)] w-60 shrink-0 flex-col rounded-card border border-border bg-surface p-compact lg:flex">
+        <Link href="/" aria-label="Spend Analyser, Overview" className="flex h-9 items-center gap-3 px-3">
+          <Logo size={24} />
+          <span className="text-base font-medium text-text">Spend Analyser</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => openTxnSheet()}
-          className="group relative mt-8 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-accent-fg"
-          aria-label="Add transaction"
-        >
-          <Plus size={22} />
-          <SideTip>Add transaction</SideTip>
-        </button>
-        <div className="mt-2">
-          <NotificationBell variant="sidebar" tip={<SideTip>Notifications</SideTip>} />
-        </div>
-        <div className="mt-2 h-px w-8 bg-border" aria-hidden />
-        <nav className="mt-2 flex flex-1 flex-col items-center gap-2" aria-label="Main">
-          {NAV.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-label={label}
-              aria-current={isActive(pathname, href) ? "page" : undefined}
-              className={cn(
-                "group relative grid h-12 w-12 place-items-center rounded-2xl transition",
-                isActive(pathname, href) ? "bg-text text-bg" : "text-muted hover:bg-surface-3 hover:text-text",
-              )}
-            >
-              <Icon size={20} />
-              <SideTip>{label}</SideTip>
-            </Link>
-          ))}
+        <nav className="mt-6 flex flex-col gap-1" aria-label="Main">
+          {NAV.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn(SIDE_ROW, active ? SIDE_ROW_ACTIVE : SIDE_ROW_IDLE)}>
+                <Icon size={18} className="shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
-        <form action={signOut}>
-          <button type="submit" className="group relative grid h-12 w-12 place-items-center rounded-2xl text-muted hover:bg-surface-3 hover:text-text" aria-label="Sign out">
-            <LogOut size={20} />
-            <SideTip>Sign out</SideTip>
-          </button>
-        </form>
+        <div className="mt-auto flex flex-col gap-1">
+          <NotificationBell variant="sidebar" />
+          <form action={signOut}>
+            <button type="submit" className={cn(SIDE_ROW, SIDE_ROW_IDLE)}>
+              <LogOut size={18} className="shrink-0" />
+              Sign out
+            </button>
+          </form>
+          <Button variant="accent" size="sm" onClick={() => openTxnSheet()} className="mt-2 w-full">
+            <Plus size={18} />
+            Add transaction
+          </Button>
+        </div>
       </aside>
 
       <div className="min-w-0 flex-1">
@@ -77,11 +67,11 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
           <NotificationBell variant="header" />
         </header>
 
-        <main className="px-4 pb-28 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
+        <main className="mx-auto w-full max-w-400 px-4 pb-28 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-2 pt-2 backdrop-blur lg:hidden" aria-label="Main">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-2 pt-2 lg:hidden" aria-label="Main">
         <div className="mx-auto grid max-w-md grid-cols-5 items-center">
           {NAV.filter((n) => (MOBILE_PRIMARY as readonly string[]).includes(n.href)).slice(0, 2).map((n) => (
             <MobileTab key={n.href} {...n} active={isActive(pathname, n.href)} />
@@ -90,17 +80,17 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
             <button
               type="button"
               onClick={() => openTxnSheet()}
-              className="-mt-6 grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-fg shadow-lg shadow-accent/30"
+              className="grid h-11 w-11 place-items-center rounded-control bg-accent text-accent-fg"
               aria-label="Add transaction"
             >
-              <Plus size={26} />
+              <Plus size={20} />
             </button>
           </div>
           {NAV.filter((n) => n.href === "/trips").map((n) => (
             <MobileTab key={n.href} {...n} active={isActive(pathname, n.href)} />
           ))}
           <button type="button" onClick={() => setMoreOpen(true)} className="flex flex-col items-center gap-1 py-1 text-xs text-muted">
-            <Menu size={22} />
+            <Menu size={18} />
             More
           </button>
         </div>
@@ -109,14 +99,14 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
       <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
         <div className="grid gap-1">
           {NAV.filter((n) => !(MOBILE_PRIMARY as readonly string[]).includes(n.href)).map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-surface-2">
-              <Icon size={20} className="text-muted" />
+            <Link key={href} href={href} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-control px-3 py-3 hover:bg-surface-2">
+              <Icon size={18} className="text-muted" />
               {label}
             </Link>
           ))}
           <form action={signOut}>
-            <button type="submit" className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-bad hover:bg-surface-2">
-              <LogOut size={20} />
+            <button type="submit" className="flex w-full items-center gap-3 rounded-control px-3 py-3 text-bad hover:bg-surface-2">
+              <LogOut size={18} />
               Sign out
             </button>
           </form>
@@ -131,20 +121,8 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
 function MobileTab({ href, label, icon: Icon, active }: { href: string; label: string; icon: typeof Plus; active: boolean }) {
   return (
     <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-1 text-xs", active ? "text-text" : "text-muted")}>
-      <Icon size={22} />
-      {label === "Transactions" ? "Activity" : label}
+      <Icon size={18} />
+      {label}
     </Link>
-  );
-}
-
-/** Hover/focus label that slides out to the right of a sidebar icon. Decorative: the control already has an aria-label. */
-function SideTip({ children }: { children: ReactNode }) {
-  return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute left-full top-1/2 ml-3 -translate-x-1 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface-3 px-2.5 py-1.5 text-xs font-medium text-text opacity-0 shadow-xl transition duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none"
-    >
-      {children}
-    </span>
   );
 }

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { InfoTitle } from "./info-title";
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-[var(--radius-card)] border border-border bg-surface p-5", className)} {...props} />;
+  return <div className={cn("rounded-card border border-border bg-surface p-card", className)} {...props} />;
 }
 
 export function CardHeader({ title, action, subtitle, info }: { title: ReactNode; action?: ReactNode; subtitle?: ReactNode; info?: ReactNode }) {
@@ -21,6 +21,6 @@ export function CardHeader({ title, action, subtitle, info }: { title: ReactNode
 /** One-line plain-language takeaway shown under a chart. */
 export function Insight({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm leading-relaxed text-muted">{children}</p>
+    <p className="mt-4 rounded-inset bg-surface-2 px-4 py-3 text-sm leading-relaxed text-muted">{children}</p>
   );
 }

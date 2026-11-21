@@ -76,7 +76,7 @@ export function TrendBars({
         <div className="flex w-10 shrink-0 flex-col text-right text-xs text-faint">
           <div className="relative flex-1" style={{ minHeight: height }}>
             {ticks.map((t) => (
-              <span key={t} className="num absolute right-0 -translate-y-1/2" style={{ bottom: `${(t / top) * 100}%` }}>
+              <span key={t} className="absolute right-0 -translate-y-1/2 font-mono" style={{ bottom: `${(t / top) * 100}%` }}>
                 {compactNumber(t)}
               </span>
             ))}
@@ -95,7 +95,7 @@ export function TrendBars({
             {data.map((d, i) => {
               const emphasized = i === active;
               const label = `${formatMonth(d.month)}${d.future ? " (planned)" : ""}: ${aLabel} ${formatMoney(d.a, currency)}${pair ? `, ${bLabel} ${formatMoney(d.b ?? 0, currency)}` : ""}`;
-              const groupClass = "flex h-full min-w-0 flex-1 items-end justify-center gap-[2px] px-[3px] outline-none";
+              const groupClass = "flex h-full min-w-0 flex-1 items-end justify-center gap-0.5 px-[3px] outline-none";
               const bars = (
                 <>
                   <Bar value={d.a} top={top} maxWidth={barMaxWidth} color={aColor} dim={active !== -1 && !emphasized} future={d.future} />
@@ -136,7 +136,7 @@ export function TrendBars({
           {/* x labels */}
           <div className="mt-2 flex">
             {data.map((d, i) => (
-              <span key={d.month} className={cn("flex-1 text-center text-xs", active === -1 || i === active ? "text-text" : "text-faint", data.length > 12 && i % 2 === 1 && "max-sm:invisible")}>
+              <span key={d.month} className={cn("flex-1 text-center font-mono text-xs", active === -1 || i === active ? "text-text" : "text-faint", data.length > 12 && i % 2 === 1 && "max-sm:invisible")}>
                 {formatMonth(d.month, "short")}
               </span>
             ))}
@@ -144,16 +144,16 @@ export function TrendBars({
           {/* tooltip */}
           {hover !== null && data[hover] ? (
             <div
-              className="pointer-events-none absolute top-2 z-10 rounded-xl border border-border bg-surface-3 px-3 py-2 text-xs shadow-xl"
+              className="pointer-events-none absolute top-2 z-10 rounded-control border border-border bg-surface-3 px-3 py-2 text-xs shadow-pop"
               style={{ left: `${Math.min(85, Math.max(15, ((hover + 0.5) / data.length) * 100))}%`, transform: "translate(-50%, -100%)" }}
             >
               <p className="mb-1 font-medium text-text">{formatMonth(data[hover].month)}{data[hover].future ? " · planned" : ""}</p>
-              <p className="num text-muted">
-                {aLabel}: <span className="text-text">{formatMoney(data[hover].a, currency, { whole: true })}</span>
+              <p className="text-muted">
+                {aLabel}: <span className="money text-text">{formatMoney(data[hover].a, currency, { whole: true })}</span>
               </p>
               {pair ? (
-                <p className="num text-muted">
-                  {bLabel}: <span className="text-text">{formatMoney(data[hover].b ?? 0, currency, { whole: true })}</span>
+                <p className="text-muted">
+                  {bLabel}: <span className="money text-text">{formatMoney(data[hover].b ?? 0, currency, { whole: true })}</span>
                 </p>
               ) : null}
             </div>
@@ -161,15 +161,15 @@ export function TrendBars({
         </div>
       </div>
       {pinnedPoint && pinnedPoint.href && pinnedPoint.month !== selected ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-2 px-4 py-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-inset border border-border bg-surface-2 px-4 py-3">
           <div className="min-w-0 text-sm">
             <p className="font-medium text-text">{formatMonth(pinnedPoint.month)}{pinnedPoint.future ? " · planned" : ""}</p>
-            <p className="num text-xs text-muted">
-              {aLabel}: <span className="text-text">{formatMoney(pinnedPoint.a, currency, { whole: true })}</span>
+            <p className="text-xs text-muted">
+              {aLabel}: <span className="money text-text">{formatMoney(pinnedPoint.a, currency, { whole: true })}</span>
               {pair ? (
                 <>
                   {" · "}
-                  {bLabel}: <span className="text-text">{formatMoney(pinnedPoint.b ?? 0, currency, { whole: true })}</span>
+                  {bLabel}: <span className="money text-text">{formatMoney(pinnedPoint.b ?? 0, currency, { whole: true })}</span>
                 </>
               ) : null}
             </p>
@@ -178,7 +178,7 @@ export function TrendBars({
             href={pinnedPoint.href}
             scroll={false}
             onClick={() => setPinned(null)}
-            className="inline-flex h-9 items-center rounded-full bg-text px-4 text-sm font-medium text-bg hover:opacity-90"
+            className="inline-flex h-9 items-center rounded-control bg-text px-4 text-sm font-medium text-bg transition-opacity hover:opacity-90"
           >
             View {formatMonth(pinnedPoint.month, "short")}
           </Link>
@@ -192,7 +192,7 @@ function Bar({ value, top, maxWidth, color, dim, future }: { value: number; top:
   const h = Math.max(0, (value / top) * 100);
   return (
     <div
-      className="w-full rounded-t-[4px] transition-[height,opacity] duration-300 ease-out"
+      className="w-full rounded-t-sm transition-opacity duration-(--dur-base) motion-reduce:transition-none"
       style={{ height: `${h}%`, maxWidth, minHeight: value > 0 ? 2 : 0, background: color, opacity: (dim ? 0.35 : 1) * (future ? 0.55 : 1) }}
     />
   );
@@ -201,7 +201,7 @@ function Bar({ value, top, maxWidth, color, dim, future }: { value: number; top:
 export function LegendDot({ color, label }: { color: string; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: color }} />
+      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: color }} />
       {label}
     </span>
   );

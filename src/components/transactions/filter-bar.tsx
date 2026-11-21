@@ -90,8 +90,8 @@ export function FilterBar({
   };
 
   const chip = (label: string, clear: Record<string, null>) => (
-    <button key={label} type="button" onClick={() => go(clear)} className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent">
-      {label} <X size={12} />
+    <button key={label} type="button" onClick={() => go(clear)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface-2 px-3 text-xs font-medium text-text transition-colors hover:bg-surface-3">
+      {label} <X size={16} className="text-muted" />
     </button>
   );
   const chips = [
@@ -115,7 +115,7 @@ export function FilterBar({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <PeriodPicker view={view} month={month} year={year} today={today} />
         <SearchBox value={filters.q} descriptions={descriptions} go={go} />
       </div>
@@ -123,8 +123,9 @@ export function FilterBar({
       {/* one line on phones (toggle · Filters · Sort, chips drop below); on sm+ chips sit beside the toggle and Filters/Sort stay right */}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
         <Segmented
+          size="sm"
           ariaLabel="Activity view"
-          className="shrink-0 max-sm:[&_button]:px-2.5 max-sm:[&_button]:text-xs"
+          className="shrink-0 max-sm:[&_button]:px-2.5"
           value={filters.core ? "core" : "all"}
           onChange={(v) => go({ core: v === "core" ? "1" : null })}
           options={[{ value: "all", label: "All activity" }, { value: "core", label: "Everyday" }]}
@@ -132,18 +133,18 @@ export function FilterBar({
         {chips.length ? (
           <div className="order-last flex w-full flex-wrap items-center gap-2 sm:order-none sm:w-auto sm:min-w-0" aria-label="Active filters">
             {chips}
-            <Link href={href(Object.fromEntries(FILTER_KEYS.map((k) => [k, null])))} scroll={false} className="text-xs text-muted hover:text-text">Clear all</Link>
+            <Link href={href(Object.fromEntries(FILTER_KEYS.map((k) => [k, null])))} scroll={false} className="px-1 text-xs text-muted transition-colors hover:text-text">Clear all</Link>
           </div>
         ) : null}
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <button type="button" onClick={openMore} aria-label={filterCount ? `Filters, ${filterCount} active` : "Filters"} className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-surface-2 text-sm hover:text-text sm:w-auto sm:px-4">
+          <button type="button" onClick={openMore} aria-label={filterCount ? `Filters, ${filterCount} active` : "Filters"} className="relative inline-flex h-10.5 w-10.5 shrink-0 items-center justify-center gap-2 rounded-control border border-border bg-surface-2 text-sm transition-colors hover:bg-surface-3 sm:w-auto sm:px-4">
             <SlidersHorizontal size={16} />
             <span className="max-sm:sr-only">Filters</span>
             {filterCount ? (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs font-medium text-white max-sm:absolute max-sm:-right-1 max-sm:-top-1" aria-hidden>{filterCount}</span>
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs font-medium text-accent-fg max-sm:absolute max-sm:-right-1 max-sm:-top-1" aria-hidden>{filterCount}</span>
             ) : null}
           </button>
-          <Select aria-label="Sort" value={sort} onChange={(e) => go({ sort: e.target.value === "newest" ? null : e.target.value })} className="h-11 w-auto rounded-full py-0 pl-3 pr-8 text-xs sm:pl-4 sm:pr-9 sm:text-sm">
+          <Select aria-label="Sort" value={sort} onChange={(e) => go({ sort: e.target.value === "newest" ? null : e.target.value })} className="h-10.5 w-auto py-0 pl-3 pr-8 text-xs sm:pl-4 sm:pr-9 sm:text-sm">
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
             <option value="largest">Largest first</option>
@@ -152,8 +153,8 @@ export function FilterBar({
       </div>
 
       <Sheet open={more.open} onClose={more.hide} title="More filters">
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <Field label="Type">
               <Select value={draft.type} onChange={(e) => setD({ type: e.target.value, cat: "", sub: "" })}>
                 <option value="">All types</option>
@@ -197,7 +198,7 @@ export function FilterBar({
               ))}
             </Select>
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <Field label="Payment">
               <Select value={draft.pay} onChange={(e) => setD({ pay: e.target.value })}>
                 <option value="">Any</option>
@@ -230,7 +231,7 @@ export function FilterBar({
               <span className="block text-xs text-muted">Future-dated entries are left out of totals until they happen. Turn on to see projected totals.</span>
             </span>
           </label>
-          <Button className="w-full" onClick={applyDraft}>Done</Button>
+          <Button className="mt-2 w-full" onClick={applyDraft}>Done</Button>
         </div>
       </Sheet>
     </div>

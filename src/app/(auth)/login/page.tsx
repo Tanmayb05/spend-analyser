@@ -4,17 +4,16 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { signIn } from "../actions";
 import { safeNext } from "@/lib/validation/auth";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Log in" };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const sp = await searchParams;
   const next = safeNext(sp.next);
   return (
     <>
-      <h1 className="text-2xl font-medium">Welcome back</h1>
-      <p className="mb-6 mt-1 text-sm text-muted">Sign in to see your spending.</p>
+      <h1 className="mb-6 text-2xl font-medium">Log in</h1>
       {sp.error === "link" ? (
-        <p className="mb-4 rounded-2xl bg-warn/10 px-4 py-3 text-sm text-warn">That link is invalid or expired. Try again.</p>
+        <p className="mb-4 rounded-inset bg-warn/10 px-4 py-3 text-sm text-warn">That link is invalid or expired. Try again.</p>
       ) : null}
       <AuthForm
         action={signIn}
@@ -26,8 +25,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         ]}
         footer={
           <div className="flex flex-wrap justify-between gap-2 pt-2 text-sm">
-            <Link href="/forgot-password" className="text-muted hover:text-text">Forgot password?</Link>
-            <Link href="/signup" className="text-accent">Create account</Link>
+            <Link href="/forgot-password" className="text-muted transition-colors hover:text-text">Forgot password?</Link>
+            <Link href="/signup" className="text-accent hover:underline">Create account</Link>
           </div>
         }
       />

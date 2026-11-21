@@ -1,9 +1,10 @@
+import { ChevronDown } from "lucide-react";
 import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const control =
-  "w-full rounded-2xl border border-border bg-surface-2 px-4 text-base text-text placeholder:text-faint " +
-  "outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60";
+  "w-full rounded-control border border-border bg-surface-2 px-4 text-base text-text placeholder:text-faint " +
+  "outline-none transition-[border-color,box-shadow] focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...props },
@@ -17,9 +18,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
   ref,
 ) {
   return (
-    <select ref={ref} className={cn(control, "h-12 appearance-none bg-[length:16px] pr-10", className)} {...props}>
-      {children}
-    </select>
+    <span className="relative flex">
+      <select ref={ref} className={cn(control, "h-12 appearance-none pr-10", className)} {...props}>
+        {children}
+      </select>
+      <ChevronDown size={16} aria-hidden className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted" />
+    </span>
   );
 });
 
@@ -46,7 +50,7 @@ export function Field({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       <label htmlFor={htmlFor} className="text-sm text-muted">
         {label}
       </label>

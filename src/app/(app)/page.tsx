@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarClock } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { NetBars } from "@/components/charts/net-bars";
@@ -54,7 +54,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         <DashboardHeader info={HELP.overview} />
         <EmptyState
           title="No transactions yet"
-          body="Add your first expense, or import your existing Excel tracker to see your dashboard come alive."
+          body="Add your first expense, or import your existing Excel tracker to see this month at a glance."
           action={<AddFirst />}
         />
       </>
@@ -159,17 +159,14 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         metrics={[
           {
             label: "Income",
-            qualifier: "for this month",
             info: HELP.kpiIncome,
             value: money(cur.income),
             delta: pctChange(cur.income, prev.income),
             goodWhenUp: true,
             sub: bTotals.incomeTarget > 0 ? `of ${money(bTotals.incomeTarget)} target` : undefined,
-            progress: bTotals.incomeTarget > 0 ? { ratio: cur.income / bTotals.incomeTarget, status: "ok" } : undefined,
           },
           {
             label: "Total spend",
-            qualifier: "for this month",
             info: HELP.kpiSpent,
             value: money(cur.spent),
             delta: pctChange(cur.spent, prev.spent),
@@ -177,7 +174,6 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
               bTotals.total > 0
                 ? `${formatPercent(cur.spent / bTotals.total)} of ${money(bTotals.total)}${isCurrent && spendRemaining > 0 ? ` · ${money(spendRemaining / Math.max(left, 1))}/day left` : ""}`
                 : "No budget set",
-            progress: bTotals.total > 0 ? { ratio: cur.spent / bTotals.total, status: budgetStatus(cur.spent, bTotals.total) } : undefined,
           },
           {
             label: "Everyday spend",
@@ -185,11 +181,9 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
             value: money(cur.core),
             delta: pctChange(cur.core, prev.core),
             sub: bTotals.core > 0 ? `of ${money(bTotals.core)} everyday budget` : "controllable categories",
-            progress: bTotals.core > 0 ? { ratio: cur.core / bTotals.core, status: budgetStatus(cur.core, bTotals.core) } : undefined,
           },
           {
             label: "Net savings",
-            qualifier: "for this month",
             info: HELP.kpiNet,
             value: formatMoney(cur.net, currency, { whole: true, signed: true }),
             tone: cur.net > 0 ? "good" : cur.net < 0 ? "bad" : undefined,
@@ -200,14 +194,14 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         ]}
       />
 
-      <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
+      <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         {/* key: switching month remounts the card so the selected day resets */}
         <CalendarCard key={month} info={HELP.calendar} month={month} today={today} rows={calendarRows} currency={currency} weekStart={profile.week_start} scope={scope} />
 
         <div className="grid grid-cols-1 gap-5">
           <Card className="flex flex-col">
             <CardHeader
-              title={scope === "core" ? "Everyday Spending Breakdown" : "All Spending Breakdown"}
+              title={scope === "core" ? "Everyday spending breakdown" : "All spending breakdown"}
               subtitle={scope === "core" ? "Everyday categories" : "All categories"}
               info={HELP.donut}
               action={<Link href="/settings/budgets" className="text-sm text-muted hover:text-text">Budgets</Link>}
@@ -217,27 +211,27 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
                 <SpendDonut slices={slices} attention={attention} currency={currency} totalLabel={scope === "core" ? "Everyday spent" : "Total spent"} />
                 {Math.abs(unshown) >= 0.5 ? (
                   <p className="mt-3 text-xs text-muted">
-                    {scope === "core" ? "Everyday spend" : "Total spend"} is {money(kpiSpend)}; {money(Math.abs(unshown))} of net refunds isn&apos;t shown by category.
+                    {scope === "core" ? "Everyday spend" : "Total spend"} is <span className="money">{money(kpiSpend)}</span>; <span className="money">{money(Math.abs(unshown))}</span> of net refunds isn&apos;t shown by category
                   </p>
                 ) : null}
               </>
             ) : (
-              <p className="py-10 text-center text-sm text-muted">No spending this month.</p>
+              <p className="py-10 text-center text-sm text-muted">No spending this month</p>
             )}
           </Card>
         </div>
       </section>
 
-      {/* second row: history and what's ahead */}
-      <section className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
-        <Card className="flex flex-col">
+      {/* second row: history and what's ahead. On desktop the list takes the wide column and the trend the narrow one (DOM order stays trend, then list) */}
+      <section className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <Card className="flex flex-col xl:order-2">
           <CardHeader
             title={scope === "core" ? "Is my everyday spending steady?" : "Am I saving?"}
             subtitle="Last 12 months"
             info={HELP.trend}
             action={
               <Link href="/insights" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
-                Details <ArrowUpRight size={14} />
+                Details <ArrowUpRight size={16} />
               </Link>
             }
           />
@@ -250,21 +244,21 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted">
             {scope === "core"
-              ? `Average ${money(avgSpend)} a month${bTotals.core > 0 ? ` against a ${money(bTotals.core)} budget` : ""}.`
+              ? `Average ${money(avgSpend)} a month${bTotals.core > 0 ? ` against a ${money(bTotals.core)} budget` : ""}`
               : activeMonths.length > 1
-                ? `Average spend ${money(avgSpend)}/month · overspent ${overMonths} of ${activeMonths.length} months.`
+                ? `Average spend ${money(avgSpend)}/month · overspent ${overMonths} of ${activeMonths.length} months`
                 : activeMonths.length
-                  ? `${overMonths ? "You spent more than you earned" : "You earned more than you spent"} this month.`
-                  : "Not enough history yet."}
+                  ? `${overMonths ? "You spent more than you earned" : "You earned more than you spent"} this month`
+                  : "Not enough history yet"}
           </p>
         </Card>
 
-        <Card>
-          <CardHeader title="What's coming up?" subtitle="Next 30 days" info={HELP.upcoming} action={<CalendarClock size={18} className="text-muted" />} />
+        <Card className="xl:order-1">
+          <CardHeader title="What's coming up?" subtitle="Next 30 days" info={HELP.upcoming} />
           {soon.length ? (
             <ul className="divide-y divide-border">
               {soon.slice(0, 5).map((r, i) => (
-                <li key={`${r.txn_id}-${r.installment_seq}-${i}`} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <li key={`${r.txn_id}-${r.installment_seq}-${i}`} className="flex items-center justify-between gap-3 py-3 text-sm">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{r.merchant_name || r.description || catName(r.category_id)}</p>
                     <p className="text-xs text-muted">
@@ -272,7 +266,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
                       {r.installment_seq ? ` · ${r.installment_seq} of ${r.installment_count}` : ""}
                     </p>
                   </div>
-                  <span className="num shrink-0 font-medium">{formatMoney(Number(r.amount), currency)}</span>
+                  <span className="money shrink-0 text-right">{formatMoney(Number(r.amount), currency)}</span>
                 </li>
               ))}
             </ul>
@@ -282,7 +276,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           <div className="mt-3 border-t border-border pt-3">
             <div className="flex justify-between text-xs text-muted">
               <span>Already committed for {formatMonth(nextMonth)}</span>
-              <span className="num">
+              <span className="money">
                 <span className="text-text">{money(committedNext)}</span>
                 {nextBudget > 0 ? ` of ${money(nextBudget)}` : ""}
               </span>

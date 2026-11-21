@@ -107,34 +107,34 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm text-muted">{count} {count === 1 ? "entry" : "entries"}</p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="num text-sm text-muted">{count} {count === 1 ? "entry" : "entries"}</p>
         {selecting ? (
           <Button variant="ghost" size="sm" onClick={() => { setSelecting(false); setPicked(new Set()); }}>
             Cancel
           </Button>
         ) : count ? (
           <Button variant="ghost" size="sm" onClick={() => setSelecting(true)}>
-            <CheckSquare size={14} /> Select
+            <CheckSquare size={16} /> Select
           </Button>
         ) : null}
       </div>
 
       {groups.map((g) => (
-        <section key={g.key} aria-label={g.upcoming ? "Upcoming scheduled" : undefined} className={cn("mb-3", g.upcoming && "mt-1 rounded-3xl border border-dashed border-border p-2")}>
-          <div className="flex items-center justify-between gap-3 px-2 py-2 text-xs text-muted">
-            <span className={cn("font-medium", g.upcoming && "uppercase tracking-wide text-warn")}>{g.title}</span>
+        <section key={g.key} aria-label={g.upcoming ? "Upcoming scheduled" : undefined} className={cn("mb-4", g.upcoming && "mt-1 rounded-card border border-dashed border-border p-2")}>
+          <div className="flex items-center justify-between gap-3 px-2 py-2 text-label text-muted">
+            <span className={cn(g.upcoming && "text-warn")}>{g.title}</span>
             {g.note ? <span className="num">{g.upcoming ? g.note : `· ${g.note}`}</span> : null}
           </div>
-          <div className="-mx-2 rounded-3xl">
+          <div className="-mx-2 divide-y divide-border border-t border-border">
             {g.rows.map((r, i) => {
               const k = `${r.txn_id ?? r.trip_id}-${r.installment_seq ?? 0}-${i}`;
               if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={detail.show} />;
               const on = r.txn_id ? picked.has(r.txn_id) : false;
               return (
-                <div key={k} className={cn("flex items-center gap-1 rounded-2xl", on && "bg-accent/10")}>
+                <div key={k} className={cn("flex items-center gap-1 rounded-control", on && "bg-surface-3 ring-1 ring-inset ring-accent")}>
                   <button type="button" disabled={!r.txn_id} onClick={() => toggle(r.txn_id)} className="grid h-11 w-11 shrink-0 place-items-center text-muted" aria-label={on ? "Deselect" : "Select"}>
-                    {on ? <CheckSquare size={20} className="text-accent" /> : <Square size={20} />}
+                    {on ? <CheckSquare size={18} className="text-accent" /> : <Square size={18} />}
                   </button>
                   <div className="min-w-0 flex-1" onClickCapture={(e) => { e.stopPropagation(); e.preventDefault(); toggle(r.txn_id); }}>
                     <LedgerItem row={r} showDate={g.showDate} />
@@ -149,14 +149,14 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
       <TxnDetail row={detail.value} onClose={detail.hide} />
 
       {selecting ? (
-        <div role="toolbar" aria-label="Bulk actions" className="sticky bottom-24 z-30 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-3 p-3 shadow-xl lg:bottom-4">
+        <div role="toolbar" aria-label="Bulk actions" className="sticky bottom-24 z-30 mt-3 flex items-center justify-between gap-3 rounded-card border border-border bg-surface-3 p-3 shadow-pop lg:bottom-4">
           <span className="text-sm text-muted">{picked.size ? `${picked.size} selected` : "Pick entries to delete"}</span>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => { setSelecting(false); setPicked(new Set()); }} aria-label="Cancel selection">
               <X size={16} />
             </Button>
             <Button variant="danger" size="sm" disabled={!picked.size || pending} onClick={bulkDelete}>
-              <Trash2 size={14} /> Delete {picked.size || ""}
+              <Trash2 size={16} /> Delete {picked.size || ""}
             </Button>
           </div>
         </div>
