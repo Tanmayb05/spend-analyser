@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyPassword } from "@/lib/supabase/reauth";
+import { removeUserReceipts } from "@/lib/receipt-storage";
 import { getRate } from "@/lib/fx";
 import { todayIn } from "@/lib/dates";
 import { emailSchema, passwordSchema } from "@/lib/validation/auth";
@@ -62,13 +64,18 @@ export async function signOutEverywhere() {
   redirect("/login");
 }
 
-export async function deleteAccount(confirm: string): Promise<Result> {
+/** Permanently deletes the account. Needs the typed word AND the current password. */
+export async function deleteAccount(confirm: string, password: string): Promise<Result> {
   if (confirm !== "DELETE") return fail("Type DELETE to confirm.");
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId, email } = await requireUser();
+  if (!(await verifyPassword(email ?? "", password, userId))) return fail("Wrong password.");
   const admin = createAdminClient();
   // receipts in storage first (database rows cascade with the user)
-  const { data: files } = await admin.storage.from("receipts").list(userId, { limit: 1000 });
-  if (files?.length) await admin.storage.from("receipts").remove(files.map((f) => `${userId}/${f.name}`));
+  try {
+    await removeUserReceipts(admin, userId);
+  } catch (e) {
+    return fail(`Couldn't remove receipt files, nothing was deleted: ${(e as Error).message}`);
+  }
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) return fail(error);
   await supabase.auth.signOut();

@@ -453,6 +453,9 @@ isOneToOne: false
 "regen_installments":
 { Args: { "p_plan": string }; Returns: undefined
                            },
+"reset_account":
+{ Args: { "p_reset_setup"?: boolean }; Returns: undefined
+                           },
 "save_transaction":
 { Args: { "p": Json }; Returns: string
                            },

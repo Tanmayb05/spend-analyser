@@ -198,7 +198,7 @@ export const HELP = {
 
   // ---- Settings ----------------------------------------------------------------------------
   profile: <p>Your display name and sign-in email. A new email takes effect after you confirm the link we send.</p>,
-  security: <p>Change your password, sign out on every device, or permanently delete your account and all its data.</p>,
+  security: <p>Change your password, sign out on every device, or find where to delete your account.</p>,
   preferences: (
     <>
       <p>
@@ -267,21 +267,7 @@ export const HELP = {
       sees your whole history at once and can&apos;t change anything. Each question uses one of your monthly questions.
     </p>
   ),
-  data: <p>Bring in your spreadsheet, download everything you have, or start over.</p>,
-  importer: (
-    <>
-      <p>
-        <b>Expense Tracker workbook</b>: brings in categories, budgets, trips, people, payment methods and every expense,
-        including EMI plans.
-      </p>
-      <p>
-        <b>Any .xlsx / .csv</b>: needs Date, Type (expense, income or refund) and Amount columns. Optional:
-        Category, Subcategory, Merchant, Description, Currency, Payment, Paid by, Trip, Notes. Rows without a category go to
-        Uncategorized; Settings → AI tidy-up can sort them.
-      </p>
-      <p>You see a preview before anything is saved. Importing the same file twice adds its rows twice.</p>
-    </>
-  ),
+  data: <p>Bring in your spreadsheet, download everything you have, or start over. Wiping data or deleting the account asks for your current password.</p>,
   exporter: <p>XLSX and CSV are spreadsheets of your transactions. JSON is a complete backup of everything in your account.</p>,
 } satisfies Record<string, ReactNode>;
 

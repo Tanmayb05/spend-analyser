@@ -1,8 +1,7 @@
+import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { SettingsPage } from "@/components/settings/section";
 import { PasswordForm, SignOutAll } from "@/components/settings/profile-forms";
-import { TypeToConfirm } from "@/components/settings/danger-delete";
-import { deleteAccount } from "../actions";
 import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Security" };
@@ -12,12 +11,11 @@ export default function SecurityPage() {
     <SettingsPage title="Security" info={HELP.security}>
       <PasswordForm />
       <SignOutAll />
-      <Card className="border-bad/30">
-        <CardHeader
-          title="Delete account"
-          subtitle="Permanently deletes your account, every transaction, budget, receipt file and setting. This can't be undone. Export a backup first (Import & export)."
-        />
-        <TypeToConfirm label="Delete my account" action={deleteAccount} />
+      <Card>
+        <CardHeader title="Delete account" subtitle="Wipe your data or delete the account from Import & export, under Reset or delete. It asks for your password." />
+        <Link href="/settings/data" className="text-sm text-accent underline-offset-4 hover:underline">
+          Go to Reset or delete
+        </Link>
       </Card>
     </SettingsPage>
   );

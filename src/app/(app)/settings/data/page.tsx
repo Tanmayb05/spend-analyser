@@ -2,10 +2,9 @@ import { Download } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { SettingsPage } from "@/components/settings/section";
 import { ImportCard } from "@/components/settings/import-card";
-import { TypeToConfirm } from "@/components/settings/danger-delete";
+import { DangerZone } from "@/components/settings/danger-zone";
 import { requireUser } from "@/lib/supabase/server";
 import { getReferenceData } from "@/lib/data/reference";
-import { deleteAllTransactions } from "./actions";
 import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Import & export" };
@@ -40,8 +39,11 @@ export default async function DataPage() {
         </ul>
       </Card>
       <Card className="border-bad/30">
-        <CardHeader title="Delete all transactions" subtitle="Removes every transaction, plan and installment. Categories, budgets and settings stay. This can't be undone; export a backup first." />
-        <TypeToConfirm label="Delete all transactions" action={deleteAllTransactions} />
+        <CardHeader
+          title="Reset or delete"
+          subtitle="Back up first (Export above). None of these can be undone, and each one asks for your current password."
+        />
+        <DangerZone />
       </Card>
     </SettingsPage>
   );

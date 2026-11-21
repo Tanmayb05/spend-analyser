@@ -21,7 +21,7 @@ export const SETTINGS_GROUPS = [
     title: "Account",
     items: [
       { href: "/settings/profile", label: "Profile", desc: "Name and email", icon: User },
-      { href: "/settings/security", label: "Security", desc: "Password, sessions, delete account", icon: Shield },
+      { href: "/settings/security", label: "Security", desc: "Password and sessions", icon: Shield },
     ],
   },
   {
@@ -37,7 +37,7 @@ export const SETTINGS_GROUPS = [
     id: "data",
     title: "Data",
     items: [
-      { href: "/settings/data", label: "Import & export", desc: "Excel / CSV in and out", icon: Database },
+      { href: "/settings/data", label: "Import & export", desc: "Import, export, wipe or delete", icon: Database },
       { href: "/settings/tidy", label: "AI tidy-up", desc: "Fix categories, merchants, item names", icon: ListChecks },
     ],
   },

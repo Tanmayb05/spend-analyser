@@ -10,7 +10,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { formatMoney } from "@/lib/money";
 import { buildBundle, UNCATEGORIZED, UNCATEGORIZED_INCOME, type ImportReport, type Rows } from "@/lib/import/workbook";
 import { importBundle } from "@/app/(app)/settings/data/actions";
-import { HELP } from "@/lib/help";
+import { ImportGuide } from "./import-guide";
 
 export function ImportCard({ hasTransactions, currency }: { hasTransactions: boolean; currency: string }) {
   const router = useRouter();
@@ -66,7 +66,8 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
 
   return (
     <Card>
-      <CardHeader title="Import" info={HELP.importer} subtitle="Your Expense Tracker workbook, or any .xlsx / .csv with Date, Type, Category, Amount columns" />
+      <CardHeader title="Import" subtitle="Your Expense Tracker workbook, or any .xlsx / .csv in the sample's format" />
+      <ImportGuide />
       <input
         ref={input}
         type="file"
@@ -84,6 +85,7 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
         <span className="font-medium">{fileName ?? "Choose a file"}</span>
         <span className="text-xs text-muted">Nothing is saved until you confirm</span>
       </button>
+      {hasTransactions && !report ? <p className="mt-3 text-xs text-muted">Importing adds rows to what you have. To start from scratch, use Reset or delete below.</p> : null}
       {error ? <p className="mt-3 rounded-inset bg-bad/10 px-4 py-3 text-sm text-bad">{error}</p> : null}
 
       {report ? (
