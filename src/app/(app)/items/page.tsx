@@ -4,6 +4,8 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { PriceLine } from "@/components/charts/price-line";
 import { ReadReceiptButton } from "@/components/insights/read-receipt-button";
+import { InboxList } from "@/components/receipts/inbox-list";
+import { loadInbox } from "@/lib/receipts/inbox";
 import { getReferenceData } from "@/lib/data/reference";
 import { requireUser } from "@/lib/supabase/server";
 import { formatDay } from "@/lib/dates";
@@ -22,7 +24,9 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
   const currency = ref.profile.base_currency;
   const q = typeof sp.q === "string" ? sp.q.trim().toLowerCase() : "";
   const selected = typeof sp.item === "string" ? sp.item : null;
+  const tab = sp.tab === "inbox" ? "inbox" : "items";
   const { supabase } = await requireUser();
+  const inbox = await loadInbox(supabase, currency);
   const { data } = await supabase
     .from("receipt_items")
     .select("normalized_name, raw_name, item_category, quantity, unit, unit_price, total_price, purchased_at, merchants(name)")
@@ -76,7 +80,32 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
         <ReadReceiptButton />
       </div>
 
-      {rows.length ? (
+      <nav aria-label="Items sections" className="mb-5 flex gap-1 border-b border-border">
+        {[
+          { key: "items", label: "Items", href: "/items" },
+          { key: "inbox", label: inbox.length ? `Inbox (${inbox.length})` : "Inbox", href: "/items?tab=inbox" },
+        ].map((t) => (
+          <Link
+            key={t.key}
+            href={t.href}
+            aria-current={tab === t.key ? "page" : undefined}
+            className={cn("-mb-px border-b-2 px-3 py-2 text-sm transition-colors duration-(--dur-fast)", tab === t.key ? "border-accent font-medium text-text" : "border-transparent text-muted hover:text-text")}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </nav>
+
+      {tab === "inbox" ? (
+        inbox.length ? (
+          <Card>
+            <CardHeader title="Inbox" subtitle="Receipts read and kept for later. Match one to a transaction when it posts." />
+            <InboxList receipts={inbox} />
+          </Card>
+        ) : (
+          <EmptyState title="Inbox is empty" body="Receipts you keep for later, or only partly match, wait here. When a statement import adds the transaction, it shows up as a likely match." action={<ReadReceiptButton />} />
+        )
+      ) : rows.length ? (
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
           <Card className="min-w-0">
             <form className="relative mb-3">

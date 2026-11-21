@@ -170,6 +170,25 @@ isOneToOne: false
       referencedColumns: ["id","user_id"]
     }
                   ]
+                },"merchant_aliases": {
+                  Row: {
+                    "alias": string,"alias_key": string | null,"created_at": string,"id": string,"merchant_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "alias": string,"alias_key"?: never,"created_at"?: string,"id"?: string,"merchant_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "alias"?: string,"alias_key"?: never,"created_at"?: string,"id"?: string,"merchant_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "merchant_aliases_merchant_id_user_id_fkey"
+      columns: ["merchant_id","user_id"]
+isOneToOne: false
+      referencedRelation: "merchants"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
                 },"merchants": {
                   Row: {
                     "created_at": string,"default_category_id": string | null,"default_subcategory_id": string | null,"id": string,"name": string,"name_key": string | null,"user_id": string
@@ -208,15 +227,34 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"payment_methods": {
+                },"payment_method_cards": {
                   Row: {
-                    "archived": boolean,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"min_due_floor": number | null,"min_due_pct": number | null,"name": string,"opening_balance": number,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
+                    "created_at": string,"id": string,"last4": string,"payment_method_id": string,"user_id": string
                   }
                   Insert: {
-                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name": string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"last4": string,"payment_method_id": string,"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name"?: string,"opening_balance"?: number,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"last4"?: string,"payment_method_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_method_cards_payment_method_id_user_id_fkey"
+      columns: ["payment_method_id","user_id"]
+isOneToOne: false
+      referencedRelation: "payment_methods"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"payment_methods": {
+                  Row: {
+                    "archived": boolean,"color": string | null,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"issuer": string | null,"min_due_floor": number | null,"min_due_pct": number | null,"name": string,"network": string | null,"nickname": string | null,"opening_balance": number,"rewards": Json | null,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "archived"?: boolean,"color"?: string | null,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"issuer"?: string | null,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name": string,"network"?: string | null,"nickname"?: string | null,"opening_balance"?: number,"rewards"?: Json | null,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                  }
+                  Update: {
+                    "archived"?: boolean,"color"?: string | null,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"issuer"?: string | null,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name"?: string,"network"?: string | null,"nickname"?: string | null,"opening_balance"?: number,"rewards"?: Json | null,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -255,13 +293,13 @@ isOneToOne: false
                   ]
                 },"receipt_items": {
                   Row: {
-                    "id": string,"item_category": string | null,"line_no": number,"merchant_id": string | null,"name_checked": boolean,"normalized_name": string | null,"purchased_at": string | null,"quantity": number | null,"raw_name": string,"receipt_id": string,"total_price": number | null,"transaction_id": string | null,"unit": string | null,"unit_price": number | null,"user_id": string
+                    "id": string,"is_weighted": boolean,"item_category": string | null,"line_discount": number | null,"line_no": number,"list_price": number | null,"merchant_id": string | null,"name_checked": boolean,"normalized_name": string | null,"purchased_at": string | null,"quantity": number | null,"raw_name": string,"receipt_id": string,"tax_code": string | null,"total_price": number | null,"transaction_id": string | null,"unit": string | null,"unit_price": number | null,"upc": string | null,"user_id": string
                   }
                   Insert: {
-                    "id"?: string,"item_category"?: string | null,"line_no": number,"merchant_id"?: string | null,"name_checked"?: boolean,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name": string,"receipt_id": string,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"user_id"?: string
+                    "id"?: string,"is_weighted"?: boolean,"item_category"?: string | null,"line_discount"?: number | null,"line_no": number,"list_price"?: number | null,"merchant_id"?: string | null,"name_checked"?: boolean,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name": string,"receipt_id": string,"tax_code"?: string | null,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"upc"?: string | null,"user_id"?: string
                   }
                   Update: {
-                    "id"?: string,"item_category"?: string | null,"line_no"?: number,"merchant_id"?: string | null,"name_checked"?: boolean,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name"?: string,"receipt_id"?: string,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"user_id"?: string
+                    "id"?: string,"is_weighted"?: boolean,"item_category"?: string | null,"line_discount"?: number | null,"line_no"?: number,"list_price"?: number | null,"merchant_id"?: string | null,"name_checked"?: boolean,"normalized_name"?: string | null,"purchased_at"?: string | null,"quantity"?: number | null,"raw_name"?: string,"receipt_id"?: string,"tax_code"?: string | null,"total_price"?: number | null,"transaction_id"?: string | null,"unit"?: string | null,"unit_price"?: number | null,"upc"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -284,18 +322,43 @@ isOneToOne: false
       referencedColumns: ["id","user_id"]
     }
                   ]
-                },"receipts": {
+                },"receipt_pages": {
                   Row: {
-                    "created_at": string,"currency": string | null,"discount": number | null,"error": string | null,"extracted": Json | null,"file_name": string | null,"id": string,"merchant_name": string | null,"mime": string | null,"purchased_at": string | null,"sha256": string | null,"source_url": string | null,"status": Database["public"]['Enums']["receipt_status"],"storage_path": string | null,"subtotal": number | null,"tax": number | null,"total": number | null,"user_id": string
+                    "created_at": string,"id": string,"mime": string,"page_no": number,"receipt_id": string,"sha256": string,"storage_path": string,"user_id": string
                   }
                   Insert: {
-                    "created_at"?: string,"currency"?: string | null,"discount"?: number | null,"error"?: string | null,"extracted"?: Json | null,"file_name"?: string | null,"id"?: string,"merchant_name"?: string | null,"mime"?: string | null,"purchased_at"?: string | null,"sha256"?: string | null,"source_url"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"storage_path"?: string | null,"subtotal"?: number | null,"tax"?: number | null,"total"?: number | null,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"mime": string,"page_no": number,"receipt_id": string,"sha256": string,"storage_path": string,"user_id"?: string
                   }
                   Update: {
-                    "created_at"?: string,"currency"?: string | null,"discount"?: number | null,"error"?: string | null,"extracted"?: Json | null,"file_name"?: string | null,"id"?: string,"merchant_name"?: string | null,"mime"?: string | null,"purchased_at"?: string | null,"sha256"?: string | null,"source_url"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"storage_path"?: string | null,"subtotal"?: number | null,"tax"?: number | null,"total"?: number | null,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"mime"?: string,"page_no"?: number,"receipt_id"?: string,"sha256"?: string,"storage_path"?: string,"user_id"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "receipt_pages_receipt_id_user_id_fkey"
+      columns: ["receipt_id","user_id"]
+isOneToOne: false
+      referencedRelation: "receipts"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"receipts": {
+                  Row: {
+                    "card_brand": string | null,"card_last4": string | null,"created_at": string,"currency": string | null,"discount": number | null,"error": string | null,"extracted": Json | null,"fees": number | null,"file_name": string | null,"id": string,"label": string | null,"match_complete": boolean,"merchant_name": string | null,"mime": string | null,"order_number": string | null,"order_type": string | null,"payment_method_id": string | null,"purchased_at": string | null,"sha256": string | null,"source_url": string | null,"status": Database["public"]['Enums']["receipt_status"],"storage_path": string | null,"store_address": string | null,"subtotal": number | null,"tax": number | null,"text_source": string | null,"tip": number | null,"tip_source": string,"total": number | null,"total_paid": number | null,"user_id": string
+                  }
+                  Insert: {
+                    "card_brand"?: string | null,"card_last4"?: string | null,"created_at"?: string,"currency"?: string | null,"discount"?: number | null,"error"?: string | null,"extracted"?: Json | null,"fees"?: number | null,"file_name"?: string | null,"id"?: string,"label"?: string | null,"match_complete"?: boolean,"merchant_name"?: string | null,"mime"?: string | null,"order_number"?: string | null,"order_type"?: string | null,"payment_method_id"?: string | null,"purchased_at"?: string | null,"sha256"?: string | null,"source_url"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"storage_path"?: string | null,"store_address"?: string | null,"subtotal"?: number | null,"tax"?: number | null,"text_source"?: string | null,"tip"?: number | null,"tip_source"?: string,"total"?: number | null,"total_paid"?: number | null,"user_id"?: string
+                  }
+                  Update: {
+                    "card_brand"?: string | null,"card_last4"?: string | null,"created_at"?: string,"currency"?: string | null,"discount"?: number | null,"error"?: string | null,"extracted"?: Json | null,"fees"?: number | null,"file_name"?: string | null,"id"?: string,"label"?: string | null,"match_complete"?: boolean,"merchant_name"?: string | null,"mime"?: string | null,"order_number"?: string | null,"order_type"?: string | null,"payment_method_id"?: string | null,"purchased_at"?: string | null,"sha256"?: string | null,"source_url"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"storage_path"?: string | null,"store_address"?: string | null,"subtotal"?: number | null,"tax"?: number | null,"text_source"?: string | null,"tip"?: number | null,"tip_source"?: string,"total"?: number | null,"total_paid"?: number | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "receipts_payment_method_id_user_id_fkey"
+      columns: ["payment_method_id","user_id"]
+isOneToOne: false
+      referencedRelation: "payment_methods"
+      referencedColumns: ["id","user_id"]
+    }
                   ]
                 },"spread_plans": {
                   Row: {
@@ -433,6 +496,11 @@ isOneToOne: false
               "remaining": number,"usage_id": number
             }[]
                            },
+"ensure_tip_subcategory":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "category_id": string,"subcategory_id": string
+            }[]
+                           },
 "import_bundle":
 { Args: { "p": Json }; Returns: Json
                            },
@@ -470,7 +538,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "ai_feature": "analysis"|"parse_text"|"parse_receipt"|"transcribe"|"categorize"|"merchants"|"items"|"anomalies"|"chat","category_kind": "expense"|"income","ledger_mode": "normalized"|"cash","plan_kind": "spread"|"emi","receipt_status": "pending"|"parsed"|"failed","trip_mode": "excluded"|"lump_sum"|"itemized","txn_source": "manual"|"text"|"receipt"|"voice"|"import","txn_type": "expense"|"income"|"refund"
+            "ai_feature": "analysis"|"parse_text"|"parse_receipt"|"transcribe"|"categorize"|"merchants"|"items"|"anomalies"|"chat","category_kind": "expense"|"income","ledger_mode": "normalized"|"cash","plan_kind": "spread"|"emi","receipt_status": "pending"|"parsed"|"failed"|"inbox","trip_mode": "excluded"|"lump_sum"|"itemized","txn_source": "manual"|"text"|"receipt"|"voice"|"import","txn_type": "expense"|"income"|"refund"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -590,7 +658,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "ai_feature": ["analysis", "parse_text", "parse_receipt", "transcribe", "categorize", "merchants", "items", "anomalies", "chat"],"category_kind": ["expense", "income"],"ledger_mode": ["normalized", "cash"],"plan_kind": ["spread", "emi"],"receipt_status": ["pending", "parsed", "failed"],"trip_mode": ["excluded", "lump_sum", "itemized"],"txn_source": ["manual", "text", "receipt", "voice", "import"],"txn_type": ["expense", "income", "refund"]
+            "ai_feature": ["analysis", "parse_text", "parse_receipt", "transcribe", "categorize", "merchants", "items", "anomalies", "chat"],"category_kind": ["expense", "income"],"ledger_mode": ["normalized", "cash"],"plan_kind": ["spread", "emi"],"receipt_status": ["pending", "parsed", "failed", "inbox"],"trip_mode": ["excluded", "lump_sum", "itemized"],"txn_source": ["manual", "text", "receipt", "voice", "import"],"txn_type": ["expense", "income", "refund"]
           }
         }
 } as const

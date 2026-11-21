@@ -6,6 +6,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/components/app-data";
+import { TransactionReceipt } from "@/components/receipts/transaction-receipt";
 import { categoryColor } from "@/components/charts/colors";
 import { formatMoney } from "@/lib/money";
 import { formatDay } from "@/lib/dates";
@@ -78,6 +79,8 @@ export function TxnDetail({ row, onClose }: { row: LedgerRowWithLink | null; onC
             ) : null}
             {row.notes ? <Item label="Notes"><span className="whitespace-pre-wrap">{row.notes}</span></Item> : null}
           </dl>
+
+          {row.receipt_id && row.txn_id ? <TransactionReceipt key={row.txn_id} receiptId={row.receipt_id} txnId={row.txn_id} currency={app.currency} onUnlinked={onClose} /> : null}
 
           <div className="flex gap-2">
             <Button variant="ghost" className="flex-1" onClick={onClose}>Close</Button>

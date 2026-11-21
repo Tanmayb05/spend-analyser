@@ -11,6 +11,7 @@ test("AI flows work through the provider layer (mock provider)", async ({ page }
   await signIn(page, email, TEST_USER.password);
 
   await page.goto("/settings/ai");
+  await page.getByText(/^Provider: /).waitFor();
   test.skip(!(await page.getByText("Provider: Mock AI").isVisible()), "dev server is not running with AI_PROVIDER=mock");
   await expect(page.getByText("What is sent to Mock AI")).toBeVisible();
 
@@ -25,7 +26,8 @@ test("AI flows work through the provider layer (mock provider)", async ({ page }
 
   // Receipt: upload → extracted items to review
   await dialog.getByRole("button", { name: "Read a receipt" }).click();
-  await page.getByLabel("Receipt file").setInputFiles(path.join(__dirname, "../fixtures/receipts/receipt.png"));
+  await page.getByLabel("Receipt files").setInputFiles(path.join(__dirname, "../fixtures/receipts/receipt.png"));
+  await page.getByRole("button", { name: "Read receipt" }).click();
   await expect(page.getByLabel("Item 1 name")).toHaveValue(/Milk/);
   await expect(page.getByLabel("Item 2 name")).toHaveValue(/Bananas/);
 

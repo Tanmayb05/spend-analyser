@@ -2,9 +2,9 @@ import { ChevronDown, Download } from "lucide-react";
 import { CLEAN_CHECKLIST, COLUMN_GUIDE } from "@/lib/import/template";
 
 const STEPS = [
-  { title: "Clean your file", desc: "Match the sample's columns and formats." },
-  { title: "Choose it", desc: "Pick the .xlsx or .csv below." },
-  { title: "Review the preview", desc: "Totals, EMI plans and skipped rows show first." },
+  { title: "Clean your file", desc: "Bank exports work as they are. Matching the sample gives the cleanest result." },
+  { title: "Choose it", desc: "Pick an .xlsx, .xls or .csv file below." },
+  { title: "Review the preview", desc: "Check what we detected, then totals and skipped rows." },
   { title: "Confirm", desc: "Nothing is saved until you press Import." },
 ];
 

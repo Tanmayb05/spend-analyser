@@ -17,7 +17,7 @@ import { DEFAULT_BIWEEKLY, MAX_BIWEEKLY, biweeklyDates } from "@/lib/biweekly";
 import { cn } from "@/lib/utils";
 import { deleteTransactions, restoreTransactions, saveTransaction } from "@/app/(app)/transactions/actions";
 import { SmartAdd } from "@/components/ai/smart-add";
-import { ReceiptFlow } from "@/components/ai/receipt-flow";
+import { ReceiptFlow } from "@/components/receipts/receipt-flow";
 import type { PlanKind, TxnType } from "@/lib/data/types";
 
 type FormValues = {

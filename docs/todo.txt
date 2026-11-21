@@ -6,7 +6,7 @@
 
 10. Credit Score api.
 
-11. Light mode in beige.
+11. Light mode in beige. [done]
 
 12. Improve Insights Page
 
@@ -14,4 +14,4 @@
 
 14. AI Talking mode.
 
-15. 
+15. how does RAG work?

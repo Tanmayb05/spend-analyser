@@ -285,6 +285,45 @@ export async function generateJson<S extends z.ZodType>(opts: {
   return { data: r.data, remaining: r.remaining, modelId: r.modelId };
 }
 
+/**
+ * One quota-checked extraction that may run twice: `primary` first (cheap, e.g. a PDF's text), and `fallback` (e.g. the
+ * page images) when the primary answer fails `accept` or errors. The user is charged one unit either way.
+ * Returns the fallback's answer even if it also fails `accept`, so the caller can show warnings instead of nothing.
+ */
+export async function generateJsonWithFallback<S extends z.ZodType>(opts: {
+  feature: Enums["ai_feature"];
+  model?: AiTier;
+  system: string;
+  primary: AiInput;
+  fallback?: AiInput;
+  accept: (data: z.infer<S>) => boolean;
+  schema: S;
+  temperature?: number;
+}): Promise<{ data: z.infer<S>; remaining: number; modelId: string; path: "primary" | "fallback"; accepted: boolean }> {
+  const inputs = [opts.primary, ...(opts.fallback ? [opts.fallback] : [])];
+  const meta = inputMeta(opts.system + inputs.map((i) => i.text).join("\n"), inputs.flatMap((i) => i.files ?? []));
+  const r = await withQuota(opts.feature, opts.model ?? "fast", meta, async (model) => {
+    const run = (input: AiInput) => callModel({ model, system: opts.system, input, schema: opts.schema, temperature: opts.temperature });
+    let first: Awaited<ReturnType<typeof run>> | null = null;
+    try {
+      first = await run(opts.primary);
+      if (opts.accept(first.data) || !opts.fallback) return { ...first, path: "primary" as const, accepted: opts.accept(first.data) };
+    } catch (e) {
+      if (!opts.fallback) throw e;
+    }
+    const second = await run(opts.fallback!);
+    const sum = (a: number | null, b: number | null) => (a == null && b == null ? null : (a ?? 0) + (b ?? 0));
+    return {
+      ...second,
+      tokensIn: sum(first?.tokensIn ?? null, second.tokensIn),
+      tokensOut: sum(first?.tokensOut ?? null, second.tokensOut),
+      path: "fallback" as const,
+      accepted: opts.accept(second.data),
+    };
+  });
+  return { data: r.data, remaining: r.remaining, modelId: r.modelId, path: r.path, accepted: r.accepted };
+}
+
 /** One quota-checked Q&A run with read-only tools. */
 export async function generateAnswer(opts: {
   feature: Enums["ai_feature"];

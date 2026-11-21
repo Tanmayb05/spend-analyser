@@ -57,7 +57,7 @@ export default async function AiSettingsPage() {
         <CardHeader title={`What is sent to ${AI.label}`} />
         <ul className="list-disc space-y-2 pl-5 text-sm text-muted">
           <li>Smart entry: the sentence you type, plus your category and merchant names so it can pick the right ones.</li>
-          <li>Receipts: the file you upload or link, to read the merchant, date, total and line items.</li>
+          <li>Receipts: for a PDF with readable text, that text (membership and loyalty numbers removed first); otherwise the pages you upload or link. It reads the merchant, date, total, card last 4 digits and line items. Your category and merchant names go with it.</li>
           <li>Deep analysis and the monthly digest: monthly totals per category, budgets and top merchants. Never individual transactions or notes.</li>
           <li>Tidy-up: for categorising, up to 50 transactions (date, amount, merchant, description); for merchants, names and counts; for items, printed product names. Never notes.</li>
           <li>Unusual-spending check: only the entries an automatic check flagged (date, amount, category, merchant, description).</li>

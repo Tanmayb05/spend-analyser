@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, ArchiveRestore, Check, CreditCard, Pencil, Plus, Star, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, CreditCard, Pencil, Plus, SlidersHorizontal, Star, Trash2, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
@@ -10,6 +10,8 @@ import { useAction } from "@/hooks/use-action";
 import { deleteListItem, saveListItem, setDefaultPaymentMethod, setListItemArchived } from "@/app/(app)/settings/actions";
 import { addCreditCard } from "@/app/(app)/transactions/card-actions";
 import { CardFields, CardSettingsSheet, type CardSettings } from "@/components/cards/card-forms";
+import { CardBadge } from "@/components/cards/card-badge";
+import { CardDetailsSheet, type CardDetails } from "@/components/cards/card-details-sheet";
 import { formatMoney } from "@/lib/money";
 
 type Item = { id: string; name: string; archived: boolean; is_self?: boolean; uses: number };
@@ -20,6 +22,7 @@ export function ListEditor({
   noun,
   defaultId,
   cards,
+  details,
   currency = "USD",
   today = "",
 }: {
@@ -30,6 +33,8 @@ export function ListEditor({
   defaultId?: string | null;
   /** payment methods only: credit-card settings by id */
   cards?: Record<string, CardSettings>;
+  /** payment methods only: nickname, issuer, network, colour and last 4 digits by id */
+  details?: Record<string, CardDetails>;
   currency?: string;
   today?: string;
 }) {
@@ -37,6 +42,7 @@ export function ListEditor({
   const [isCard, setIsCard] = useState(false);
   const [cardV, setCardV] = useState({ limit: "", statement: "", due: "" });
   const [cardSheet, setCardSheet] = useState<string | null>(null);
+  const [detailsSheet, setDetailsSheet] = useState<string | null>(null);
   const withCards = table === "payment_methods" && cards;
   const dayNum = (x: string) => (x.trim() === "" ? null : Number(x));
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
@@ -82,7 +88,7 @@ export function ListEditor({
       </form>
       <ul className="divide-y divide-border">
         {items.map((it) => (
-          <li key={it.id} className="flex items-center gap-2 py-2.5">
+          <li key={it.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-2.5">
             {editing?.id === it.id ? (
               <form
                 className="flex flex-1 gap-2"
@@ -97,7 +103,14 @@ export function ListEditor({
               </form>
             ) : (
               <>
-                <span className={`min-w-0 flex-1 truncate ${it.archived ? "text-faint line-through" : ""}`}>{it.name}</span>
+                {details?.[it.id] ? <CardBadge issuer={details[it.id].issuer} nickname={details[it.id].nickname} name={it.name} color={details[it.id].color} /> : null}
+                <span className={`min-w-0 flex-1 basis-32 truncate ${it.archived ? "text-faint line-through" : ""}`}>
+                  {it.name}
+                  {details?.[it.id]?.nickname ? <span className="ml-2 text-sm text-muted">{details[it.id].nickname}</span> : null}
+                  {details?.[it.id]?.last4s.length ? <span className="money ml-2 text-xs text-faint">{details[it.id].last4s.map((n) => `•••• ${n}`).join(" ")}</span> : null}
+                  <span className="ml-2 text-xs text-muted sm:hidden">{it.uses} uses</span>
+                </span>
+                <div className="ml-auto flex flex-wrap items-center justify-end">
                 {it.is_self ? <Badge tone="accent">You</Badge> : null}
                 {table === "payment_methods" && defaultId === it.id ? <Badge tone="accent">Default</Badge> : null}
                 {cards?.[it.id]?.is_credit_card ? (
@@ -105,7 +118,7 @@ export function ListEditor({
                     Credit card{cards[it.id].credit_limit ? ` · ${formatMoney(cards[it.id].credit_limit!, currency, { whole: true })}` : ""}
                   </Badge>
                 ) : null}
-                <span className="text-xs text-muted">{it.uses} uses</span>
+                <span className="mr-2 hidden text-xs text-muted sm:inline">{it.uses} uses</span>
                 {table === "payment_methods" && !it.archived ? (
                   <Button
                     size="icon"
@@ -129,6 +142,11 @@ export function ListEditor({
                     <CreditCard size={16} className={cards[it.id]?.is_credit_card ? "text-accent" : undefined} />
                   </Button>
                 ) : null}
+                {details?.[it.id] && !it.archived ? (
+                  <Button size="icon" variant="ghost" aria-label={`Card details for ${it.name}`} title="Nickname, issuer, last 4 digits and colour" onClick={() => setDetailsSheet(it.id)}>
+                    <SlidersHorizontal size={16} />
+                  </Button>
+                ) : null}
                 <Button size="icon" variant="ghost" aria-label={`Rename ${it.name}`} onClick={() => setEditing({ id: it.id, name: it.name })}><Pencil size={16} /></Button>
                 <Button size="icon" variant="ghost" aria-label={it.archived ? "Restore" : "Archive"} title={it.archived ? "Restore" : "Archive (hide from pickers)"} onClick={() => a.run(() => setListItemArchived(table, it.id, !it.archived))}>
                   {it.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
@@ -145,11 +163,13 @@ export function ListEditor({
                     {confirmId === it.id ? "Confirm" : null}
                   </Button>
                 ) : null}
+                </div>
               </>
             )}
           </li>
         ))}
       </ul>
+      {details && detailsSheet && details[detailsSheet] ? <CardDetailsSheet key={detailsSheet} card={details[detailsSheet]} open onClose={() => setDetailsSheet(null)} /> : null}
       {withCards && cardSheet && cards[cardSheet] ? (
         <CardSettingsSheet card={cards[cardSheet]} open onClose={() => setCardSheet(null)} currency={currency} today={today} />
       ) : null}

@@ -17,7 +17,7 @@ and read receipts with AI. Open source (MIT), self-hostable on **Vercel + Supaba
 - **Spread / EMI** any expense over N months, by months or by a per-month amount. Future months show what's already committed.
 - **Transactions analysis**: filter by month, category, subcategory, core, trip, merchant, payment, person or text, with a month-on-month chart for the same filter.
 - **Multi-currency**: 120+ currencies. Each transaction keeps its original amount and the day's exchange rate. Change the default currency any time and everything is converted. INR uses lakh grouping (₹1,00,000).
-- **Import / export**: imports the Expense Tracker workbook (or any CSV/XLSX with Date, Type, Category, Amount columns). Exports Excel/CSV in the same columns (re-importable) and a full JSON backup.
+- **Import / export**: imports the Expense Tracker workbook, or a bank or spreadsheet export (CSV/XLSX/XLS with a Date column and an Amount, or Debit and Credit, column). It detects the encoding, delimiter, date order, decimal mark and sign convention, shows what it found with overrides, skips unreadable rows with a reason, and skips rows you already imported. Exports Excel/CSV in the same columns (re-importable) and a full JSON backup.
 - **AI with Gemini** (optional, quota-limited):
   - "12.50 kroger groceries yesterday", typed or spoken, becomes a pre-filled transaction
   - Receipts (PDF, photo or public Google Drive link) are read, split by category, and every line item is stored

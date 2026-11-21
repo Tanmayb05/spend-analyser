@@ -80,3 +80,42 @@ export async function addCreditCard(input: z.infer<typeof newCardSchema>): Promi
   const { error } = await supabase.from("payment_methods").insert({ ...v.data, is_credit_card: true, opening_balance: 0 });
   return error ? fail(error.message.includes("duplicate key") ? "That name is already used." : error.message) : done("Card added");
 }
+
+const detailsSchema = z.object({
+  id: z.string().uuid(),
+  nickname: z.string().trim().max(60).nullable(),
+  issuer: z.string().trim().max(60).nullable(),
+  network: z.enum(["visa", "mastercard", "amex", "discover", "other"]).nullable(),
+  color: z.string().regex(/^c[1-8]$/).nullable(),
+  last4s: z.array(z.string().regex(/^\d{4}$/, "Last 4 digits must be four numbers")).max(6),
+});
+export type CardDetailsInput = z.infer<typeof detailsSchema>;
+
+/** Nickname, issuer, network, colour and the last 4 digits that identify this card on receipts. */
+export async function saveCardDetails(input: CardDetailsInput): Promise<Result> {
+  const v = detailsSchema.safeParse(input);
+  if (!v.success) return fail(v.error.issues[0].message);
+  const { id, last4s, ...fields } = v.data;
+  const unique = [...new Set(last4s)];
+  const { supabase, userId } = await requireUser();
+  const up = await supabase
+    .from("payment_methods")
+    .update({ nickname: fields.nickname || null, issuer: fields.issuer || null, network: fields.network, color: fields.color })
+    .eq("id", id);
+  if (up.error) return fail(up.error.message);
+
+  const current = await supabase.from("payment_method_cards").select("last4").eq("payment_method_id", id);
+  if (current.error) return fail(current.error.message);
+  const have = new Set((current.data ?? []).map((r) => r.last4));
+  const drop = [...have].filter((x) => !unique.includes(x));
+  const add = unique.filter((x) => !have.has(x));
+  if (drop.length) {
+    const del = await supabase.from("payment_method_cards").delete().eq("payment_method_id", id).in("last4", drop);
+    if (del.error) return fail(del.error.message);
+  }
+  if (add.length) {
+    const ins = await supabase.from("payment_method_cards").insert(add.map((last4) => ({ user_id: userId, payment_method_id: id, last4 })));
+    if (ins.error) return fail(ins.error.code === "23505" ? "One of those numbers already belongs to another card." : ins.error.message);
+  }
+  return done("Card details saved");
+}

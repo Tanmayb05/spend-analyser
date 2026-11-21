@@ -6,7 +6,7 @@ import { callModel } from "@/lib/ai/generate";
 import { getModel } from "@/lib/ai/provider";
 import { receiptSystem } from "@/lib/ai/prompts";
 import { scoreReceipt, summarise, type ReceiptTruth, type RunResult } from "@/lib/ai/receipt-score";
-import { receiptSchema } from "@/lib/ai/schemas";
+import { receiptSchema, toExtraction } from "@/lib/ai/schemas";
 
 /**
  * Receipt accuracy eval: runs the app's own receipt prompt + schema over a labelled set of real receipts
@@ -53,7 +53,7 @@ for (const tier of tiers) {
           schema: receiptSchema,
           timeoutMs: 120_000,
         });
-        return { file: t.file, score: scoreReceipt(t, r.data), error: null, ms: Date.now() - started, tokensIn: r.tokensIn, tokensOut: r.tokensOut, extraction: r.data };
+        return { file: t.file, score: scoreReceipt(t, toExtraction(r.data)), error: null, ms: Date.now() - started, tokensIn: r.tokensIn, tokensOut: r.tokensOut, extraction: r.data };
       } catch (e) {
         return { file: t.file, score: null, error: e instanceof Error ? e.message : String(e), ms: Date.now() - started, tokensIn: null, tokensOut: null };
       }

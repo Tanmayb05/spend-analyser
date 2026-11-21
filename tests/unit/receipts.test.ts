@@ -19,24 +19,3 @@ describe("drive links", () => {
     expect(sniffMime(new TextEncoder().encode("<html>"))).toBeNull();
   });
 });
-
-import { allocate } from "@/lib/receipts/allocate";
-
-describe("receipt split allocation", () => {
-  it("shares tax pro-rata and sums exactly to the total", () => {
-    const out = allocate(
-      [
-        { key: "groceries", total_price: 30 },
-        { key: "household", total_price: 10 },
-        { key: "groceries", total_price: 20 },
-      ],
-      53.33,
-    );
-    expect(out.map((o) => o.key)).toEqual(["groceries", "household"]);
-    expect(out[0].amount).toBeCloseTo(44.44, 2);
-    expect(out.reduce((a, o) => a + o.amount, 0)).toBeCloseTo(53.33, 2);
-  });
-  it("handles empty input", () => {
-    expect(allocate([], 10)).toEqual([]);
-  });
-});

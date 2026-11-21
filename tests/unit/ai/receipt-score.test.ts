@@ -3,14 +3,15 @@ import { isConsistent, scoreReceipt, summarise, type ReceiptTruth } from "@/lib/
 import type { ReceiptExtraction } from "@/lib/ai/schemas";
 
 const item = (raw_name: string, total_price: number) => ({
-  raw_name, normalized_name: raw_name, item_category: "Produce", quantity: 1, unit: null, unit_price: total_price, total_price, category: "Groceries", subcategory: null,
+  raw_name, normalized_name: raw_name, item_category: "Produce", quantity: 1, unit: null, unit_price: total_price, total_price, list_price: null, line_discount: null, upc: null, tax_code: null, is_weighted: false, category: "Groceries", subcategory: null,
 });
 const truth: ReceiptTruth = {
   file: "k.pdf", merchant: ["kroger"], date: "2026-11-09", total: [10.5], tax: 0.5,
   items: [{ name: "Fresh Bananas", price: 4 }, { name: "Garlic", price: 6 }, { name: "Tomato (unavailable)", price: 3, optional: true }],
 };
 const perfect: ReceiptExtraction = {
-  merchant: "Kroger #512", date: "2026-11-09", currency: "USD", subtotal: 10, tax: 0.5, discount: null, total: 10.5,
+  merchant: "Kroger #512", date: "2026-11-09", currency: "USD", subtotal: 10, tax: 0.5, discount: null, fees: null, total: 10.5, tip: null, tip_source: "none", written_total: null,
+  card_last4: null, card_brand: null, order_type: null, order_number: null, store_address: null, printed_item_count: null,
   items: [item("BANANAS", 4), item("GARLIC", 6)],
 };
 
