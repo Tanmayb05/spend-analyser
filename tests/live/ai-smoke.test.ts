@@ -3,7 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolveAiConfig, PROVIDER_KEY_ENV, type AiProvider } from "@/lib/ai/config";
 import { callModel, callWithTools } from "@/lib/ai/generate";
-import { getModel } from "@/lib/ai/provider";
+import { getModel, getTranscriptionModel } from "@/lib/ai/provider";
+import { transcribe } from "ai";
 import { analysisSchema, anomalySchema, categorizeSchema, itemNamesSchema, merchantCleanupSchema, parseTextSchema, receiptSchema } from "@/lib/ai/schemas";
 import { analysisSystem, anomalySystem, askSystem, categorizeSystem, itemNamesSystem, merchantsSystem, parseTextSystem, receiptSystem } from "@/lib/ai/prompts";
 import { anomalyPrompt, categorizePrompt, itemsPrompt, mapAnomalies, mapCategorized, mapItemNames, merchantsPrompt, planMerchantFixes } from "@/lib/ai/tidy";
@@ -173,6 +174,16 @@ for (const p of providers) {
       log(p, `ask (${r.toolCalls.join(", ")})`, r, Date.now() - t);
       expect(r.toolCalls.length).toBeGreaterThan(0);
       expect(r.text).toMatch(/165/);
+    });
+
+    // Claude has no speech-to-text; the app falls back to the browser's recogniser there.
+    it.skipIf(!cfg.transcribeModel)("transcribes a spoken entry from a 16 kHz mono WAV", async () => {
+      const t = Date.now();
+      const wav = new Uint8Array(readFileSync(path.join(__dirname, "../fixtures/voice/kroger.wav")));
+      const res = await transcribe({ model: getTranscriptionModel(cfg)!.model, audio: wav, maxRetries: 0 });
+      console.log(`[${p}] transcribe (${cfg.transcribeModel}): ok in ${Date.now() - t}ms, heard ${res.text.trim().length} chars`);
+      expect(res.text).toMatch(/kroger/i);
+      expect(res.text).toMatch(/12|twelve/i);
     });
 
     it("writes a deep analysis with the smart model", async () => {

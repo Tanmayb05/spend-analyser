@@ -1,10 +1,10 @@
 import "server-only";
-import type { LanguageModel } from "ai";
+import type { LanguageModel, TranscriptionModel } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { AI, type AiConfig, type AiTier } from "./config";
-import { mockModel } from "./mock";
+import { mockModel, mockTranscriptionModel } from "./mock";
 
 /** Media types each provider can read as an input file. */
 const FILE_SUPPORT: Record<AiConfig["provider"], ReadonlySet<string>> = {
@@ -31,5 +31,21 @@ export function getModel(tier: AiTier, cfg: AiConfig = AI): { model: LanguageMod
       return { model: createOpenAI({ apiKey: cfg.key })(modelId), modelId };
     case "mock":
       return { model: mockModel(), modelId };
+  }
+}
+
+/** Speech-to-text model for the configured provider, or null when it has none (Claude). */
+export function getTranscriptionModel(cfg: AiConfig = AI): { model: TranscriptionModel; modelId: string } | null {
+  const modelId = cfg.transcribeModel;
+  if (!modelId) return null;
+  switch (cfg.provider) {
+    case "gemini":
+      return { model: createGoogleGenerativeAI({ apiKey: cfg.key }).transcription(modelId), modelId };
+    case "openai":
+      return { model: createOpenAI({ apiKey: cfg.key }).transcription(modelId), modelId };
+    case "mock":
+      return { model: mockTranscriptionModel(), modelId };
+    case "claude":
+      return null;
   }
 }

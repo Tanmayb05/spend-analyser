@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
-import { generateJson } from "@/lib/ai/generate";
+import { generateJson, generateTranscript } from "@/lib/ai/generate";
+import { parseWav, VOICE_MAX_BYTES, VOICE_MAX_SECONDS, VOICE_MIN_SECONDS } from "@/lib/voice";
 import { analysisSchema, parseTextSchema, type Analysis } from "@/lib/ai/schemas";
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
 import { analysisSystem, parseTextSystem } from "@/lib/ai/prompts";
@@ -46,6 +47,26 @@ export async function parseTextAction(text: string): Promise<{ ok: true; presets
       };
     });
     return { ok: true, presets, note: data.note, remaining };
+  } catch (e) {
+    return failOf(e);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Voice → text (the recorded clip is a 16-bit mono WAV; see lib/voice)
+// ---------------------------------------------------------------------------
+export async function transcribeAction(formData: FormData): Promise<{ ok: true; text: string; remaining: number } | Fail> {
+  const file = formData.get("audio");
+  if (!(file instanceof File)) return { ok: false, error: "No recording came through. Try again." };
+  if (file.size > VOICE_MAX_BYTES) return { ok: false, error: `Recordings can be up to ${VOICE_MAX_SECONDS} seconds.` };
+  const audio = new Uint8Array(await file.arrayBuffer());
+  const wav = parseWav(audio);
+  if (!wav || wav.channels !== 1 || wav.sampleRate < 8_000 || wav.sampleRate > 48_000) return { ok: false, error: "That recording couldn't be read. Try again." };
+  if (wav.seconds < VOICE_MIN_SECONDS) return { ok: false, error: "That was too short. Hold on a little longer and say the whole entry." };
+  if (wav.seconds > VOICE_MAX_SECONDS + 1) return { ok: false, error: `Recordings can be up to ${VOICE_MAX_SECONDS} seconds.` };
+  try {
+    const { text, remaining } = await generateTranscript({ audio });
+    return { ok: true, text, remaining };
   } catch (e) {
     return failOf(e);
   }

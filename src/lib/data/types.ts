@@ -37,4 +37,6 @@ export type ReferenceData = {
   budgets: Budget[];
   today: string;
   aiReady: boolean;
+  /** AI is on and the configured provider can transcribe recordings (false for Claude: voice then uses the browser). */
+  voiceReady: boolean;
 };

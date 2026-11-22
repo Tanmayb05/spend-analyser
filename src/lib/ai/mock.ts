@@ -1,4 +1,4 @@
-import { MockLanguageModelV4 } from "ai/test";
+import { MockLanguageModelV4, MockTranscriptionModelV4 } from "ai/test";
 
 /**
  * Offline model for E2E tests and local demos (AI_PROVIDER=mock, never in production).
@@ -75,5 +75,23 @@ export function mockModel() {
         warnings: [],
       };
     },
+  });
+}
+
+/** What the mock "hears" for any recording. It parses cleanly through the mock text model too. */
+export const MOCK_TRANSCRIPT = "12.50 Mock Cafe lunch";
+
+export function mockTranscriptionModel() {
+  return new MockTranscriptionModelV4({
+    provider: "mock",
+    modelId: "mock-transcribe",
+    doGenerate: async () => ({
+      text: MOCK_TRANSCRIPT,
+      segments: [],
+      language: "en",
+      durationInSeconds: undefined,
+      warnings: [],
+      response: { timestamp: new Date(), modelId: "mock-transcribe", headers: {} },
+    }),
   });
 }

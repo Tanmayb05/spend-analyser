@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Mic, MicOff, Receipt } from "lucide-react";
 import { useAppData } from "@/components/app-data";
+import { useRecorder } from "@/hooks/use-recorder";
 import { useSpeech } from "@/hooks/use-speech";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { parseTextAction, type TxnPreset } from "@/app/(app)/ai/actions";
+import { formatClock } from "@/lib/voice";
+import { parseTextAction, transcribeAction, type TxnPreset } from "@/app/(app)/ai/actions";
 
 /** "Describe it" box: text or voice → LLM → prefilled transaction(s). */
 export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[], note: string | null) => void; onReceipt: () => void }) {
   const app = useAppData();
   const [text, setText] = useState("");
   const [pending, start] = useTransition();
+  const [transcribing, startTranscribe] = useTransition();
   const run = (t: string) =>
     start(async () => {
       const res = await parseTextAction(t);
@@ -22,10 +25,41 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
       onPresets(res.presets, res.note);
       setText("");
     });
-  const speech = useSpeech((t, final) => {
-    setText(t);
-    if (final && t.trim()) run(t);
+
+  // Voice only fills the box. The user checks or edits the words, then presses Fill.
+  const base = useRef("");
+  const input = useRef<HTMLInputElement>(null);
+  const fill = (spoken: string) => setText([base.current, spoken].filter(Boolean).join(" "));
+
+  // Browser speech recognition: free, nothing leaves the app, but it depends on the browser.
+  const speech = useSpeech({
+    onText: fill,
+    onError: (m) => toast.error(m),
+    onEnd: () => input.current?.focus(),
   });
+  // Server transcription: same result in every browser. Used when the AI provider can transcribe (not Claude).
+  const recorder = useRecorder({
+    onDone: (wav) =>
+      startTranscribe(async () => {
+        const form = new FormData();
+        form.append("audio", wav, "voice.wav");
+        const res = await transcribeAction(form);
+        if (!res.ok) return void toast.error(res.error);
+        fill(res.text);
+        input.current?.focus();
+      }),
+    onError: (m) => toast.error(m),
+  });
+
+  const server = app.voiceReady && recorder.supported;
+  const listening = server ? recorder.recording : speech.listening;
+  const micAvailable = server || speech.supported;
+  const toggleMic = () => {
+    if (!listening) base.current = text.trim(); // keep what was already typed
+    if (!server) return speech.toggle();
+    if (recorder.recording) recorder.stop();
+    else void recorder.start();
+  };
 
   if (!app.aiReady) return null;
 
@@ -34,37 +68,49 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
       {/* A div, not a <form>: this renders inside the transaction form, and forms can't nest. */}
       <div className="flex items-center gap-2">
         <input
+          ref={input}
           aria-label="Describe a transaction"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key !== "Enter") return;
             e.preventDefault(); // don't submit the outer transaction form
-            if (text.trim() && !pending) run(text);
+            if (text.trim() && !pending && !transcribing) run(text);
           }}
-          placeholder={speech.listening ? "Listening…" : "e.g. 12.50 Kroger groceries yesterday"}
+          placeholder={listening ? "Listening…" : transcribing ? "Transcribing…" : "e.g. 12.50 Kroger groceries yesterday"}
           className="h-10 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-faint"
           disabled={pending}
+          readOnly={transcribing}
         />
-        {speech.supported ? (
+        {server && recorder.recording ? <span className="shrink-0 text-xs tabular-nums text-muted">{formatClock(recorder.seconds)}</span> : null}
+        {micAvailable ? (
           <button
             type="button"
-            onClick={speech.toggle}
-            aria-label={speech.listening ? "Stop listening" : "Speak"}
-            className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-control transition-colors", speech.listening ? "bg-surface-3 text-bad" : "text-muted hover:bg-surface-3")}
+            onClick={toggleMic}
+            disabled={transcribing}
+            aria-label={listening ? "Stop listening" : "Speak"}
+            aria-pressed={listening}
+            className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-control transition-colors disabled:opacity-50", listening ? "bg-surface-3 text-bad" : "text-muted hover:bg-surface-3")}
           >
-            {speech.listening ? <MicOff size={18} /> : <Mic size={18} />}
+            {listening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
         ) : null}
         <button type="button" onClick={onReceipt} aria-label="Read a receipt" className="grid h-9 w-9 shrink-0 place-items-center rounded-control text-muted transition-colors hover:bg-surface-3">
           <Receipt size={18} />
         </button>
-        <Button size="sm" onClick={() => text.trim() && run(text)} disabled={!text.trim() || pending}>
+        <Button size="sm" onClick={() => text.trim() && run(text)} disabled={!text.trim() || pending || transcribing}>
           {pending ? "Reading…" : "Fill"}
         </Button>
       </div>
       <p className="mt-2 px-1 text-xs leading-relaxed text-muted">
-        Type{speech.supported ? " or say" : ""} what you spent (amount, place, when) and press Fill. The form below is completed for you to check before saving. Several entries at once work too. The receipt icon reads a bill.
+        Type{micAvailable ? " or say" : ""} what you spent (amount, place, when) and press Fill. The form below is completed for you to check before saving. Several entries at once work too. The receipt icon reads a bill.
+        {server
+          ? " Your recording is sent to the AI provider to transcribe and isn't saved in the app."
+          : speech.supported
+            ? speech.local
+              ? " Voice is transcribed on this device."
+              : " Voice is transcribed by your browser's speech service."
+            : ""}
       </p>
     </div>
   );

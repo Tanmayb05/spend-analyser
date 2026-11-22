@@ -49,19 +49,29 @@ export const DEFAULT_MODELS: Record<AiProvider, Record<AiTier, string>> = {
   mock: { fast: "mock-fast", smart: "mock-smart" },
 };
 
+/** Speech-to-text model per provider. Claude has none (Anthropic takes no audio), so voice falls back to the browser there. */
+export const DEFAULT_TRANSCRIBE_MODELS: Record<AiProvider, string | null> = {
+  gemini: "gemini-3.5-transcribe",
+  claude: null,
+  openai: "gpt-4o-mini-transcribe",
+  mock: "mock-transcribe",
+};
+
 export type AiConfig = {
   provider: AiProvider;
   label: string;
   key: string;
   keyEnv: string | null;
   models: Record<AiTier, string>;
+  /** null when the provider can't transcribe audio */
+  transcribeModel: string | null;
 };
 
 type Env = Record<string, string | undefined>;
 
 /**
  * Resolve which LLM provider/models the server uses. Pure (takes env) so it can be unit-tested.
- * AI_PROVIDER picks the provider (default gemini); AI_MODEL_FAST/SMART override models.
+ * AI_PROVIDER picks the provider (default gemini); AI_MODEL_FAST/SMART/TRANSCRIBE override models.
  * GEMINI_MODEL_FAST/SMART are still honoured when the provider is gemini (back-compat).
  */
 export function resolveAiConfig(env: Env = process.env): AiConfig {
@@ -77,9 +87,13 @@ export function resolveAiConfig(env: Env = process.env): AiConfig {
     smart: env.AI_MODEL_SMART || legacy.smart || DEFAULT_MODELS[provider].smart,
   };
   const keyEnv = provider === "mock" ? null : PROVIDER_KEY_ENV[provider];
-  return { provider, label: PROVIDER_LABEL[provider], key: keyEnv ? (env[keyEnv] ?? "").trim() : "", keyEnv, models };
+  const transcribeModel = DEFAULT_TRANSCRIBE_MODELS[provider] === null ? null : env.AI_MODEL_TRANSCRIBE || DEFAULT_TRANSCRIBE_MODELS[provider];
+  return { provider, label: PROVIDER_LABEL[provider], key: keyEnv ? (env[keyEnv] ?? "").trim() : "", keyEnv, models, transcribeModel };
 }
 
 export const AI = resolveAiConfig();
 
 export const aiConfigured = (cfg: AiConfig = AI) => cfg.provider === "mock" || Boolean(cfg.key);
+
+/** True when the configured provider can turn recorded speech into text. */
+export const supportsTranscription = (cfg: AiConfig = AI) => cfg.transcribeModel !== null;

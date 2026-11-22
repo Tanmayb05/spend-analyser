@@ -7,9 +7,12 @@ import {
   NoObjectGeneratedError,
   NoOutputGeneratedError,
   NoSuchToolError,
+  NoTranscriptGeneratedError,
   Output,
   RetryError,
+  transcribe,
   type LanguageModel,
+  type TranscriptionModel,
   type LanguageModelUsage,
   type ToolSet,
   type UserContent,
@@ -17,8 +20,8 @@ import {
 import type { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/supabase/server";
-import { AI, AI_LIMITS, aiConfigured, QUOTA_GROUP, QUOTA_UNIT, type AiConfig, type AiTier } from "./config";
-import { getModel, supportsFile, supportsTemperature } from "./provider";
+import { AI, AI_LIMITS, aiConfigured, QUOTA_GROUP, QUOTA_UNIT, supportsTranscription, type AiConfig, type AiTier } from "./config";
+import { getModel, getTranscriptionModel, supportsFile, supportsTemperature } from "./provider";
 import { costUsd, type TokenUsage } from "./pricing";
 import type { Enums } from "@/lib/data/types";
 import type { TablesInsert } from "@/lib/supabase/database.types";
@@ -71,6 +74,7 @@ export function toAiError(e: unknown, cfg: AiConfig = AI): AiError {
   if (RetryError.isInstance(e)) return toAiError(e.lastError, cfg);
   if (NoObjectGeneratedError.isInstance(e) || NoOutputGeneratedError.isInstance(e))
     return new AiError("The AI's answer didn't match what we expected. Try again.", "bad_response");
+  if (NoTranscriptGeneratedError.isInstance(e)) return new AiError("Couldn't make out any words in that recording. Try again.", "bad_response");
   if (NoSuchToolError.isInstance(e) || InvalidToolInputError.isInstance(e))
     return new AiError("The AI asked for data in a way we couldn't handle. Try rephrasing.", "bad_response");
   if (APICallError.isInstance(e)) {
@@ -198,16 +202,20 @@ export function statsColumns(modelId: string | null, stats: CallStats | undefine
 /** Size of what is sent, for the log (never the content). */
 export type CallInputMeta = { fileCount: number; inputBytes: number };
 
+type ModelTarget<M> = { modelName: string; resolve: () => { model: M; modelId: string } };
+
 /**
  * Reserve one unit of the user's monthly allowance for `feature`, run `fn`, then stamp tokens (or refund on failure).
  * Usage is recorded before the call so concurrent requests can't overspend.
  * Every call that reaches the quota check is written to ai_call_log (ok / error / blocked).
  */
-async function withQuota<T extends { tokensIn: number | null; tokensOut: number | null; stats: CallStats }>(
+async function withQuota<T extends { tokensIn: number | null; tokensOut: number | null; stats: CallStats }, M = LanguageModel>(
   feature: Enums["ai_feature"],
   tier: AiTier,
   meta: CallInputMeta,
-  fn: (model: LanguageModel) => Promise<T>,
+  fn: (model: M) => Promise<T>,
+  /** Which model the call runs on. Defaults to the provider's text model for `tier`; speech-to-text passes its own. */
+  target: ModelTarget<M> = { modelName: AI.models[tier], resolve: () => getModel(tier) as { model: M; modelId: string } },
 ): Promise<T & { remaining: number; modelId: string }> {
   const { supabase, userId } = await requireUser();
   const { data: profile } = await supabase.from("profiles").select("ai_enabled").eq("id", userId).single();
@@ -215,12 +223,11 @@ async function withQuota<T extends { tokensIn: number | null; tokensOut: number 
   if (!aiConfigured()) throw new AiError(`AI isn't set up on this server (${AI.keyEnv ?? "API key"} missing).`, "not_configured");
 
   const admin = createAdminClient();
-  const modelName = AI.models[tier];
   const base: CallLogRow = {
     user_id: userId,
     feature,
     provider: AI.provider,
-    model: modelName,
+    model: target.modelName,
     tier,
     status: "ok",
     file_count: meta.fileCount,
@@ -246,7 +253,7 @@ async function withQuota<T extends { tokensIn: number | null; tokensOut: number 
   }
   const { usage_id, remaining } = quota.data![0];
 
-  const { model, modelId } = getModel(tier);
+  const { model, modelId } = target.resolve();
   const started = performance.now();
   const elapsed = () => Math.round(performance.now() - started);
   try {
@@ -338,4 +345,35 @@ export async function generateAnswer(opts: {
     callWithTools({ model, system: opts.system, messages: opts.messages, tools: opts.tools, maxSteps: opts.maxSteps }),
   );
   return { text: r.text, toolCalls: r.toolCalls, remaining: r.remaining, modelId: r.modelId };
+}
+
+export const TRANSCRIBE_TIMEOUT_MS = 45_000;
+
+/**
+ * One quota-checked speech-to-text call. `audio` is a WAV clip (see lib/voice). Failed or empty transcripts are refunded.
+ * Providers without a transcription model (Claude) are refused up front, before any quota is used.
+ */
+export async function generateTranscript(opts: { audio: Uint8Array }): Promise<{ text: string; remaining: number; modelId: string }> {
+  if (!supportsTranscription()) throw new AiError(`${AI.label} can't turn speech into text here. Type it instead.`, "unsupported_file");
+  const r = await withQuota<{ text: string; tokensIn: null; tokensOut: null; stats: CallStats }, TranscriptionModel>(
+    "transcribe",
+    "fast",
+    { fileCount: 1, inputBytes: opts.audio.byteLength },
+    async (model) => {
+      const res = await transcribe({ model, audio: opts.audio, maxRetries: 1, abortSignal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS) });
+      const text = res.text.trim();
+      if (!text) throw new AiError("Didn't catch any words in that recording. Try again a little closer to the microphone.", "bad_response");
+      const usage: TokenUsage = { input: null, output: null, cacheRead: null, cacheWrite: null, reasoning: null };
+      return { text, tokensIn: null, tokensOut: null, stats: { usage, finishReason: null, steps: 1, toolCalls: 0 } };
+    },
+    {
+      modelName: AI.transcribeModel ?? "",
+      resolve: () => {
+        const m = getTranscriptionModel();
+        if (!m) throw new AiError(`${AI.label} can't turn speech into text here. Type it instead.`, "unsupported_file");
+        return m;
+      },
+    },
+  );
+  return { text: r.text, remaining: r.remaining, modelId: r.modelId };
 }

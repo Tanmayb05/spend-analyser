@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiConfigured, resolveAiConfig } from "@/lib/ai/config";
+import { aiConfigured, resolveAiConfig, supportsTranscription } from "@/lib/ai/config";
 
 describe("resolveAiConfig", () => {
   it("defaults to gemini with built-in models", () => {
@@ -40,5 +40,19 @@ describe("resolveAiConfig", () => {
   it("allows mock only outside production", () => {
     expect(aiConfigured(resolveAiConfig({ AI_PROVIDER: "mock" }))).toBe(true);
     expect(() => resolveAiConfig({ AI_PROVIDER: "mock", NODE_ENV: "production" })).toThrow(/only allowed outside production/);
+  });
+
+  it("picks a speech model per provider, and none for Claude", () => {
+    expect(resolveAiConfig({ GEMINI_API_KEY: "k" }).transcribeModel).toBe("gemini-3.5-transcribe");
+    expect(resolveAiConfig({ AI_PROVIDER: "openai", OPENAI_API_KEY: "o" }).transcribeModel).toBe("gpt-4o-mini-transcribe");
+    const claude = resolveAiConfig({ AI_PROVIDER: "claude", CLAUDE_API_KEY: "c", AI_MODEL_TRANSCRIBE: "ignored" });
+    expect(claude.transcribeModel).toBeNull();
+    expect(supportsTranscription(claude)).toBe(false);
+    expect(supportsTranscription(resolveAiConfig({ GEMINI_API_KEY: "k" }))).toBe(true);
+    expect(supportsTranscription(resolveAiConfig({ AI_PROVIDER: "mock" }))).toBe(true);
+  });
+
+  it("lets AI_MODEL_TRANSCRIBE override the speech model", () => {
+    expect(resolveAiConfig({ GEMINI_API_KEY: "k", AI_MODEL_TRANSCRIBE: "gemini-x" }).transcribeModel).toBe("gemini-x");
   });
 });

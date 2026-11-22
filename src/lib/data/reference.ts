@@ -3,7 +3,7 @@ import { cache } from "react";
 import { requireUser } from "@/lib/supabase/server";
 import { todayIn } from "@/lib/dates";
 import type { ReferenceData } from "./types";
-import { aiConfigured } from "@/lib/ai/config";
+import { aiConfigured, supportsTranscription } from "@/lib/ai/config";
 
 /** Everything the UI needs for pickers and lookups. One round trip per request (React cache). */
 export const getReferenceData = cache(async (): Promise<ReferenceData> => {
@@ -35,5 +35,6 @@ export const getReferenceData = cache(async (): Promise<ReferenceData> => {
     budgets: budgets.data ?? [],
     today: todayIn(profile.data.timezone),
     aiReady: aiConfigured() && profile.data.ai_enabled,
+    voiceReady: aiConfigured() && profile.data.ai_enabled && supportsTranscription(),
   };
 });
