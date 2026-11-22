@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { createConfirmedUser, signIn } from "./helpers";
+import { createConfirmedUser, signIn, openAddForm, pickCategory } from "./helpers";
 import { TEST_USER } from "./test-user";
 
 // Scan flow end-to-end with the mock AI provider (the mock receipt is "Mock Market", total 10.00, dated today).
@@ -32,11 +32,10 @@ test("scan: link with a tip, create new, park, unlink", async ({ page }, info) =
 
   // a bank-style transaction, $2.50 above the receipt total (a tip)
   await page.goto("/");
-  await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
-  let dialog = page.getByRole("dialog");
+  let dialog = await openAddForm(page);
   await dialog.getByLabel("Amount", { exact: true }).fill("12.50");
   await dialog.getByLabel("Merchant", { exact: true }).fill("Mock Market");
-  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: "Dining & Drinks" });
+  await pickCategory(dialog, "Dining & Drinks");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 
@@ -81,7 +80,7 @@ test("scan: link with a tip, create new, park, unlink", async ({ page }, info) =
   await expect(page.getByLabel("Item 1 name")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await dialog.getByRole("button", { name: "New transaction" }).click();
-  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: "Groceries" });
+  await pickCategory(dialog, "Groceries");
   await dialog.getByRole("button", { name: "Create transaction" }).click();
   await expect(page.getByText(/Transaction created/)).toBeVisible();
 
@@ -133,11 +132,10 @@ test("inbox: a parked receipt shows a likely match, links later, and another can
 
   // the statement import (here: a manual transaction) arrives afterwards
   await page.goto("/");
-  await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
-  let dialog = page.getByRole("dialog");
+  let dialog = await openAddForm(page);
   await dialog.getByLabel("Amount", { exact: true }).fill("10.00");
   await dialog.getByLabel("Merchant", { exact: true }).fill("Mock Market");
-  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: "Groceries" });
+  await pickCategory(dialog, "Groceries");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 

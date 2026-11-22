@@ -12,7 +12,7 @@ export default async function PreferencesPage() {
   const { count } = await supabase.from("transactions").select("id", { count: "exact", head: true });
   return (
     <SettingsPage title="Preferences" info={HELP.preferences}>
-      <PreferencesForm profile={ref.profile} txnCount={count ?? 0} />
+      <PreferencesForm profile={ref.profile} txnCount={count ?? 0} aiReady={ref.aiReady} />
     </SettingsPage>
   );
 }

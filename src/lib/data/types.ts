@@ -1,4 +1,5 @@
 import type { Database } from "@/lib/supabase/database.types";
+import type { EntryHints } from "@/lib/entry-hints";
 
 type Tables = Database["public"]["Tables"];
 type Fns = Database["public"]["Functions"];
@@ -35,6 +36,8 @@ export type ReferenceData = {
   trips: Trip[];
   merchants: Merchant[];
   budgets: Budget[];
+  /** most-used categories and merchants from recent history, for the add form */
+  entryHints: EntryHints;
   today: string;
   aiReady: boolean;
   /** AI is on and the configured provider can transcribe recordings (false for Claude: voice then uses the browser). */

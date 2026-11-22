@@ -81,3 +81,21 @@ export async function importWorkbookAs(email: string, password: string, file = "
   if (error) throw error;
   return sb;
 }
+
+/** Opens Add transaction on the plain form, whichever entry method is the default (the sheet may open on "Describe it"). */
+export async function openAddForm(page: Page) {
+  await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  const form = dialog.getByRole("radio", { name: "Form" });
+  if (await form.isVisible()) await form.click();
+  await expect(dialog.getByLabel("Amount", { exact: true })).toBeVisible();
+  return dialog;
+}
+
+/** Picks a category from the full list (the chips only show the most used ones). */
+export async function pickCategory(dialog: ReturnType<Page["getByRole"]>, name: string) {
+  const more = dialog.getByRole("button", { name: "More categories" });
+  if ((await more.count()) && (await dialog.getByLabel("Category", { exact: true }).count()) === 0) await more.click();
+  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: name });
+}

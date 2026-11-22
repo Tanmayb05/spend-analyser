@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import * as XLSX from "xlsx";
-import { createConfirmedUser, importWorkbookAs, signIn } from "./helpers";
+import { createConfirmedUser, importWorkbookAs, signIn, openAddForm, pickCategory } from "./helpers";
 import { TEST_USER } from "./test-user";
 
 test.describe.configure({ mode: "serial" });
@@ -120,6 +120,7 @@ test("trip counting modes change monthly totals", async ({ page }, info) => {
   await page.getByRole("button", { name: "Add expense" }).click();
   const d = page.getByRole("dialog");
   await d.getByLabel("Amount", { exact: true }).fill("300");
+  await d.getByRole("button", { name: "Pick date" }).click();
   await d.getByLabel("Date", { exact: true }).fill("2026-10-02");
   await d.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
@@ -170,10 +171,9 @@ test("changing default currency converts everything", async ({ page }, info) => 
   await createConfirmedUser(email, TEST_USER.password);
   await signIn(page, email, TEST_USER.password);
   // one USD expense
-  await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
-  const d = page.getByRole("dialog");
+  const d = await openAddForm(page);
   await d.getByLabel("Amount", { exact: true }).fill("100");
-  await d.getByLabel("Category", { exact: true }).selectOption({ label: "Groceries" });
+  await pickCategory(d, "Groceries");
   await d.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronDown, Copy, ExternalLink, Loader2, Trash2 } from "lucide-react";
@@ -14,107 +14,97 @@ import { allCurrencies, formatMoney } from "@/lib/money";
 import { formatDay, formatMonth, monthStart } from "@/lib/dates";
 import { buildSchedule, monthsForAmount } from "@/lib/installments";
 import { DEFAULT_BIWEEKLY, MAX_BIWEEKLY, biweeklyDates } from "@/lib/biweekly";
+import { parseISO, toISO } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { deleteTransactions, restoreTransactions, saveTransaction } from "@/app/(app)/transactions/actions";
-import { SmartAdd } from "@/components/ai/smart-add";
+import { AiEntry } from "@/components/ai/ai-entry";
+import { Chip } from "@/components/ui/chip";
+import { blankValues, toSaveInput, type FormValues } from "@/components/transactions/entry-model";
+import { parseEntryMethod, resolveEntryMode, type EntryMethod } from "@/lib/entry-mode";
+import type { TxnPreset } from "@/app/(app)/ai/actions";
 import { ReceiptFlow } from "@/components/receipts/receipt-flow";
-import type { PlanKind, TxnType } from "@/lib/data/types";
-
-type FormValues = {
-  id: string | null;
-  date: string;
-  type: TxnType;
-  amount: string;
-  currency: string;
-  fx_rate: string;
-  category_id: string;
-  subcategory_id: string;
-  merchant_name: string;
-  description: string;
-  external_url: string;
-  payment_method_id: string;
-  paid_by_id: string;
-  trip_id: string;
-  receipt_id: string;
-  notes: string;
-  spread: boolean;
-  plan_kind: PlanKind;
-  plan_months: string;
-  plan_amount: string;
-  plan_start: string; // YYYY-MM
-  plan_touched: boolean;
-  repeat: boolean; // income only, new transactions only: bi-weekly paychecks
-  repeat_count: string;
-};
 
 const CURRENCIES = allCurrencies();
 
 export function TransactionSheet() {
   const app = useAppData();
   const { txnSheet, closeTxnSheet } = app;
-  const [receipt, setReceipt] = useState(false);
+  // These belong to one opening of the sheet: each opening is a new txnSheet object, so they reset by themselves.
+  const [receipt, setReceipt] = useState<object | null>(null);
+  const [switched, setSwitched] = useState<{ sheet: object; method: EntryMethod } | null>(null);
+  const [handoff, setHandoff] = useState<{ sheet: object; presets: TxnPreset[] } | null>(null);
   const open = txnSheet.open;
   const editId = txnSheet.open ? txnSheet.id : undefined;
   const preset = txnSheet.open ? txnSheet.preset : undefined;
   const close = () => {
-    setReceipt(false);
+    setReceipt(null);
     closeTxnSheet();
   };
-  const receiptMode = receipt || preset?.__receipt === "1";
+
+  const override = switched?.sheet === txnSheet ? switched.method : null;
+  const mine = handoff?.sheet === txnSheet ? handoff.presets : null;
+  const mode = resolveEntryMode({ editId, preset, defaultMethod: parseEntryMethod(app.profile.default_entry_method), aiReady: app.aiReady, override });
+  const receiptMode = receipt === txnSheet || mode === "receipt";
+  const formMode = Boolean(mine) || mode === "manual";
+  // The AI / form switch only makes sense for a plain new entry.
+  const canSwitch = open && !editId && !receiptMode && app.aiReady && !(preset && Object.keys(preset).length > 0);
+  const [first, ...rest] = mine ?? [];
 
   return (
     <Sheet open={open} onClose={close} title={receiptMode ? "Read a receipt" : editId ? "Edit transaction" : "Add transaction"}>
+      {open && canSwitch ? (
+        <Segmented
+          ariaLabel="Entry method"
+          className="mb-4 w-full [&>button]:flex-1"
+          value={formMode ? "manual" : "ai"}
+          onChange={(method) => {
+            setHandoff(null);
+            setSwitched({ sheet: txnSheet, method });
+          }}
+          options={[
+            { value: "ai", label: "Describe it" },
+            { value: "manual", label: "Form" },
+          ]}
+        />
+      ) : null}
       {open && receiptMode ? <ReceiptFlow onDone={close} /> : null}
-      {open && !receiptMode ? <TransactionForm key={editId ?? JSON.stringify(preset ?? {})} editId={editId} preset={preset} onReceipt={() => setReceipt(true)} /> : null}
+      {open && !receiptMode && !formMode ? (
+        <AiEntry
+          onReceipt={() => setReceipt(txnSheet)}
+          onEdit={(presets) => setHandoff({ sheet: txnSheet, presets })}
+        />
+      ) : null}
+      {open && !receiptMode && formMode ? (
+        <TransactionForm
+          onReceipt={() => setReceipt(txnSheet)}
+          key={editId ?? JSON.stringify(mine ?? preset ?? {})}
+          editId={editId}
+          preset={first ?? preset}
+          initialQueue={rest}
+        />
+      ) : null}
     </Sheet>
   );
 }
 
-function blank(app: ReturnType<typeof useAppData>, preset?: Record<string, string>): FormValues {
-  const self = app.people.find((p) => p.is_self);
-  const defaultPm = app.paymentMethods.find((p) => p.id === app.profile.default_payment_method_id && !p.archived);
-  return {
-    id: null,
-    date: app.today,
-    type: "expense",
-    amount: "",
-    currency: app.currency,
-    fx_rate: "",
-    category_id: "",
-    subcategory_id: "",
-    merchant_name: "",
-    description: "",
-    external_url: "",
-    payment_method_id: defaultPm?.id ?? "",
-    paid_by_id: self?.id ?? "",
-    trip_id: "",
-    receipt_id: "",
-    notes: "",
-    spread: false,
-    plan_kind: "spread",
-    plan_months: String(app.profile.default_spread_months),
-    plan_amount: "",
-    plan_start: app.today.slice(0, 7),
-    plan_touched: false,
-    repeat: false,
-    repeat_count: String(DEFAULT_BIWEEKLY),
-    ...(preset as Partial<FormValues>),
-    // presets are strings; "1" turns "Spread this cost" on (Plans / EMIs empty states)
-    ...(preset?.spread ? { spread: preset.spread === "1" } : {}),
-  };
-}
+const blank = blankValues;
 
-function TransactionForm({ editId, preset, onReceipt }: { editId?: string; preset?: Record<string, string>; onReceipt: () => void }) {
+function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?: string; preset?: Record<string, string>; initialQueue?: Record<string, string>[]; onReceipt?: () => void }) {
   const app = useAppData();
   const router = useRouter();
   const [v, setV] = useState<FormValues>(() => blank(app, preset));
   const [loading, setLoading] = useState(Boolean(editId));
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // "More details" starts open when a payment method is pre-filled (the default one), so it is visible
-  const [more, setMore] = useState(() => Boolean(v.payment_method_id));
+  // rarely used parts stay folded unless the entry already uses them
+  const [more, setMore] = useState(() => Boolean(v.description || v.trip_id || v.notes || v.external_url));
+  const [allCats, setAllCats] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [advanced, setAdvanced] = useState(() => v.spread || v.repeat);
+  const amountRef = useRef<HTMLInputElement>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [queue, setQueue] = useState<Record<string, string>[]>([]);
+  const [queue, setQueue] = useState<Record<string, string>[]>(() => initialQueue ?? []);
   const [source, setSource] = useState<string>(preset?.source ?? "manual");
 
   function applyPresets(list: Record<string, string>[], note: string | null) {
@@ -124,7 +114,8 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
     setSource(first.source ?? "text");
     setQueue(rest);
     setErrors({});
-    setMore(Boolean(first.description || first.trip_id || first.notes || first.paid_by_id || next.payment_method_id));
+    setMore(Boolean(first.description || first.trip_id || first.notes));
+    setAdvanced(next.spread || next.repeat);
     if (note) toast.message(note);
     if (rest.length) toast.message(`Found ${list.length} transactions. Review and save each one.`);
   }
@@ -172,7 +163,8 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         repeat: false,
         repeat_count: String(DEFAULT_BIWEEKLY),
       });
-      setMore(Boolean(t.payment_method_id || t.trip_id || t.notes || t.description || t.external_url));
+      setMore(Boolean(t.trip_id || t.notes || t.description || t.external_url));
+      setAdvanced(Boolean(plan));
       setLoading(false);
     })();
   }, [editId, app]);
@@ -209,50 +201,29 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
     return repeating && Number.isInteger(n) && n >= 2 && n <= MAX_BIWEEKLY ? biweeklyDates(v.date, n) : [];
   }, [repeating, v.repeat_count, v.date]);
 
+  /** Picking a known merchant fills what you used last time: category, payment method and who paid. */
   function onMerchant(name: string) {
-    set("merchant_name", name);
     const m = app.merchants.find((x) => x.name_key === name.trim().toLowerCase());
-    if (m?.default_category_id && app.maps.category.get(m.default_category_id)?.kind === kind) {
-      setV((s) => ({ ...s, merchant_name: name, category_id: m.default_category_id!, subcategory_id: m.default_subcategory_id ?? "" }));
-    }
+    const last = m ? app.entryHints.lastByMerchant[m.id] : undefined;
+    const catId = m?.default_category_id ?? last?.category_id ?? null;
+    const catOk = catId && app.maps.category.get(catId)?.kind === kind;
+    const subId = m?.default_category_id ? m.default_subcategory_id : last?.subcategory_id;
+    const pay = last?.payment_method_id ? app.paymentMethods.find((p) => p.id === last.payment_method_id && !p.archived) : undefined;
+    const who = last?.paid_by_id ? app.people.find((p) => p.id === last.paid_by_id && !p.archived) : undefined;
+    setV((s) => ({
+      ...s,
+      merchant_name: name,
+      ...(m && catOk ? { category_id: catId, subcategory_id: subId ?? "" } : {}),
+      ...(m && pay ? { payment_method_id: pay.id } : {}),
+      ...(m && who ? { paid_by_id: who.id } : {}),
+    }));
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit(e?: React.FormEvent, again = false) {
+    e?.preventDefault();
     setErrors({});
-    const plan = !v.spread
-      ? null
-      : editId && !v.plan_touched
-        ? { unchanged: true as const }
-        : {
-            kind: v.plan_kind,
-            months: Number(v.plan_months),
-            start_month: `${v.plan_start}-01`,
-            installment_amount: Number(v.plan_amount) || null,
-          };
-
     startTransition(async () => {
-      const res = await saveTransaction({
-        id: v.id,
-        date: v.date,
-        type: v.type,
-        category_id: v.category_id,
-        subcategory_id: v.subcategory_id,
-        merchant_name: v.merchant_name,
-        description: v.description,
-        external_url: v.external_url,
-        amount: v.amount,
-        currency: v.currency,
-        fx_rate: foreign && v.fx_rate ? Number(v.fx_rate) : null,
-        payment_method_id: v.payment_method_id,
-        paid_by_id: v.paid_by_id,
-        trip_id: v.trip_id,
-        receipt_id: v.receipt_id,
-        notes: v.notes,
-        source: editId ? undefined : (source as "manual" | "text" | "voice"),
-        plan,
-        repeat: repeating ? { kind: "biweekly", count: Number(v.repeat_count) } : null,
-      });
+      const res = await saveTransaction(toSaveInput(v, { editId, source, baseCurrency: app.currency }));
       if (!res.ok) {
         setErrors(res.fields ?? {});
         toast.error(res.error);
@@ -262,6 +233,15 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
       router.refresh();
       if (queue.length) {
         applyPresets(queue, null);
+        return;
+      }
+      if (again) {
+        // keep what repeats between entries (type, date, currency, payment, payer); clear the rest
+        setV({ ...blank(app), type: v.type, date: v.date, currency: v.currency, payment_method_id: v.payment_method_id, paid_by_id: v.paid_by_id });
+        setSource("manual");
+        setMore(false);
+        setAdvanced(false);
+        amountRef.current?.focus();
         return;
       }
       app.closeTxnSheet();
@@ -310,6 +290,27 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
     });
   }
 
+  const quickCats = useMemo(() => {
+    const ranked = app.entryHints.topCategories[kind].map((id) => categories.find((c) => c.id === id)).filter((c): c is (typeof categories)[number] => Boolean(c));
+    const pool = ranked.length >= 3 ? ranked : [...ranked, ...categories.filter((c) => !ranked.includes(c))];
+    const top = pool.slice(0, 6);
+    const sel = categories.find((c) => c.id === v.category_id);
+    return sel && !top.includes(sel) ? [...top.slice(0, 5), sel] : top;
+  }, [app.entryHints, categories, kind, v.category_id]);
+  const { merchants, entryHints } = app;
+  const quickMerchants = useMemo(
+    () => entryHints.topMerchants.map((id) => merchants.find((m) => m.id === id)).filter((m): m is (typeof merchants)[number] => Boolean(m)).slice(0, 5),
+    [entryHints, merchants],
+  );
+  const yesterday = useMemo(() => {
+    const d = parseISO(app.today);
+    d.setDate(d.getDate() - 1);
+    return toISO(d);
+  }, [app.today]);
+  const customDate = v.date !== app.today && v.date !== yesterday;
+  const pm = app.maps.payment.get(v.payment_method_id);
+  const payer = app.maps.person.get(v.paid_by_id);
+
   if (loading)
     return (
       <p role="status" className="flex h-40 items-center justify-center gap-2 text-sm text-muted">
@@ -319,7 +320,6 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
 
   return (
     <form onSubmit={submit} className="space-y-6" noValidate>
-      {!editId ? <SmartAdd onPresets={applyPresets} onReceipt={onReceipt} /> : null}
       {queue.length ? <p className="rounded-inset border border-border bg-surface-2 px-4 py-2 text-sm text-text">{queue.length} more after this one</p> : null}
       <Segmented
         ariaLabel="Type"
@@ -348,6 +348,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
             step="0.01"
             min="0"
             placeholder="0.00"
+            ref={amountRef}
             autoFocus={!editId}
             value={v.amount}
             onChange={(e) => set("amount", e.target.value)}
@@ -377,38 +378,107 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         ) : null}
       </div>
 
-      <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Date" htmlFor="date" error={errors.date}>
-          <Input id="date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} />
-        </Field>
-        <Field label="Merchant" htmlFor="merchant">
-          <Input id="merchant" list="merchant-list" autoComplete="off" placeholder="e.g. Kroger" value={v.merchant_name} onChange={(e) => onMerchant(e.target.value)} />
-          <datalist id="merchant-list">
-            {app.merchants.map((m) => (
-              <option key={m.id} value={m.name} />
-            ))}
-          </datalist>
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Category" htmlFor="category" error={errors.category_id}>
-          <Select id="category" value={v.category_id} onChange={(e) => setV((s) => ({ ...s, category_id: e.target.value, subcategory_id: "" }))}>
+      {/* Category: the one choice every entry needs, so the usual ones are a tap away */}
+      <div className="space-y-2">
+        <p className="text-sm text-muted">Category</p>
+        <div role="group" aria-label="Frequent categories" className="flex flex-wrap gap-2">
+          {quickCats.map((c) => (
+            <Chip key={c.id} selected={v.category_id === c.id} onClick={() => setV((s) => ({ ...s, category_id: c.id, subcategory_id: "" }))}>
+              {c.name}
+            </Chip>
+          ))}
+          {categories.length > quickCats.length ? (
+            <Chip selected={allCats} aria-label="More categories" onClick={() => setAllCats((a) => !a)}>
+              More
+            </Chip>
+          ) : null}
+        </div>
+        {allCats || !quickCats.length ? (
+          <Select id="category" aria-label="Category" value={v.category_id} onChange={(e) => setV((s) => ({ ...s, category_id: e.target.value, subcategory_id: "" }))}>
             <option value="">Choose…</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </Select>
-        </Field>
-        <Field label="Subcategory" htmlFor="subcategory">
-          <Select id="subcategory" value={v.subcategory_id} onChange={(e) => set("subcategory_id", e.target.value)} disabled={!subcategories.length}>
-            <option value="">{subcategories.length ? "Optional" : "—"}</option>
-            {subcategories.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+        ) : null}
+        {errors.category_id ? <p className="text-sm text-bad">{errors.category_id}</p> : null}
+      </div>
+
+      {subcategories.length ? (
+        <div className="space-y-2">
+          <p className="text-sm text-muted">Subcategory (optional)</p>
+          <div role="group" aria-label="Subcategories" className="flex flex-wrap gap-2">
+            {subcategories.map((sc) => (
+              <Chip key={sc.id} selected={v.subcategory_id === sc.id} onClick={() => set("subcategory_id", v.subcategory_id === sc.id ? "" : sc.id)}>
+                {sc.name}
+              </Chip>
             ))}
-          </Select>
-        </Field>
+          </div>
+        </div>
+      ) : null}
+
+      <Field label="Merchant" htmlFor="merchant">
+        <Input id="merchant" list="merchant-list" autoComplete="off" placeholder="e.g. Kroger" value={v.merchant_name} onChange={(e) => onMerchant(e.target.value)} />
+        <datalist id="merchant-list">
+          {app.merchants.map((m) => (
+            <option key={m.id} value={m.name} />
+          ))}
+        </datalist>
+        {!v.merchant_name && quickMerchants.length ? (
+          <div role="group" aria-label="Recent merchants" className="flex flex-wrap gap-2">
+            {quickMerchants.map((m) => (
+              <Chip key={m.id} onClick={() => onMerchant(m.name)}>{m.name}</Chip>
+            ))}
+          </div>
+        ) : null}
+      </Field>
+
+      <Field label="Date" htmlFor="date" error={errors.date}>
+        <div role="group" aria-label="Date shortcuts" className="flex flex-wrap gap-2">
+          <Chip selected={v.date === app.today} onClick={() => { set("date", app.today); setDateOpen(false); }}>Today</Chip>
+          <Chip selected={v.date === yesterday} onClick={() => { set("date", yesterday); setDateOpen(false); }}>Yesterday</Chip>
+          <Chip selected={customDate || dateOpen} aria-label="Pick date" onClick={() => setDateOpen(true)}>
+            {customDate ? formatDay(v.date) : "Pick date"}
+          </Chip>
+        </div>
+        {dateOpen || customDate ? <Input id="date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} /> : null}
+      </Field>
+
+      {/* Paid with: shown as one line, changed only when it differs from the default */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          aria-expanded={payOpen}
+          onClick={() => setPayOpen((o) => !o)}
+          className="flex w-full items-center justify-between gap-3 rounded-control border border-border bg-surface-2 px-4 py-3 text-left text-sm transition-colors hover:bg-surface-3"
+        >
+          <span className="min-w-0 truncate">
+            <span className="text-muted">Paid with </span>
+            <span className="text-text">{pm?.name ?? "no payment method"}</span>
+            {payer ? <span className="text-muted"> · by {payer.name}</span> : null}
+          </span>
+          <span className="shrink-0 text-muted">Change</span>
+        </button>
+        {payOpen ? (
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Payment" htmlFor="pay">
+              <Select id="pay" value={v.payment_method_id} onChange={(e) => set("payment_method_id", e.target.value)}>
+                <option value="">—</option>
+                {app.paymentMethods.filter((p) => !p.archived || p.id === v.payment_method_id).map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Paid by" htmlFor="paidby">
+              <Select id="paidby" value={v.paid_by_id} onChange={(e) => set("paid_by_id", e.target.value)}>
+                <option value="">—</option>
+                {app.people.filter((p) => !p.archived || p.id === v.paid_by_id).map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        ) : null}
       </div>
 
       {editId && linkHref ? (
@@ -429,8 +499,16 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
         </a>
       ) : null}
 
-      </div>
 
+      {/* Spread / repeat: rare, so folded */}
+      {v.type === "expense" || (v.type === "income" && !editId) ? (
+        <div className="space-y-6">
+          <button type="button" aria-expanded={advanced} onClick={() => setAdvanced((a) => !a)} className="flex w-full items-center justify-between rounded-control py-1 text-sm text-muted transition-colors hover:text-text">
+            {v.type === "expense" ? "Spread this cost over months" : "Repeat as bi-weekly paychecks"}
+            <ChevronDown size={18} className={cn("transition-transform duration-(--dur-fast)", advanced && "rotate-180")} />
+          </button>
+          {advanced ? (
+            <>
       {/* Spread / EMI */}
       {v.type === "expense" ? (
         <div className="rounded-card border border-border bg-surface-2 p-compact">
@@ -524,10 +602,14 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
           ) : null}
         </div>
       ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* More details */}
       <button type="button" onClick={() => setMore((m) => !m)} className="flex w-full items-center justify-between rounded-control py-1 text-sm text-muted transition-colors hover:text-text">
-        More details (link, payment, trip, notes)
+        More details (description, link, trip, notes)
         <ChevronDown size={18} className={cn("transition-transform duration-(--dur-fast)", more && "rotate-180")} />
       </button>
       {more ? (
@@ -561,24 +643,6 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
               ) : null}
             </div>
           </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Payment" htmlFor="pay">
-              <Select id="pay" value={v.payment_method_id} onChange={(e) => set("payment_method_id", e.target.value)}>
-                <option value="">—</option>
-                {app.paymentMethods.filter((p) => !p.archived || p.id === v.payment_method_id).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Paid by" htmlFor="paidby">
-              <Select id="paidby" value={v.paid_by_id} onChange={(e) => set("paid_by_id", e.target.value)}>
-                <option value="">—</option>
-                {app.people.filter((p) => !p.archived || p.id === v.paid_by_id).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </Select>
-            </Field>
-          </div>
           <Field label="Trip" htmlFor="trip" hint={v.trip_id ? tripHint(app.maps.trip.get(v.trip_id)?.include_mode) : undefined}>
             <Select id="trip" value={v.trip_id} onChange={(e) => set("trip_id", e.target.value)}>
               <option value="">Not part of a trip</option>
@@ -605,10 +669,20 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
             </Button>
           </>
         ) : null}
+        {!editId && !queue.length ? (
+          <Button variant="outline" size="lg" disabled={pending} onClick={() => submit(undefined, true)}>
+            Add &amp; another
+          </Button>
+        ) : null}
         <Button type="submit" size="lg" className="flex-1" disabled={pending}>
           {pending ? "Saving…" : editId ? "Save changes" : queue.length ? "Add & next" : "Add"}
         </Button>
       </div>
+      {!editId && app.aiReady && onReceipt ? (
+        <button type="button" onClick={onReceipt} className="text-sm text-accent underline-offset-2 hover:underline">
+          Read a receipt instead
+        </button>
+      ) : null}
     </form>
   );
 }

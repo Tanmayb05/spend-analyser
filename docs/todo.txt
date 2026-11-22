@@ -10,7 +10,7 @@
 
 12. Improve Insights Page
 
-13. AI First Inputs
+13. [done] AI First Inputs. Improve the Input transactions.
 
 14. AI Talking mode.
 

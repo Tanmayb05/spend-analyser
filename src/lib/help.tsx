@@ -208,6 +208,10 @@ export const HELP = {
       <p>
         <b>Spread months</b>: pre-filled when you turn on “Spread this cost”.
       </p>
+      <p>
+        <b>Add transaction opens</b>: “Describe it” lets you type or say what you spent, then check the result and save. “Form”
+        opens the short form. Both are one tap away from inside the sheet.
+      </p>
     </>
   ),
   categories: (

@@ -1,14 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createConfirmedUser, signIn } from "./helpers";
+import { createConfirmedUser, signIn, openAddForm, pickCategory } from "./helpers";
 import { TEST_USER } from "./test-user";
 
 async function addTxn(page: Page, amount: string, merchant: string, category: string) {
-  await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
+  const dialog = await openAddForm(page);
   await dialog.getByLabel("Amount", { exact: true }).fill(amount);
   await dialog.getByLabel("Merchant", { exact: true }).fill(merchant);
-  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: category });
+  await pickCategory(dialog, category);
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 }

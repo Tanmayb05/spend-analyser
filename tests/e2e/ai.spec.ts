@@ -15,14 +15,15 @@ test("AI flows work through the provider layer (mock provider)", async ({ page }
   test.skip(!(await page.getByText("Provider: Mock AI").isVisible()), "dev server is not running with AI_PROVIDER=mock");
   await expect(page.getByText("What is sent to Mock AI")).toBeVisible();
 
-  // Smart Add: text → prefilled form
+  // Describe it is the default: text → a card to check → Save
   await page.goto("/");
   await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Describe a transaction").fill("lunch 12.50 at mock cafe");
-  await dialog.getByRole("button", { name: "Fill" }).click();
-  await expect(dialog.getByLabel("Merchant", { exact: true })).toHaveValue("Mock Cafe");
-  await expect(dialog.getByLabel("Amount", { exact: true })).toHaveValue("12.5");
+  await dialog.getByRole("button", { name: "Read it" }).click();
+  const card = dialog.getByRole("region", { name: "Transaction 1" });
+  await expect(card.getByText("Mock Cafe")).toBeVisible();
+  await expect(card.getByText("$12.50")).toBeVisible();
 
   // Receipt: upload → extracted items to review
   await dialog.getByRole("button", { name: "Read a receipt" }).click();

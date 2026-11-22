@@ -241,7 +241,7 @@ Remaining quota is shown in the UI and in Settings → AI. Analysis results are 
 |---|---|
 | **Profile** | name, email (change → confirm email) |
 | **Security** | change password, sign out all devices, delete account (type-to-confirm, cascades everything incl. storage) |
-| **Preferences** | **default currency** (searchable list of all ISO currencies; changing it recomputes `base_amount` for all transactions from historical rates, and asks whether to convert budgets at today's rate), number format/locale (en-IN gives ₹1,00,000 lakh grouping), date format, week start, timezone, theme, default dashboard mode (Normalized/Cash), default spread months |
+| **Preferences** | **default currency** (searchable list of all ISO currencies; changing it recomputes `base_amount` for all transactions from historical rates, and asks whether to convert budgets at today's rate), number format/locale (en-IN gives ₹1,00,000 lakh grouping), date format, week start, timezone, theme, default dashboard mode (Normalized/Cash), default spread months, **default entry method** (Describe it / Form; Describe it falls back to the form when AI is off) |
 | **Categories** | CRUD, drag reorder, color/icon, **Core toggle**, expense/income kind, archive. Deleting a used category opens a dialog to reassign or merge into another. Subcategories inline under each category. |
 | **Budgets** | month picker + table: category · budget · "set since Mar 2026" · last month actual. Editing shows "Applies from Oct 2026 onward" (confirm if later overrides get replaced). Totals row: total budget, core budget, income target. History drawer per category showing its effective-dated changes. |
 | **Payment methods / People** | simple lists with CRUD and archive |

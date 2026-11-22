@@ -9,7 +9,7 @@ test.use({
 });
 
 // Like ai.spec.ts: needs the dev server started with AI_PROVIDER=mock (the mock "hears" a fixed sentence); skipped otherwise.
-test("voice: record → transcribe on the server → edit → Fill (mock provider)", async ({ page }, info) => {
+test("voice: record → transcribe on the server → edit → Read it (mock provider)", async ({ page }, info) => {
   const email = TEST_USER.email.replace("@", `+voice-${info.project.name}@`);
   await createConfirmedUser(email, TEST_USER.password);
   await signIn(page, email, TEST_USER.password);
@@ -34,11 +34,12 @@ test("voice: record → transcribe on the server → edit → Fill (mock provide
 
   // the transcript lands in the box for review, and nothing is submitted for the user
   await expect(box).toHaveValue("for the team 12.50 Mock Cafe lunch");
-  await expect(dialog.getByLabel("Merchant", { exact: true })).not.toHaveValue("Mock Cafe");
+  await expect(dialog.getByRole("region", { name: "Transaction 1" })).toHaveCount(0);
 
-  await dialog.getByRole("button", { name: "Fill" }).click();
-  await expect(dialog.getByLabel("Merchant", { exact: true })).toHaveValue("Mock Cafe");
-  await expect(dialog.getByLabel("Amount", { exact: true })).toHaveValue("12.5");
+  await dialog.getByRole("button", { name: "Read it" }).click();
+  const card = dialog.getByRole("region", { name: "Transaction 1" });
+  await expect(card.getByText("Mock Cafe")).toBeVisible();
+  await expect(card.getByText("$12.50")).toBeVisible();
 
   // a recording shorter than the minimum is refused before any allowance is used
   await dialog.getByLabel("Describe a transaction").fill("");

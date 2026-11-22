@@ -7,6 +7,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
 import { useAction } from "@/hooks/use-action";
 import { allCurrencies, currencyName, formatMoney } from "@/lib/money";
+import { parseEntryMethod } from "@/lib/entry-mode";
 import { updatePreferences } from "@/app/(app)/settings/actions";
 import type { Profile } from "@/lib/data/types";
 
@@ -41,7 +42,7 @@ const TIMEZONES: [id: string, label: string][] = [
 ];
 const cityOf = (id: string) => id.split("/").pop()!.replace(/_/g, " ");
 
-export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCount: number }) {
+export function PreferencesForm({ profile, txnCount, aiReady }: { profile: Profile; txnCount: number; aiReady: boolean }) {
   const [v, setV] = useState({
     base_currency: profile.base_currency,
     locale: profile.locale,
@@ -49,6 +50,7 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
     week_start: profile.week_start,
     theme: profile.theme as "dark" | "light" | "system",
     default_spread_months: profile.default_spread_months,
+    default_entry_method: parseEntryMethod(profile.default_entry_method),
   });
   const [convertBudgets, setConvertBudgets] = useState(true);
   const a = useAction();
@@ -92,6 +94,29 @@ export function PreferencesForm({ profile, txnCount }: { profile: Profile; txnCo
           <Field label="Spread over (months)" htmlFor="dsm" hint="Pre-filled when you spread a purchase over several months">
             <Input id="dsm" type="number" min={1} max={120} value={v.default_spread_months} onChange={(e) => set("default_spread_months", Number(e.target.value))} />
           </Field>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Adding transactions" />
+        <div>
+          <p className="mb-2 text-sm text-muted">Add transaction opens</p>
+          <Segmented
+            ariaLabel="Add transaction opens"
+            value={v.default_entry_method}
+            onChange={(m) => set("default_entry_method", m)}
+            options={[
+              { value: "ai", label: "Describe it" },
+              { value: "manual", label: "Form" },
+            ]}
+          />
+          <p className="mt-2 text-xs text-faint">
+            {v.default_entry_method === "ai"
+              ? aiReady
+                ? "Type or say what you spent, check the result and save. You can switch to the form from the sheet."
+                : "Describe it needs AI turned on and set up (Settings, AI). Until then Add transaction opens the form."
+              : "A short form: amount, category, then save. You can switch to Describe it from the sheet when AI is on."}
+          </p>
         </div>
       </Card>
 

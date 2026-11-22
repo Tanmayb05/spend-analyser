@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Mic, MicOff, Receipt } from "lucide-react";
 import { useAppData } from "@/components/app-data";
@@ -9,27 +9,31 @@ import { useSpeech } from "@/hooks/use-speech";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatClock } from "@/lib/voice";
-import { parseTextAction, transcribeAction, type TxnPreset } from "@/app/(app)/ai/actions";
+import { transcribeAction } from "@/app/(app)/ai/actions";
 
-/** "Describe it" box: text or voice → LLM → prefilled transaction(s). */
-export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[], note: string | null) => void; onReceipt: () => void }) {
+/**
+ * "Describe it" box: type or say what you spent. Voice only fills the box; the user checks the words, then presses Enter or "Read it".
+ * Controlled so the caller can keep the text if the AI can't read it.
+ */
+export function DescribeInput({
+  text,
+  onText,
+  onRun,
+  running,
+  onReceipt,
+}: {
+  text: string;
+  onText: (t: string) => void;
+  onRun: (t: string) => void;
+  running: boolean;
+  onReceipt: () => void;
+}) {
   const app = useAppData();
-  const [text, setText] = useState("");
-  const [pending, start] = useTransition();
   const [transcribing, startTranscribe] = useTransition();
-  const run = (t: string) =>
-    start(async () => {
-      const res = await parseTextAction(t);
-      if (!res.ok) return void toast.error(res.error);
-      if (!res.presets.length) return void toast.message("Couldn't find a transaction in that. Try adding an amount.");
-      onPresets(res.presets, res.note);
-      setText("");
-    });
 
-  // Voice only fills the box. The user checks or edits the words, then presses Fill.
   const base = useRef("");
   const input = useRef<HTMLInputElement>(null);
-  const fill = (spoken: string) => setText([base.current, spoken].filter(Boolean).join(" "));
+  const fill = (spoken: string) => onText([base.current, spoken].filter(Boolean).join(" "));
 
   // Browser speech recognition: free, nothing leaves the app, but it depends on the browser.
   const speech = useSpeech({
@@ -54,6 +58,7 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
   const server = app.voiceReady && recorder.supported;
   const listening = server ? recorder.recording : speech.listening;
   const micAvailable = server || speech.supported;
+  const busy = running || transcribing;
   const toggleMic = () => {
     if (!listening) base.current = text.trim(); // keep what was already typed
     if (!server) return speech.toggle();
@@ -61,25 +66,23 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
     else void recorder.start();
   };
 
-  if (!app.aiReady) return null;
-
   return (
     <div className="rounded-card border border-border bg-surface-2 p-compact">
-      {/* A div, not a <form>: this renders inside the transaction form, and forms can't nest. */}
       <div className="flex items-center gap-2">
         <input
           ref={input}
+          autoFocus
           aria-label="Describe a transaction"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => onText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key !== "Enter") return;
-            e.preventDefault(); // don't submit the outer transaction form
-            if (text.trim() && !pending && !transcribing) run(text);
+            e.preventDefault();
+            if (text.trim() && !busy) onRun(text);
           }}
           placeholder={listening ? "Listening…" : transcribing ? "Transcribing…" : "e.g. 12.50 Kroger groceries yesterday"}
-          className="h-10 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-faint"
-          disabled={pending}
+          className="h-10 min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-faint"
+          disabled={running}
           readOnly={transcribing}
         />
         {server && recorder.recording ? <span className="shrink-0 text-xs tabular-nums text-muted">{formatClock(recorder.seconds)}</span> : null}
@@ -98,12 +101,12 @@ export function SmartAdd({ onPresets, onReceipt }: { onPresets: (p: TxnPreset[],
         <button type="button" onClick={onReceipt} aria-label="Read a receipt" className="grid h-9 w-9 shrink-0 place-items-center rounded-control text-muted transition-colors hover:bg-surface-3">
           <Receipt size={18} />
         </button>
-        <Button size="sm" onClick={() => text.trim() && run(text)} disabled={!text.trim() || pending || transcribing}>
-          {pending ? "Reading…" : "Fill"}
+        <Button size="sm" onClick={() => text.trim() && onRun(text)} disabled={!text.trim() || busy}>
+          {running ? "Reading…" : "Read it"}
         </Button>
       </div>
       <p className="mt-2 px-1 text-xs leading-relaxed text-muted">
-        Type{micAvailable ? " or say" : ""} what you spent (amount, place, when) and press Fill. The form below is completed for you to check before saving. Several entries at once work too. The receipt icon reads a bill.
+        Type{micAvailable ? " or say" : ""} what you spent: amount, place, when. Several entries at once work too. The receipt icon reads a bill.
         {server
           ? " Your recording is sent to the AI provider to transcribe and isn't saved in the app."
           : speech.supported

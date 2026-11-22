@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createConfirmedUser, signIn } from "./helpers";
+import { createConfirmedUser, signIn, openAddForm, pickCategory } from "./helpers";
 import { TEST_USER } from "./test-user";
 
 async function openAdd(page: Page) {
-  await page.getByRole("button", { name: "Add transaction" }).filter({ visible: true }).first().click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await openAddForm(page);
 }
 
 test("add, edit, spread, delete + undo", async ({ page }, info) => {
@@ -19,7 +18,7 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Amount", { exact: true }).fill("42.50");
   await dialog.getByLabel("Merchant", { exact: true }).fill("Kroger");
-  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: "Groceries" });
+  await pickCategory(dialog, "Groceries");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Added")).toBeVisible();
 
@@ -30,7 +29,7 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
   // merchant remembers category
   await openAdd(page);
   await dialog.getByLabel("Merchant", { exact: true }).fill("Kroger");
-  await expect(dialog.getByLabel("Category", { exact: true })).toHaveValue(/.+/);
+  await expect(dialog.getByRole("group", { name: "Frequent categories" }).getByRole("button", { name: "Groceries", exact: true })).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("Escape");
 
   // edit
@@ -48,7 +47,8 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
   await openAdd(page);
   await dialog.getByLabel("Amount", { exact: true }).fill("1200");
   await dialog.getByLabel("Merchant", { exact: true }).fill("Apple");
-  await dialog.getByLabel("Category", { exact: true }).selectOption({ label: "Shopping" });
+  await pickCategory(dialog, "Shopping");
+  await dialog.getByRole("button", { name: "Spread this cost over months" }).click();
   await dialog.getByRole("checkbox").check();
   await dialog.getByLabel("Months", { exact: true }).fill("12");
   await expect(dialog.getByText(/\$100\.00\/mo/)).toBeVisible();
