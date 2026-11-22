@@ -11,7 +11,10 @@ export const parsedTxnSchema = z.object({
   subcategory: z.string().nullable().describe("One of that category's subcategory names, or null"),
   merchant: z.string().nullable().describe("Store / payee name in Title Case, reuse a known merchant spelling when it matches"),
   description: z.string().nullable(),
-  trip: z.string().nullable().describe("One of the provided trip names if the text clearly refers to it, else null"),
+  trip: z.string().nullable().describe("One of the provided trip names if the text mentions that trip or its destination, or the date falls inside it and the text hints at travel; else null"),
+  payment_method: z.string().nullable().describe("One of the provided payment method names when the text says how it was paid (card, cash, UPI, 'on my Visa'), else null. Never guess"),
+  paid_by: z.string().nullable().describe("One of the provided people when the text says someone else paid or who paid ('Priya paid'); null when it is the user or not said"),
+  notes: z.string().nullable().describe("Extra detail worth keeping that fits no other field (who it was with, why); null if none"),
 });
 
 export const parseTextSchema = z.object({

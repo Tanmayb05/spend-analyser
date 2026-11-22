@@ -5,12 +5,14 @@ import type { Category, Subcategory } from "@/lib/data/types";
 
 export async function context() {
   const { supabase, userId } = await requireUser();
-  const [profile, categories, subcategories, merchants, trips] = await Promise.all([
+  const [profile, categories, subcategories, merchants, trips, payments, people] = await Promise.all([
     supabase.from("profiles").select("base_currency, timezone").eq("id", userId).single(),
     supabase.from("categories").select("*").eq("archived", false).order("sort_order"),
     supabase.from("subcategories").select("*").eq("archived", false),
     supabase.from("merchants").select("id, name").order("created_at", { ascending: false }).limit(300),
     supabase.from("trips").select("id, name, start_date, end_date").order("start_date", { ascending: false, nullsFirst: true }).limit(20),
+    supabase.from("payment_methods").select("id, name, nickname, issuer, network, archived").eq("archived", false).order("sort_order"),
+    supabase.from("people").select("id, name, is_self").eq("archived", false).order("is_self", { ascending: false }).order("name"),
   ]);
   const cats = categories.data ?? [];
   const subs = subcategories.data ?? [];
@@ -23,6 +25,8 @@ export async function context() {
     subs,
     merchants: merchants.data ?? [],
     trips: trips.data ?? [],
+    payments: payments.data ?? [],
+    people: people.data ?? [],
   };
 }
 

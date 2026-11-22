@@ -6,6 +6,8 @@ export const parseTextSystem = (today: string, base: string) =>
     `Today is ${today}. Default currency: ${base}.`,
     "Pick category and subcategory only from the list. Income (salary, refunds from employer, cashback) uses income categories.",
     "If the note lists several purchases, return several transactions. Never invent amounts.",
+    "Capture every detail the note gives: payment method, who paid, trip, merchant, date. Pick payment_method, paid_by and trip only from the provided lists, spelled exactly as listed; use null when the note does not say.",
+    "A trip counts when the note names it, its destination, or says 'on the trip'. Do not attach a trip just because dates overlap.",
   ].join("\n");
 
 export const receiptSystem = (base: string, today: string) =>

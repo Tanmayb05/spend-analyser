@@ -124,7 +124,7 @@ function TransactionForm({ editId, preset, onReceipt }: { editId?: string; prese
     setSource(first.source ?? "text");
     setQueue(rest);
     setErrors({});
-    setMore(Boolean(first.description || first.trip_id || next.payment_method_id));
+    setMore(Boolean(first.description || first.trip_id || first.notes || first.paid_by_id || next.payment_method_id));
     if (note) toast.message(note);
     if (rest.length) toast.message(`Found ${list.length} transactions. Review and save each one.`);
   }

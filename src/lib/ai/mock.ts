@@ -11,7 +11,7 @@ function fixtureFor(schema: unknown): unknown {
   if (props.includes("transactions"))
     return {
       transactions: [
-        { date: today(), type: "expense", amount: 12.5, currency: "USD", category: "Food", subcategory: null, merchant: "Mock Cafe", description: "Mock lunch", trip: null },
+        { date: today(), type: "expense", amount: 12.5, currency: "USD", category: "Food", subcategory: null, merchant: "Mock Cafe", description: "Mock lunch", trip: null, payment_method: null, paid_by: null, notes: null },
       ],
       note: null,
     };

@@ -9,6 +9,7 @@ import { analysisSchema, parseTextSchema, type Analysis } from "@/lib/ai/schemas
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
 import { analysisSystem, parseTextSystem } from "@/lib/ai/prompts";
 import { categoryList, context, matchCategory } from "@/lib/ai/context";
+import { paymentLine, toPreset } from "@/lib/ai/parse-text";
 
 type Fail = { ok: false; error: string };
 const failOf = (e: unknown): Fail => ({ ok: false, error: e instanceof Error ? e.message : String(e) });
@@ -28,24 +29,12 @@ export async function parseTextAction(text: string): Promise<{ ok: true; presets
       `Categories:\n${categoryList(ctx.cats, ctx.subs)}`,
       `Known merchants: ${ctx.merchants.map((m) => m.name).join(", ") || "none"}`,
       `Trips: ${ctx.trips.map((tr) => `${tr.name} (${tr.start_date ?? "?"}–${tr.end_date ?? "?"})`).join("; ") || "none"}`,
+      `Payment methods: ${ctx.payments.map(paymentLine).join("; ") || "none"}`,
+      `People: ${ctx.people.map((x) => x.name).join(", ") || "none"}`,
       `Note: """${t.data}"""`,
     ].join("\n\n");
     const { data, remaining } = await generateJson({ feature: "parse_text", system, input: { text: prompt }, schema: parseTextSchema });
-    const presets = data.transactions.map((p) => {
-      const m = matchCategory(ctx.cats, ctx.subs, p.category, p.subcategory);
-      const trip = ctx.trips.find((tr) => tr.name.toLowerCase() === (p.trip ?? "").toLowerCase());
-      return {
-        date: p.date,
-        type: p.type,
-        amount: String(p.amount),
-        currency: p.currency,
-        ...m,
-        merchant_name: p.merchant ?? "",
-        description: p.description ?? "",
-        trip_id: trip?.id ?? "",
-        source: "text",
-      };
-    });
+    const presets = data.transactions.map((p) => toPreset(p, ctx, matchCategory(ctx.cats, ctx.subs, p.category, p.subcategory)));
     return { ok: true, presets, note: data.note, remaining };
   } catch (e) {
     return failOf(e);
