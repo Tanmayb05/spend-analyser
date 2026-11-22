@@ -188,6 +188,36 @@ export const HELP = {
       budget pace, EMIs finishing. Free and always up to date. “Deep analysis” uses the AI for a fuller review.
     </p>
   ),
+  forecast: (
+    <>
+      <p>
+        A projection for the current month: what you have spent so far, plus entries already booked for later (EMIs, scheduled expenses), plus your everyday (core) spending continued at its pace so far for the days that remain.
+      </p>
+      <p>
+        One-off spending outside the everyday categories is not extrapolated. It needs at least 3 days of data before it shows a number. The grey line is last month&apos;s running total for comparison, and “Left per day on budget” is what remains of the total budget after spent and booked, divided by the days left.
+      </p>
+    </>
+  ),
+  categoryMovers: (
+    <p>
+      Pick what to compare with: the 3-month average, last month, or the same month last year. Each category&apos;s spend this month sits next to that baseline. A category more than 20% above the baseline shows in amber, more than 20% below in green. The Spent, Income and Saved figures on top use the same baseline. The bar shows how much of the budget is used (amber from 80%, red when over). Tap a row to see its transactions.
+    </p>
+  ),
+  merchantsInsight: (
+    <p>
+      Where the month&apos;s money went, by merchant, with what you usually spend there. “New this month” means no spending there in the 3 months before. Only transactions with a merchant are counted.
+    </p>
+  ),
+  recurring: (
+    <p>
+      Merchants charged in at least 3 of the last 4 months with an amount that stays within 20% of its usual size, which is how subscriptions and fixed bills look. Installments and spread plans are tracked in Transactions → Plans and EMIs, so they are left out here.
+    </p>
+  ),
+  rhythm: (
+    <p>
+      Average spent on each day of the week over the last 3 months. Installments and spread plans are left out because they land on fixed dates and say nothing about your habits.
+    </p>
+  ),
   // ---- Transactions ------------------------------------------------------------------------
   filteredTotal: (
     <p>

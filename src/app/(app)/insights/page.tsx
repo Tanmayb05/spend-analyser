@@ -12,13 +12,24 @@ import { requireUser } from "@/lib/supabase/server";
 import { getAiUsage } from "@/lib/ai/usage";
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
 import { formatMoney } from "@/lib/money";
-import { addMonths, formatMonth, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
+import { addMonths, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
 import { budgetTotals, budgetsForMonth } from "@/lib/analytics/budgets";
 import { lastMonths, monthlySeries } from "@/lib/analytics/summary";
 import { ruleInsights } from "@/lib/analytics/insights";
 import { cn } from "@/lib/utils";
 import type { Analysis } from "@/lib/ai/schemas";
-import { InfoTitle } from "@/components/ui/info-title";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { InsightTabs } from "@/components/insights/insight-tabs";
+import { INSIGHT_INTRO, parseInsightTab } from "@/components/insights/tabs";
+import { CategoryMovers } from "@/components/insights/category-movers";
+import { HabitStats, MerchantsCard, RecurringCard, RhythmCard } from "@/components/insights/habit-cards";
+import { categoryColor } from "@/components/charts/colors";
+import { PeriodPicker } from "@/components/transactions/period-picker";
+import { ForecastCard } from "@/components/insights/forecast-card";
+import { CompareSwitch } from "@/components/insights/compare-switch";
+import { StatStrip } from "@/components/cards/stat-strip";
+import { categoryMovers, compareLabel, compareTotals, forecastMonth, merchantRows, parseCompareBase, recurringCharges, spendingRhythm } from "@/lib/analytics/insight-views";
+import { formatPercent } from "@/lib/money";
 import { HELP } from "@/lib/help";
 
 export const metadata = { title: "Insights" };
@@ -31,27 +42,35 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   const scopeName = sp.scope === "quarter" || sp.scope === "year" ? sp.scope : "month";
   const scope = { scope: scopeName, month } as const;
   const scopeKey = `${scopeName}|${month}`;
+  const tab = parseInsightTab(sp.tab);
+  const vs = parseCompareBase(sp.vs);
 
   const { supabase } = await requireUser();
-  const [rows, usage, cachedRow, flagRows] = await Promise.all([
-    getLedger(addMonths(month, -14), monthEnd(addMonths(month, 3))),
-    getAiUsage(),
-    supabase.from("ai_insights").select("result, scope, created_at").eq("scope_key", scopeKey).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("ai_flags").select("id, kind, reason, transaction_id").eq("dismissed", false).order("created_at", { ascending: false }).limit(20),
-  ]);
-  const flagTxns = flagRows.data?.length
-    ? ((await supabase.from("transactions").select("id, date, amount, currency, description, merchants(name)").in("id", flagRows.data.map((f) => f.transaction_id))).data ?? [])
-    : [];
-  const flags: FlagView[] = (flagRows.data ?? []).flatMap((f) => {
-    const t = flagTxns.find((x) => x.id === f.transaction_id);
-    if (!t) return [];
-    const label = (t.merchants as { name: string } | null)?.name || t.description || "Transaction";
-    return [{ id: f.id, kind: f.kind as FlagView["kind"], reason: f.reason, date: t.date, label, amount: Number(t.amount), currency: t.currency, href: `/transactions?${new URLSearchParams({ m: t.date.slice(0, 7), q: label })}` }];
-  });
-  let stale = false;
-  if (cachedRow.data && ref.aiReady) {
-    const { fingerprint } = await buildAnalysisInput(scope);
-    stale = (cachedRow.data.scope as { fingerprint?: string })?.fingerprint !== fingerprint;
+  const rows = await getLedger(addMonths(month, -14), monthEnd(addMonths(month, 3)));
+
+  // the AI tab's data (cached analysis, usage, flags) is only fetched when that tab is open
+  let ai: { cachedRow: { result: unknown; scope: unknown; created_at: string } | null; usage: Awaited<ReturnType<typeof getAiUsage>>; flags: FlagView[]; stale: boolean } | null = null;
+  if (tab === "ai") {
+    const [usage, cachedRow, flagRows] = await Promise.all([
+      getAiUsage(),
+      supabase.from("ai_insights").select("result, scope, created_at").eq("scope_key", scopeKey).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("ai_flags").select("id, kind, reason, transaction_id").eq("dismissed", false).order("created_at", { ascending: false }).limit(20),
+    ]);
+    const flagTxns = flagRows.data?.length
+      ? ((await supabase.from("transactions").select("id, date, amount, currency, description, merchants(name)").in("id", flagRows.data.map((f) => f.transaction_id))).data ?? [])
+      : [];
+    const flags: FlagView[] = (flagRows.data ?? []).flatMap((f) => {
+      const t = flagTxns.find((x) => x.id === f.transaction_id);
+      if (!t) return [];
+      const label = (t.merchants as { name: string } | null)?.name || t.description || "Transaction";
+      return [{ id: f.id, kind: f.kind as FlagView["kind"], reason: f.reason, date: t.date, label, amount: Number(t.amount), currency: t.currency, href: `/transactions?${new URLSearchParams({ m: t.date.slice(0, 7), q: label })}` }];
+    });
+    let stale = false;
+    if (cachedRow.data && ref.aiReady) {
+      const { fingerprint } = await buildAnalysisInput(scope);
+      stale = (cachedRow.data.scope as { fingerprint?: string })?.fingerprint !== fingerprint;
+    }
+    ai = { cachedRow: cachedRow.data, usage, flags, stale };
   }
 
   const resolved = budgetsForMonth(ref.budgets, ref.categories, month);
@@ -79,64 +98,145 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
     6,
   );
 
-  const link = (patch: Record<string, string>) => `?${new URLSearchParams({ m: month.slice(0, 7), scope: scopeName, ...patch })}`;
+  const link = (patch: Record<string, string>) => {
+    const q = new URLSearchParams({ m: month.slice(0, 7), ...(tab !== "overview" ? { tab } : {}), ...(tab === "ai" ? { scope: scopeName } : {}), ...(tab === "categories" && vs !== "avg" ? { vs } : {}), ...patch });
+    return `?${q}`;
+  };
+  const txnHref = (patch: Record<string, string>) => `/transactions?${new URLSearchParams({ m: month.slice(0, 7), ...patch })}`;
+
+  // Categories and Habits tabs: computed from the same ledger, nothing extra to fetch
+  const catName = (id: string) => ref.categories.find((c) => c.id === id)?.name ?? "Other";
+  const movers = tab === "categories" ? categoryMovers(rows, month, ref.today, resolved, vs) : [];
+  const moverViews = movers.map((c) => ({
+    ...c,
+    name: catName(c.categoryId),
+    color: categoryColor(ref.categories.find((x) => x.id === c.categoryId)),
+    href: txnHref({ cat: c.categoryId }),
+  }));
+  const overBudget = movers.filter((c) => c.status === "over").length;
+  const biggestRise = movers.filter((c) => c.change != null && c.spent - c.base >= 20).sort((a, b) => b.spent - b.base - (a.spent - a.base))[0];
+  const moverTakeaway = movers.length
+    ? [
+        overBudget ? `${overBudget === 1 ? "1 category is" : `${overBudget} categories are`} over budget.` : "No category is over budget.",
+        biggestRise ? `${catName(biggestRise.categoryId)} rose the most, ${formatMoney(biggestRise.spent - biggestRise.base, currency, { whole: true })} above ${vs === "avg" ? "its usual level" : vs === "prev" ? "last month" : compareLabel(month, vs)}.` : "",
+      ].filter(Boolean).join(" ")
+    : undefined;
+
+  const baseLabel = compareLabel(month, vs);
+  const cmp = tab === "categories" ? compareTotals(rows, month, ref.today, vs) : null;
+  const diff = (c: number | null, goodWhenDown: boolean) => {
+    if (c == null) return { note: `No ${baseLabel === "usual" ? "history" : baseLabel} to compare with` } as const;
+    const up = c >= 0;
+    const tone = Math.abs(c) < 0.05 ? undefined : up === goodWhenDown ? ("bad" as const) : ("good" as const);
+    return { note: `${up ? "+" : "−"}${formatPercent(Math.abs(c))} vs ${baseLabel}`, noteTone: tone };
+  };
+  const forecast = tab === "overview" ? forecastMonth(rows, month, ref.today, budgetTotals(resolved, ref.categories).total) : null;
+
+  const merchants = tab === "habits" ? merchantRows(rows, month, ref.today, 8).map((m) => ({ ...m, href: txnHref({ merchant: m.merchantId }) })) : [];
+  const recurring = tab === "habits" ? recurringCharges(rows, month, ref.today).map((r) => ({ ...r, href: txnHref({ merchant: r.merchantId }) })) : [];
+  const rhythm = tab === "habits" ? spendingRhythm(rows, month, ref.today) : null;
 
   return (
     <>
-      <InfoTitle as="h1" info={HELP.insights} className="text-2xl font-medium" panelClassName="max-w-xl">Insights</InfoTitle>
-      <p className="mb-5 mt-1 text-sm text-muted">What stands out in your money, in plain words</p>
+      <DashboardHeader title="Insights" info={HELP.insights}>
+        <InsightTabs tab={tab} />
+      </DashboardHeader>
+      <p className="-mt-2 mb-4 max-w-2xl text-sm text-muted">{INSIGHT_INTRO[tab]}</p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-control border border-border bg-surface-2 p-1 text-sm">
-          <Link href={link({ m: addMonths(month, -1).slice(0, 7) })} className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)-4px)] transition-colors duration-(--dur-fast) hover:bg-surface-3" aria-label="Previous month">‹</Link>
-          <span className="min-w-36 text-center font-medium">{formatMonth(month)}</span>
-          <Link href={link({ m: addMonths(month, 1).slice(0, 7) })} className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)-4px)] transition-colors duration-(--dur-fast) hover:bg-surface-3" aria-label="Next month">›</Link>
-        </div>
-        <div className="inline-flex rounded-control border border-border bg-surface-2 p-1">
-          {(["month", "quarter", "year"] as const).map((s) => (
-            <Link key={s} href={link({ scope: s })} className={cn("rounded-[calc(var(--radius-control)-4px)] px-3.5 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast)", scopeName === s ? "bg-surface-3 text-text ring-1 ring-inset ring-text/10" : "text-muted hover:text-text")}>
-              {s === "month" ? "This month" : s === "quarter" ? "3 months" : "12 months"}
-            </Link>
-          ))}
-        </div>
+        <PeriodPicker view="month" month={month} year={Number(month.slice(0, 4))} today={ref.today} monthOnly />
+        {tab === "categories" ? <CompareSwitch value={vs} /> : null}
+        {tab === "ai" ? (
+          <div className="inline-flex rounded-control border border-border bg-surface-2 p-1">
+            {(["month", "quarter", "year"] as const).map((sc) => (
+              <Link key={sc} href={link({ scope: sc })} className={cn("rounded-[calc(var(--radius-control)-4px)] px-3.5 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast)", scopeName === sc ? "bg-surface-3 text-text ring-1 ring-inset ring-text/10" : "text-muted hover:text-text")}>
+                {sc === "month" ? "This month" : sc === "quarter" ? "3 months" : "12 months"}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-4">
-        <Card>
-          <CardHeader title="Am I spending more than I earn?" subtitle="Last 12 months · spent vs income" info={HELP.trend} />
-          <TrendBars data={trend} selected={month} currency={currency} aLabel="Spent" bLabel="Income" aColor={SERIES.spent} bColor={SERIES.income} height={200} />
-          <Insight>
-            {activeMonths.length > 1
-              ? `You spent more than you earned in ${overMonths} of the last ${activeMonths.length} months. Average spend: ${formatMoney(avgSpend, currency, { whole: true })}/month.`
-              : activeMonths.length
-                ? `${overMonths ? "You spent more than you earned" : "You earned more than you spent"} this month.`
-                : "Not enough history yet."}
-          </Insight>
-        </Card>
-        <Card>
-          <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" info={HELP.quickInsights} />
-          <ul className="divide-y divide-border">
-            {rules.map((i) => (
-              <li key={i.id} className="flex gap-3 py-3 text-sm leading-relaxed first:pt-0 last:pb-0">
-                <span className={cn("mt-2 h-2 w-2 shrink-0 rounded-full", TONE[i.tone])} aria-hidden />
-                {i.text}
-              </li>
-            ))}
-            {!rules.length ? <li className="text-sm text-muted">Nothing unusual this month</li> : null}
-          </ul>
-        </Card>
-        <AnalysisPanel
-          key={scopeKey}
-          scope={scope}
-          cached={(cachedRow.data?.result as Analysis | undefined) ?? null}
-          stale={stale}
-          generatedAt={cachedRow.data?.created_at ?? null}
-          left={usage.analysis.left}
-          limit={usage.analysis.limit}
-          ready={ref.aiReady}
-        />
-        <AskCard ready={ref.aiReady} left={usage.chat.left} limit={usage.chat.limit} info={HELP.ask} examples={pickAskExamples(5)} />
-        {ref.aiReady || flags.length ? <FlagsCard flags={flags} ready={ref.aiReady} left={usage.organize.left} info={HELP.flags} /> : null}
+        {tab === "overview" ? (
+          <>
+            {forecast ? <ForecastCard f={forecast} currency={currency} info={HELP.forecast} /> : null}
+            <Card>
+              <CardHeader title="Am I spending more than I earn?" subtitle="Last 12 months · spent vs income" info={HELP.trend} />
+              <TrendBars data={trend} selected={month} currency={currency} aLabel="Spent" bLabel="Income" aColor={SERIES.spent} bColor={SERIES.income} height={200} />
+              <Insight>
+                {activeMonths.length > 1
+                  ? `You spent more than you earned in ${overMonths} of the last ${activeMonths.length} months. Average spend: ${formatMoney(avgSpend, currency, { whole: true })}/month.`
+                  : activeMonths.length
+                    ? `${overMonths ? "You spent more than you earned" : "You earned more than you spent"} this month.`
+                    : "Not enough history yet."}
+              </Insight>
+            </Card>
+            <Card>
+              <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" info={HELP.quickInsights} />
+              <ul className="divide-y divide-border">
+                {rules.map((i) => (
+                  <li key={i.id} className="flex gap-3 py-3 text-sm leading-relaxed first:pt-0 last:pb-0">
+                    <span className={cn("mt-2 h-2 w-2 shrink-0 rounded-full", TONE[i.tone])} aria-hidden />
+                    {i.text}
+                  </li>
+                ))}
+                {!rules.length ? <li className="text-sm text-muted">Nothing unusual this month</li> : null}
+              </ul>
+            </Card>
+          </>
+        ) : null}
+
+        {tab === "categories" && cmp ? (
+          <>
+            <StatStrip
+              stats={[
+                { label: "Spent", value: formatMoney(cmp.spent.now, currency, { whole: true }), ...diff(cmp.spent.change, true) },
+                { label: "Income", value: formatMoney(cmp.income.now, currency, { whole: true }), ...diff(cmp.income.change, false) },
+                { label: "Saved", value: formatMoney(cmp.saved.now, currency, { whole: true }), ...diff(cmp.saved.change, false) },
+                { label: vs === "avg" ? "3-month average spend" : `Spent ${baseLabel}`, value: formatMoney(cmp.spent.base, currency, { whole: true }) },
+              ]}
+            />
+            <CategoryMovers
+              items={moverViews}
+              currency={currency}
+              info={HELP.categoryMovers}
+              takeaway={moverTakeaway}
+              baseLabel={baseLabel}
+              subtitle={vs === "avg" ? "This month against the average of the 3 months before" : vs === "prev" ? "This month against the month before" : `This month against ${baseLabel}`}
+            />
+          </>
+        ) : null}
+
+        {tab === "habits" && rhythm ? (
+          <>
+            <HabitStats rhythm={rhythm} currency={currency} />
+            <div className="grid items-start gap-4 xl:grid-cols-2">
+              <MerchantsCard items={merchants} currency={currency} info={HELP.merchantsInsight} />
+              <div className="min-w-0 space-y-4">
+                <RecurringCard items={recurring} currency={currency} info={HELP.recurring} />
+                <RhythmCard rhythm={rhythm} currency={currency} info={HELP.rhythm} />
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {tab === "ai" && ai ? (
+          <>
+            <AnalysisPanel
+              key={scopeKey}
+              scope={scope}
+              cached={(ai.cachedRow?.result as Analysis | undefined) ?? null}
+              stale={ai.stale}
+              generatedAt={ai.cachedRow?.created_at ?? null}
+              left={ai.usage.analysis.left}
+              limit={ai.usage.analysis.limit}
+              ready={ref.aiReady}
+            />
+            <AskCard ready={ref.aiReady} left={ai.usage.chat.left} limit={ai.usage.chat.limit} info={HELP.ask} examples={pickAskExamples(5)} />
+            {ref.aiReady || ai.flags.length ? <FlagsCard flags={ai.flags} ready={ref.aiReady} left={ai.usage.organize.left} info={HELP.flags} /> : null}
+          </>
+        ) : null}
       </div>
     </>
   );

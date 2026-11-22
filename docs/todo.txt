@@ -1,12 +1,12 @@
 ===========================
 
-8. Create a system for Scanning the Receipts and somehow adding the data to new transactions or existing transactions
+8. [done] Create a system for Scanning the Receipts and somehow adding the data to new transactions or existing transactions
 
-9. Add Voice transactions better it. Add Whispr Flo integration
+9. [done] Add Voice transactions better it. Add Whispr Flo integration
 
 10. Credit Score api.
 
-11. Light mode in beige. [done]
+11. [done] Light mode in beige.
 
 12. Improve Insights Page
 
