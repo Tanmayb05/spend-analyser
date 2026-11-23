@@ -73,6 +73,7 @@ export async function CardsView() {
               key={c.summary.card.id}
               data={c.summary}
               payments={c.payments}
+              look={{ color: pm.color, network: pm.network, last4: c.last4s[0] ?? null }}
               currency={currency}
               today={today}
               settings={{

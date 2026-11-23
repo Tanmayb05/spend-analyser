@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
 import { deleteCardPayment } from "@/app/(app)/transactions/card-actions";
 import { CardSettingsSheet, PaySheet, type CardSettings } from "./card-forms";
+import { CardFace, type CardLook } from "./card-face";
 import { utilBand, type CardPayment, type CardSummary } from "@/lib/cards";
 import { formatDay, formatMonth, relativeDays } from "@/lib/dates";
 import { formatMoney, formatPercent } from "@/lib/money";
@@ -28,38 +29,7 @@ export function UtilMeter({ value, className }: { value: number; className?: str
   );
 }
 
-/** Payment card drawn in code: flat ink face, hairline inner frame, chip and contactless mark. No gradient, no glow. */
-function CardFace({ name, limit, onEdit }: { name: string; limit: string | null; onEdit: () => void }) {
-  return (
-    <div className="relative flex aspect-[1.586/1] w-full flex-col justify-between rounded-card bg-text p-compact text-bg ring-1 ring-inset ring-bg/20">
-      <span aria-hidden className="pointer-events-none absolute inset-2 rounded-inset border border-bg/15" />
-      <div className="relative flex items-start justify-between gap-2">
-        <p className="min-w-0 truncate font-medium">{name}</p>
-        <Button size="icon" variant="ghost" className="-mr-2 -mt-2 h-9 w-9 text-bg hover:bg-bg/15" aria-label={`Edit ${name}`} onClick={onEdit}>
-          <Pencil size={16} />
-        </Button>
-      </div>
-      <div className="relative flex items-center gap-3 text-bg/60">
-        <span aria-hidden className="relative block h-8 w-11 overflow-hidden rounded-inset bg-bg/25 ring-1 ring-inset ring-bg/40">
-          <span className="absolute inset-y-0 left-1/3 w-px bg-bg/40" />
-          <span className="absolute inset-y-0 right-1/3 w-px bg-bg/40" />
-          <span className="absolute inset-x-0 top-1/2 h-px bg-bg/40" />
-        </span>
-        <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <path d="M8.5 8.5a5 5 0 0 1 0 7" />
-          <path d="M12 6a9 9 0 0 1 0 12" />
-          <path d="M15.5 3.5a13 13 0 0 1 0 17" />
-        </svg>
-      </div>
-      <div className="relative">
-        <p className="text-label text-bg/60">{limit ? "Limit" : "No limit set"}</p>
-        {limit ? <p className="money text-lg">{limit}</p> : null}
-      </div>
-    </div>
-  );
-}
-
-export function CardTile({ data, payments, settings, currency, today }: { data: CardSummary; payments: CardPayment[]; settings: CardSettings; currency: string; today: string }) {
+export function CardTile({ data, payments, settings, look, currency, today }: { data: CardSummary; payments: CardPayment[]; settings: CardSettings; look: CardLook; currency: string; today: string }) {
   const [sheet, setSheet] = useState<"pay" | "edit" | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const a = useAction();
@@ -77,7 +47,7 @@ export function CardTile({ data, payments, settings, currency, today }: { data: 
     <Card className="min-w-0">
       <div className="flex flex-col gap-card-lg sm:flex-row">
         <div className="w-full shrink-0 sm:w-72">
-          <CardFace name={data.card.name} limit={data.card.credit_limit ? formatMoney(data.card.credit_limit, currency, { whole: true }) : null} onEdit={() => setSheet("edit")} />
+          <CardFace look={look} name={data.card.name} limit={data.card.credit_limit ? formatMoney(data.card.credit_limit, currency, { whole: true }) : null} onEdit={() => setSheet("edit")} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-end justify-between gap-3">

@@ -24,3 +24,19 @@ Character: calm, exact, plain-spoken. Ledger look: ink figures, hairline rules, 
 - **Copy:** plain and specific, no marketing framing, no trailing periods on short UI strings. Keep factual privacy claims as the code makes them.
 - **Theme:** respect light/dark/system via `src/lib/theme.ts`; never hard-code dark (`Toaster`, `themeColor`).
 - **Tailwind merge:** custom tokens are registered in `cn()` (`src/lib/utils.ts`); add new spacing/radius tokens there too.
+
+# App lifecycle: "start app" / "stop app"
+
+When the user says **start app** or **stop app**, do all of the steps below, in order, without asking. Local only; never touches hosted Supabase or Vercel.
+
+**Stop app** (stop everything this app runs):
+1. Dev server: `lsof -nP -iTCP:3000 -sTCP:LISTEN`, then `kill` the `next dev` and `next-server` PIDs.
+2. Local database: `npx supabase stop --project-id spend-analyser`. This removes the containers but keeps the data volumes and a backup, so data survives.
+3. Colima: `colima stop`.
+
+**Start app** (bring everything back):
+1. Colima: `colima start` if `docker ps` fails.
+2. Local database: `SUPABASE_PROJECT_ID=spend-analyser npx supabase start`. The env var is required: `.env.local` holds the hosted project ref, and without the override the CLI creates a second, empty stack named after the hosted ref (`*_gehuvxvbrcqqpvxwatgh`, different keys, no data). The correct stack is the one named `*_spend-analyser`; it restores the local data. If the wrong stack is running by mistake, stop its containers first (`docker stop` the `*_gehuvxvbrcqqpvxwatgh` ones).
+3. Check it is healthy: `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:54321/auth/v1/health` returns 200, and `docker ps` shows `*_spend-analyser` containers.
+4. Dev server: `npm run dev` in the background (http://localhost:3000). Skip if port 3000 is already listening.
+5. Report what is running and the URL. Never print `.env.local` values.

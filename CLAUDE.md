@@ -28,6 +28,22 @@ The user must be able to see every UI and backend change running locally **befor
 - A "before you ship" note: commit and push first, then `npx supabase db push` for any new migration. Migrations that are additive can go before the UI deploy. Destructive ones (drop/rename column) need a two-step deploy. Flag that explicitly if relevant.
 - Leave the working tree uncommitted so the user can review the diff.
 
+# App lifecycle: "start app" / "stop app"
+
+When the user says **start app** or **stop app**, do all of the steps below, in order, without asking. Local only; never touches hosted Supabase or Vercel.
+
+**Stop app** (stop everything this app runs):
+1. Dev server: `lsof -nP -iTCP:3000 -sTCP:LISTEN`, then `kill` the `next dev` and `next-server` PIDs.
+2. Local database: `npx supabase stop --project-id spend-analyser`. This removes the containers but keeps the data volumes and a backup, so data survives.
+3. Colima: `colima stop`.
+
+**Start app** (bring everything back):
+1. Colima: `colima start` if `docker ps` fails.
+2. Local database: `SUPABASE_PROJECT_ID=spend-analyser npx supabase start`. The env var is required: `.env.local` holds the hosted project ref, and without the override the CLI creates a second, empty stack named after the hosted ref (`*_gehuvxvbrcqqpvxwatgh`, different keys, no data). The correct stack is the one named `*_spend-analyser`; it restores the local data. If the wrong stack is running by mistake, stop its containers first (`docker stop` the `*_gehuvxvbrcqqpvxwatgh` ones).
+3. Check it is healthy: `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:54321/auth/v1/health` returns 200, and `docker ps` shows `*_spend-analyser` containers.
+4. Dev server: `npm run dev` in the background (http://localhost:3000). Skip if port 3000 is already listening.
+5. Report what is running and the URL. Never print `.env.local` values.
+
 # UI style
 
 All new or changed UI must follow the "UI style" section in `AGENTS.md` (unslop pass): token-only colors/radius/spacing, one accent, hairline rules, `money`/`num-lg` figures for amounts, `shadow-pop` only, no gradients/glows/emoji/sparkle icons/uppercase-tracked labels/pulsing. Before finishing UI work, grep for leftovers: `rounded-2xl|rounded-3xl|uppercase tracking|animate-pulse|shadow-(lg|xl|2xl)|transition-all|text-\[\d+px\]`.

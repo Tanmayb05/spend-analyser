@@ -12,7 +12,7 @@ type TxnRow = {
   spread_plans: { kind: "spread" | "emi"; installments: { due_date: string; amount_base: number }[] } | null;
 };
 
-export type CardData = { summary: CardSummary; payments: CardPayment[] };
+export type CardData = { summary: CardSummary; payments: CardPayment[]; last4s: string[] };
 
 /** Every payment method marked as a credit card, with its balance, statement and payment history. */
 export async function getCardData(): Promise<CardData[]> {
@@ -42,6 +42,8 @@ export async function getCardData(): Promise<CardData[]> {
   const { data: pays, error } = await supabase.from("card_payments").select("id, payment_method_id, date, amount, note").order("date", { ascending: false });
   if (error) throw new Error(error.message);
 
+  const { data: nums } = await supabase.from("payment_method_cards").select("payment_method_id, last4").in("payment_method_id", ids).order("created_at");
+
   return cards.map((c) => {
     const config: CardConfig = {
       id: c.id,
@@ -65,6 +67,6 @@ export async function getCardData(): Promise<CardData[]> {
     const payments: CardPayment[] = (pays ?? [])
       .filter((p) => p.payment_method_id === c.id)
       .map((p) => ({ id: p.id, date: p.date, amount: Number(p.amount), note: p.note }));
-    return { summary: summarizeCard(config, charges, payments, ref.today), payments };
+    return { summary: summarizeCard(config, charges, payments, ref.today), payments, last4s: (nums ?? []).filter((n) => n.payment_method_id === c.id).map((n) => n.last4) };
   });
 }
