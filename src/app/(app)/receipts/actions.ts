@@ -544,7 +544,7 @@ export async function saveReceiptAction(input: SaveReceiptInput): Promise<SaveRe
       else {
         const ins = await supabase
           .from("payment_methods")
-          .insert({ name: cardChoice.name, issuer: cardChoice.issuer || null, network: cardChoice.network ?? networkOf(d.cardBrand), is_credit_card: false })
+          .insert({ name: cardChoice.name, issuer: cardChoice.issuer || null, network: cardChoice.network ?? networkOf(d.cardBrand), kind: "debit_card", is_credit_card: false })
           .select("id")
           .single();
         if (ins.error) return { ok: false, error: ins.error.code === "23505" ? "A payment method with that name exists. Choose it instead." : ins.error.message };
