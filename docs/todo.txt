@@ -15,3 +15,5 @@
 14. AI Talking mode.
 
 15. how does RAG work?
+
+16. Each trip should have a unique trip card. The background should be different. Should feel like a card

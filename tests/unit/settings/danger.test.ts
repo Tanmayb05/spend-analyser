@@ -55,13 +55,14 @@ describe("verifyPassword", () => {
 // --- removeUserReceipts -------------------------------------------------------------------
 type Entry = { name: string; id: string | null };
 
-function fakeStorage(tree: Record<string, Entry[]>) {
+function fakeStorage(tree: Record<string, Entry[]>, covers: Record<string, Entry[]> = {}) {
   const removed: string[][] = [];
+  const trees: Record<string, Record<string, Entry[]>> = { receipts: tree, "trip-covers": covers };
   const client = {
     storage: {
-      from: () => ({
+      from: (bucket: string) => ({
         list: async (prefix: string, opts: { limit: number; offset: number }) => ({
-          data: (tree[prefix] ?? []).slice(opts.offset, opts.offset + opts.limit),
+          data: (trees[bucket]?.[prefix] ?? []).slice(opts.offset, opts.offset + opts.limit),
           error: null,
         }),
         remove: async (paths: string[]) => {
@@ -95,6 +96,12 @@ describe("removeUserReceipts", () => {
     const { client, removed } = fakeStorage({ u1: many });
     expect(await removeUserReceipts(client, "u1")).toBe(230);
     expect(removed.map((r) => r.length)).toEqual([100, 100, 30]);
+  });
+
+  it("also removes trip cover photos", async () => {
+    const { client, removed } = fakeStorage({ u1: [{ name: "abc.jpg", id: "1" }] }, { u1: [{ name: "trip-1.webp", id: "9" }] });
+    expect(await removeUserReceipts(client, "u1")).toBe(2);
+    expect(removed.flat().sort()).toEqual(["u1/abc.jpg", "u1/trip-1.webp"]);
   });
 
   it("does nothing for a user with no files", async () => {

@@ -15,6 +15,7 @@ export function Sheet({
   className,
   side = "bottom",
   actions,
+  bare = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -24,6 +25,8 @@ export function Sheet({
   side?: "bottom" | "left";
   /** extra header controls, shown left of the close button */
   actions?: ReactNode;
+  /** no padding or scrolling around the children: they manage their own scroll area and a fixed footer */
+  bare?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -57,9 +60,9 @@ export function Sheet({
       }}
       className={cn(
         side === "bottom"
-          ? ["m-0 mt-auto w-full max-w-none rounded-t-panel border border-border bg-surface p-0 text-text", "sm:m-auto sm:max-w-lg sm:rounded-panel"]
+          ? ["m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-hidden rounded-t-panel border border-border bg-surface p-0 text-text", "sm:m-auto sm:max-w-lg sm:rounded-panel"]
           : [
-              "sheet-left m-0 mt-auto h-[92dvh] max-h-none w-full max-w-none rounded-t-panel border border-border bg-surface p-0 text-text",
+              "sheet-left m-0 mt-auto h-[92dvh] max-h-none w-full max-w-none overflow-hidden rounded-t-panel border border-border bg-surface p-0 text-text",
               // desktop: the panel starts where page content does (--sidebar-offset, set by the app shell)
               "lg:my-4 lg:ml-(--sidebar-offset) lg:mr-0 lg:h-[calc(100dvh-2rem)] lg:w-105 lg:rounded-panel",
             ],
@@ -76,7 +79,7 @@ export function Sheet({
             </button>
           </div>
         </div>
-        <div className={cn("overflow-y-auto px-card pt-card pb-safe", side === "left" && "flex-1")}>{children}</div>
+        <div className={cn("min-h-0", bare ? "flex flex-1 flex-col" : "overflow-y-auto overscroll-contain px-card pt-card pb-safe", !bare && side === "left" && "flex-1")}>{children}</div>
       </div>
     </dialog>
   );

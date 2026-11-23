@@ -17,7 +17,7 @@ export function NewTripButton() {
       <Button onClick={() => setOpen(true)}>
         <Plus size={16} /> New trip
       </Button>
-      <Sheet open={open} onClose={() => setOpen(false)} title="New trip">
+      <Sheet open={open} onClose={() => setOpen(false)} title="New trip" bare>
         {open ? <TripForm onDone={(id) => { setOpen(false); if (id) router.push(`/trips/${id}`); }} /> : null}
       </Sheet>
     </>
@@ -36,7 +36,7 @@ export function TripHeaderActions({ trip }: { trip: Trip }) {
       <Button onClick={() => app.openTxnSheet({ preset: { trip_id: trip.id, category_id: travel?.id ?? "", date: trip.start_date && trip.start_date > app.today ? trip.start_date : app.today } })}>
         <Plus size={16} /> Add expense
       </Button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={`Edit ${trip.name}`}>
+      <Sheet open={open} onClose={() => setOpen(false)} title={`Edit ${trip.name}`} bare>
         {open ? <TripForm trip={trip} onDone={() => setOpen(false)} /> : null}
       </Sheet>
     </div>

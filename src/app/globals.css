@@ -41,6 +41,13 @@
   --warn: light-dark(#8c5d00, #e0aa3a);
   --bad: light-dark(#bc3434, #ec6f6d);
 
+  /* text on a photo (trip cards): flat scrim, same idea as the dialog scrim; fixed white in both themes */
+  --scrim: rgb(0 0 0 / 0.65);
+  --on-photo: #ffffff;
+  --on-photo-muted: rgb(255 255 255 / 0.92);
+  --on-photo-chip: rgb(255 255 255 / 0.2);
+  --on-photo-track: rgb(255 255 255 / 0.28);
+
   /* transaction kinds. Plans and EMIs share the accent (no separate purple); trips stay a quiet orange. */
   --trip: light-dark(#e8590c, #ff8a3d);
   --plan: var(--accent);
@@ -93,6 +100,11 @@
   --color-good: var(--good);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
+  --color-scrim: var(--scrim);
+  --color-on-photo: var(--on-photo);
+  --color-on-photo-muted: var(--on-photo-muted);
+  --color-on-photo-chip: var(--on-photo-chip);
+  --color-on-photo-track: var(--on-photo-track);
   --color-trip: var(--trip);
   --color-plan: var(--plan);
   --color-expense: var(--expense);

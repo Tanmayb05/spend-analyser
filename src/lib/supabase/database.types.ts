@@ -248,13 +248,13 @@ isOneToOne: false
                   ]
                 },"payment_methods": {
                   Row: {
-                    "archived": boolean,"color": string | null,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"issuer": string | null,"min_due_floor": number | null,"min_due_pct": number | null,"name": string,"network": string | null,"nickname": string | null,"opening_balance": number,"rewards": Json | null,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
+                    "archived": boolean,"color": string | null,"credit_limit": number | null,"due_day": number | null,"id": string,"is_credit_card": boolean,"issuer": string | null,"kind": string,"min_due_floor": number | null,"min_due_pct": number | null,"name": string,"network": string | null,"nickname": string | null,"opening_balance": number,"rewards": Json | null,"sort_order": number,"statement_day": number | null,"tracking_from": string | null,"user_id": string
                   }
                   Insert: {
-                    "archived"?: boolean,"color"?: string | null,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"issuer"?: string | null,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name": string,"network"?: string | null,"nickname"?: string | null,"opening_balance"?: number,"rewards"?: Json | null,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                    "archived"?: boolean,"color"?: string | null,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"issuer"?: string | null,"kind"?: string,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name": string,"network"?: string | null,"nickname"?: string | null,"opening_balance"?: number,"rewards"?: Json | null,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"color"?: string | null,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"issuer"?: string | null,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name"?: string,"network"?: string | null,"nickname"?: string | null,"opening_balance"?: number,"rewards"?: Json | null,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
+                    "archived"?: boolean,"color"?: string | null,"credit_limit"?: number | null,"due_day"?: number | null,"id"?: string,"is_credit_card"?: boolean,"issuer"?: string | null,"kind"?: string,"min_due_floor"?: number | null,"min_due_pct"?: number | null,"name"?: string,"network"?: string | null,"nickname"?: string | null,"opening_balance"?: number,"rewards"?: Json | null,"sort_order"?: number,"statement_day"?: number | null,"tracking_from"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -455,13 +455,13 @@ isOneToOne: false
                   ]
                 },"trips": {
                   Row: {
-                    "budget": number | null,"created_at": string,"end_date": string | null,"id": string,"include_mode": Database["public"]['Enums']["trip_mode"],"lump_category_id": string | null,"lump_date": string | null,"lump_spread_months": number | null,"name": string,"notes": string | null,"start_date": string | null,"user_id": string
+                    "budget": number | null,"cover_credit_name": string | null,"cover_credit_url": string | null,"cover_path": string | null,"cover_url": string | null,"created_at": string,"destination": string | null,"end_date": string | null,"id": string,"include_mode": Database["public"]['Enums']["trip_mode"],"lump_category_id": string | null,"lump_date": string | null,"lump_spread_months": number | null,"name": string,"notes": string | null,"start_date": string | null,"user_id": string
                   }
                   Insert: {
-                    "budget"?: number | null,"created_at"?: string,"end_date"?: string | null,"id"?: string,"include_mode"?: Database["public"]['Enums']["trip_mode"],"lump_category_id"?: string | null,"lump_date"?: string | null,"lump_spread_months"?: number | null,"name": string,"notes"?: string | null,"start_date"?: string | null,"user_id"?: string
+                    "budget"?: number | null,"cover_credit_name"?: string | null,"cover_credit_url"?: string | null,"cover_path"?: string | null,"cover_url"?: string | null,"created_at"?: string,"destination"?: string | null,"end_date"?: string | null,"id"?: string,"include_mode"?: Database["public"]['Enums']["trip_mode"],"lump_category_id"?: string | null,"lump_date"?: string | null,"lump_spread_months"?: number | null,"name": string,"notes"?: string | null,"start_date"?: string | null,"user_id"?: string
                   }
                   Update: {
-                    "budget"?: number | null,"created_at"?: string,"end_date"?: string | null,"id"?: string,"include_mode"?: Database["public"]['Enums']["trip_mode"],"lump_category_id"?: string | null,"lump_date"?: string | null,"lump_spread_months"?: number | null,"name"?: string,"notes"?: string | null,"start_date"?: string | null,"user_id"?: string
+                    "budget"?: number | null,"cover_credit_name"?: string | null,"cover_credit_url"?: string | null,"cover_path"?: string | null,"cover_url"?: string | null,"created_at"?: string,"destination"?: string | null,"end_date"?: string | null,"id"?: string,"include_mode"?: Database["public"]['Enums']["trip_mode"],"lump_category_id"?: string | null,"lump_date"?: string | null,"lump_spread_months"?: number | null,"name"?: string,"notes"?: string | null,"start_date"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
