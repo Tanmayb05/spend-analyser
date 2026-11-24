@@ -1,4 +1,4 @@
-import { Activity, Cpu, Database, FolderTree, ListChecks, PiggyBank, RotateCcw, Shield, SlidersHorizontal, Store, User, Users, Wallet } from "lucide-react";
+import { Activity, Cpu, Database, FolderTree, Info, ListChecks, PiggyBank, RotateCcw, Shield, SlidersHorizontal, Store, User, Users, Wallet } from "lucide-react";
 
 /**
  * Settings pages grouped under headings. Headings are labels only (not pages); each item is the real page.
@@ -41,5 +41,10 @@ export const SETTINGS_GROUPS = [
       { href: "/settings/tidy", label: "AI tidy-up", desc: "Fix categories, merchants, item names", icon: ListChecks },
       { href: "/settings/reset", label: "Reset or delete", desc: "Wipe data or delete account", icon: RotateCcw },
     ],
+  },
+  {
+    id: "about",
+    title: "About",
+    items: [{ href: "/settings/about", label: "About", desc: "Tour video, how to use it, source code", icon: Info }],
   },
 ] as const;

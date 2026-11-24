@@ -31,6 +31,7 @@ const PAGES = [
   ["/settings/data", "Import & export"],
   ["/settings/reset", "Reset or delete"],
   ["/settings/security", "Security"],
+  ["/settings/about", "About"],
 ] as const;
 
 test("every page renders with real data", async ({ page }, info) => {
@@ -51,7 +52,7 @@ test("every page renders with real data", async ({ page }, info) => {
   }
   // settings pages are grouped under headings (labels only; the desktop sidebar repeats them, so take the first)
   await page.goto("/settings");
-  for (const heading of ["Transaction setup", "Account", "App", "Data"]) {
+  for (const heading of ["Transaction setup", "Account", "App", "Data", "About"]) {
     await expect(page.getByRole("heading", { level: 2, name: heading }).first()).toBeVisible();
   }
   // a trip detail page

@@ -323,6 +323,12 @@ export const HELP = {
     </p>
   ),
   data: <p>Bring in your spreadsheet, download everything you have, or find where to start over.</p>,
+  about: (
+    <p>
+      A short video tour, the steps to get set up, and where the source code lives. The same tour opens once after you sign
+      up.
+    </p>
+  ),
   reset: <p>Wipe your data, wipe it together with your categories and payment methods, or delete the account. Each asks for your current password and cannot be undone.</p>,
   exporter: <p>XLSX and CSV are spreadsheets of your transactions. JSON is a complete backup of everything in your account.</p>,
 } satisfies Record<string, ReactNode>;

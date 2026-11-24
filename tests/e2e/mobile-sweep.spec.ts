@@ -239,6 +239,7 @@ test("phone sweep", async ({ page }, info) => {
     ["/settings/data", "Import & export"],
     ["/settings/reset", "Reset or delete"],
     ["/settings/security", "Security"],
+    ["/settings/about", "About"],
   ] as const)
     await visit(p, h);
   await step("settings: preferences save", async () => {
