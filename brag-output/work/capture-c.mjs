@@ -21,7 +21,6 @@ const boxes = await p.evaluate(() => {
 });
 console.log(boxes);
 for (const [i, r] of boxes.entries()) await p.screenshot({ path: `${dir}cardface${i}.png`, clip: r, fullPage: true });
-const util = p.getByText("Overall utilization", { exact: true }).locator("xpath=ancestor::*[contains(@class,'rounded-card')][1]");
 const sum = p.getByText("Owed on cards", { exact: true }).locator("xpath=ancestor::*[contains(@class,'rounded-card')][1]");
 await sum.screenshot({ path: dir + "cards-summary.png" });
 const m = JSON.parse(fs.readFileSync(dir + "meta.json", "utf8"));
