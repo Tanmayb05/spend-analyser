@@ -17,3 +17,24 @@
 15. how does RAG work?
 
 16. Each trip should have a unique trip card. The background should be different. Should feel like a card
+
+
+
+
+
+Ranked: best value for effort
+#	Where	Metaphor	Data (already have)	Effort
+1	Plans (plan-row.tsx)	Punch card / ticket stub. Installments are punched holes, paid are filled and the next due is ringed. The stub tears off at "N of M".	installments, due_date, paid, nextDue	Low
+2	Transaction detail (transaction-receipt.tsx)	Thermal paper receipt. Zigzag top and bottom edge, dotted leader lines from item to price, mono totals, a barcode-style strip.	receipts, receipt_items, tax/tip/fees/total	Low–Med
+3	Dashboard	Wallet stack. Credit cards overlap like Apple Wallet. The top one is full size, the rest show only their top strip, and tapping one fans the stack out.	payment_methods	Low
+4	Credit card extras	Utilization ring on the card face (spent vs credit_limit). Statement and due dates as a mini countdown, and a "due in 6 days" chip.	statement_day, due_day, opening_balance, card_payments	Low
+5	Budgets (Settings and Insights)	Envelope or fuel gauge. Each category is a tall gauge with tick marks, and the fill turns warn then bad. This is more physical than a plain progress bar.	budgets, spend by category	Low
+6	Insights → Forecast	Flight-path progress. The month is a route line from day 1 to day 30. A dot marks today, a dashed line marks expected pace, and the gap shows whether you're ahead or behind. This reuses the boarding-pass look.	forecast-card.tsx data	Med
+7	Dashboard	Monthly statement. One paper "bank statement" page with opening balance, in, out and closing balance in ruled columns. It can export as a PNG recap to share.	summary analytics	Med
+8	Items (PriceLine)	Shelf price tag. Each item gets a small tag with the current price, a ▲/▼ vs last purchase, and a sparkline.	receipt_items.unit_price	Low
+9	Trips list	Passport page. Finished trips become round or rectangular stamps with a date, in a grid. The boarding pass stays for upcoming and active trips, and the stamp shows once a trip has ended.	trips, end date	Med
+10	Trip detail	Luggage tag. The category breakdown sits on a tag-shaped card with a punched hole. It also gets a companion avatar stack with initials, built from companions.	companions (free text, so avatars are initials only)	Low
+11	People / paid_by	Settle-up ledger. Avatar pairs with a two-sided bar showing who paid and who owes.	paid_by_id, people	Med
+12	Dashboard	Year heatmap. A GitHub-style grid for the year, tinted by spend. It sits next to the month calendar that already exists.	transactions	Low
+13	Insights → Overview	Cash-flow Sankey. Income flows into categories, then into merchants. This is the most eye-catching chart, but it needs a hand-built layout or d3-sankey.	transactions	High
+14	Merchants	Store tile. A monogram avatar in the category colour, used on every ledger row. It makes the lists scan much faster.	merchants, category colour	Low
