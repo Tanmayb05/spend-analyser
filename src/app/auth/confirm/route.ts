@@ -24,5 +24,7 @@ export async function GET(request: NextRequest) {
     const back = type === "recovery" || next === "/reset-password" ? "/forgot-password" : "/login";
     return NextResponse.redirect(`${origin}${back}?error=link`);
   }
-  return NextResponse.redirect(`${origin}${type === "recovery" ? "/reset-password" : next}`);
+  // A confirmed sign-up (template link: type=email; PKCE link from signUp: next=/?welcome=1) lands on the welcome tour.
+  const dest = type === "recovery" ? "/reset-password" : (type === "email" || type === "signup") && next === "/" ? "/?welcome=1" : next;
+  return NextResponse.redirect(`${origin}${dest}`);
 }

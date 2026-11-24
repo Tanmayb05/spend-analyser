@@ -39,7 +39,7 @@ export async function signUp(_: FormState, form: FormData): Promise<FormState> {
     password: parsed.data.password,
     options: {
       data: { display_name: parsed.data.name },
-      emailRedirectTo: `${siteUrl()}/auth/confirm?next=/`,
+      emailRedirectTo: `${siteUrl()}/auth/confirm?next=${encodeURIComponent("/?welcome=1")}`,
     },
   });
   if (error) {
@@ -47,7 +47,7 @@ export async function signUp(_: FormState, form: FormData): Promise<FormState> {
     return { message: msg, values };
   }
   // Email confirmation disabled → session exists immediately.
-  if (data.session) redirect("/");
+  if (data.session) redirect("/?welcome=1");
   return { ok: true, message: `We sent a confirmation link to ${parsed.data.email}.` };
 }
 

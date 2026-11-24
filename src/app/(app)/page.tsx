@@ -12,6 +12,7 @@ import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { SpendDonut, type AttentionItem } from "@/components/dashboard/spend-donut";
 import { AddFirst } from "@/components/dashboard/add-first";
 import { WalletCard } from "@/components/cards/wallet-card";
+import { WelcomeSheet } from "@/components/about/welcome-sheet";
 import { HELP } from "@/lib/help";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
@@ -34,6 +35,8 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const currency = profile.base_currency;
   const month = isValidMonthParam(sp.m as string) ? `${sp.m}-01` : monthStart(today);
   const scope: Scope = sp.scope === "core" ? "core" : "all";
+  // first visit after sign-up: the confirm link (or instant sign-up) lands here with ?welcome=1
+  const welcome = sp.welcome === "1";
   const qs = (extra: Record<string, string>) => `/transactions?${new URLSearchParams({ m: month.slice(0, 7), ...extra })}`;
 
   const thisMonth = monthStart(today);
@@ -53,6 +56,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   if (isNew) {
     return (
       <>
+        {welcome ? <WelcomeSheet /> : null}
         <DashboardHeader info={HELP.overview} />
         <EmptyState
           title="No transactions yet"
@@ -148,6 +152,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
 
   return (
     <>
+      {welcome ? <WelcomeSheet /> : null}
       <DashboardHeader info={HELP.overview} addTransaction />
 
       <SummaryCard

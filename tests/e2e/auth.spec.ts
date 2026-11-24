@@ -31,6 +31,12 @@ test.describe("account management", () => {
 
     // confirm
     await page.goto(await latestLink(email));
+    // first visit after sign-up shows the welcome tour; closing it drops ?welcome=1
+    await expect(page).toHaveURL(/\/\?welcome=1$/);
+    const welcome = page.getByRole("dialog").filter({ hasText: "Welcome to Spend Analyser" });
+    await expect(welcome).toBeVisible();
+    await expect(welcome.locator("video")).toHaveAttribute("src", "/demo.mp4");
+    await welcome.getByRole("button", { name: "Get started" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 
