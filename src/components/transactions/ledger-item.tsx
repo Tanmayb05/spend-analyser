@@ -34,7 +34,7 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
         disabled={!row.txn_id}
         onClick={() => row.txn_id && (onOpen ? onOpen(row) : app.openTxnSheet({ id: row.txn_id }))}
         className="absolute inset-0 z-0 rounded-control disabled:cursor-default focus-visible:outline-offset-0"
-        aria-label={row.txn_id ? `Edit ${title}` : undefined}
+        aria-label={row.txn_id ? `View ${title}` : undefined}
       />
       {/* merchant monogram on a tile tinted with the category colour */}
       <span

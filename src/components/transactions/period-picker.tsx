@@ -41,6 +41,8 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
   const next = view === "month" ? monthHref(addMonths(month, 1)) : yearHref(year + 1);
   const label = view === "month" ? formatMonth(month) : String(year);
   const noun = view === "month" ? "month" : "year";
+  // phones get "Nov 2026" so the picker can sit beside another control
+  const shortLabel = view === "month" ? `${formatMonth(month, "short")} ${month.slice(0, 4)}` : label;
 
   useEffect(() => {
     if (!open) return;
@@ -100,7 +102,7 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
         }}
       />}
       <div ref={root} className="relative flex h-10.5 items-center rounded-control border border-border bg-surface-2 p-1">
-        <Link href={prev} scroll={false} aria-label={`Previous ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3">
+        <Link href={prev} scroll={false} aria-label={`Previous ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3 max-sm:w-6">
           <ChevronLeft size={18} />
         </Link>
         <button
@@ -110,12 +112,13 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
           aria-expanded={open}
           aria-controls={panelId}
           onClick={openPanel}
-          className="flex h-8 min-w-36 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors hover:bg-surface-3"
+          className="flex h-8 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors hover:bg-surface-3 sm:min-w-36 max-sm:whitespace-nowrap max-sm:px-1"
         >
-          <CalendarDays size={16} className="text-faint" />
-          {label}
+          <CalendarDays size={16} className="text-faint max-sm:hidden" />
+          <span className="sm:hidden">{shortLabel}</span>
+          <span className="max-sm:hidden">{label}</span>
         </button>
-        <Link href={next} scroll={false} aria-label={`Next ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3">
+        <Link href={next} scroll={false} aria-label={`Next ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3 max-sm:w-6">
           <ChevronRight size={18} />
         </Link>
 

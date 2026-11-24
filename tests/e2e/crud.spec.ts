@@ -29,7 +29,7 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
   // merchant remembers category
   await openAdd(page);
   await dialog.getByLabel("Merchant", { exact: true }).fill("Kroger");
-  await expect(dialog.getByRole("group", { name: "Frequent categories" }).getByRole("button", { name: "Groceries", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.getByRole("group", { name: "Recent categories" }).getByRole("button", { name: "Groceries", exact: true })).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("Escape");
 
   // edit

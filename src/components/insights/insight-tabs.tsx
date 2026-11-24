@@ -9,6 +9,7 @@ export function InsightTabs({ tab }: { tab: InsightTab }) {
   const go = useFilterNav();
   return (
     <Segmented<InsightTab>
+      compact
       ariaLabel="Insights view"
       value={tab}
       onChange={(v) => go({ tab: v === "overview" ? null : v })}

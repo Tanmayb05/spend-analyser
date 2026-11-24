@@ -1,5 +1,5 @@
 "use client";
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,13 +11,16 @@ export function Segmented<T extends string>({
   options,
   onChange,
   size = "md",
+  compact = false,
   className,
   ariaLabel,
 }: {
   value: T;
-  options: { value: T; label: string }[];
+  options: { value: T; label: ReactNode }[];
   onChange: (v: T) => void;
   size?: "sm" | "md";
+  /** Tighter on phones (smaller text and padding) so a few options fit beside a title or another control. */
+  compact?: boolean;
   className?: string;
   ariaLabel?: string;
 }) {
@@ -49,7 +52,7 @@ export function Segmented<T extends string>({
   }, [box]);
 
   return (
-    <div ref={root} role="radiogroup" aria-label={ariaLabel} style={{ "--seg-radius": "calc(var(--radius-control) - 4px)" } as CSSProperties} className={cn("relative inline-flex rounded-control border border-border bg-surface-2 p-1", className)}>
+    <div ref={root} role="radiogroup" aria-label={ariaLabel} style={{ "--seg-radius": "calc(var(--radius-control) - 4px)" } as CSSProperties} className={cn("relative inline-flex max-w-full rounded-control border border-border bg-surface-2 p-1", className)}>
       {box ? (
         <span
           aria-hidden
@@ -65,7 +68,8 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "relative z-10 rounded-(--seg-radius) px-3 font-medium transition-colors",
+            "relative z-10 whitespace-nowrap rounded-(--seg-radius) px-3 font-medium transition-colors",
+            compact && "max-sm:px-1.5 max-sm:text-xs",
             size === "sm" ? "h-8 text-xs" : "h-9 text-sm",
             value === o.value ? (box ? "text-text" : "bg-accent/15 text-text ring-1 ring-inset ring-accent") : "text-muted hover:text-text",
           )}

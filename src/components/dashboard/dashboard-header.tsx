@@ -28,9 +28,9 @@ export function DashboardHeader({ title = "Overview", info, addTransaction = fal
   const { openTxnSheet } = useAppData();
   return (
     <div className="mb-5 flex min-w-0 items-center justify-between gap-4">
-      <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
-        <InfoTitle as="h1" info={info} className="text-2xl font-medium" panelClassName="max-w-xl">{title}</InfoTitle>
-        {children}
+      <div className="flex min-w-0 items-center gap-x-3 sm:gap-x-5">
+        <InfoTitle as="h1" info={info} className="truncate text-lg font-medium min-[380px]:text-xl sm:text-2xl" panelClassName="max-w-xl">{title}</InfoTitle>
+        <div className="min-w-0 shrink-0">{children}</div>
       </div>
       {addTransaction ? (
         <Button variant="accent" onClick={() => openTxnSheet()} className="hidden shrink-0 lg:inline-flex">

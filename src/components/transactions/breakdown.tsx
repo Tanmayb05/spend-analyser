@@ -9,7 +9,7 @@ export function Breakdown({ items, total, currency }: { items: BreakdownItem[]; 
   return (
     <ul className="divide-y divide-border">
       {items.map((i) => (
-        <li key={i.label} className="py-3 first:pt-0 last:pb-0">
+        <li key={i.href} className="py-3 first:pt-0 last:pb-0">
           <Link href={i.href} scroll={false} className="block">
             <div className="flex justify-between gap-3 text-sm">
               <span className="truncate">{i.label}</span>

@@ -24,7 +24,7 @@ test("form: Add & another keeps the date; usual merchants and categories become 
   // history now offers Kroger as a chip; picking it fills the category from last time
   await amount.fill("7");
   await dialog.getByRole("group", { name: "Recent merchants" }).getByRole("button", { name: "Kroger" }).click();
-  await expect(dialog.getByRole("group", { name: "Frequent categories" }).getByRole("button", { name: "Groceries", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.getByRole("group", { name: "Recent categories" }).getByRole("button", { name: "Groceries", exact: true })).toHaveAttribute("aria-pressed", "true");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
 });

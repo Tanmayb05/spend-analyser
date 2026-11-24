@@ -12,6 +12,7 @@ export function ScopeControl({ scope }: { scope: Scope }) {
   const href = useParamHref();
   return (
     <Segmented
+      compact
       ariaLabel="Spending scope"
       value={scope}
       onChange={(v) => router.push(href({ scope: v === "all" ? null : v }), { scroll: false })}

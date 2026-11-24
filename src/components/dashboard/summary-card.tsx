@@ -27,7 +27,7 @@ export type SummaryMetric = {
 export function SummaryCard({ metrics, header }: { metrics: SummaryMetric[]; header?: ReactNode }) {
   return (
     <section aria-label="Financial summary" className="rounded-card border border-border bg-surface">
-      {header ? <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-border p-compact sm:px-card">{header}</div> : null}
+      {header ? <div className="flex items-center justify-between gap-x-3 border-b border-border p-compact max-sm:whitespace-nowrap sm:justify-start sm:gap-x-5 sm:px-card">{header}</div> : null}
       <div className="relative grid grid-cols-2 lg:grid-cols-4">
         {metrics.map((m, i) => {
           const up = (m.delta ?? 0) > 0;

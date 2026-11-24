@@ -171,10 +171,10 @@ export function TxnDetail({ row, onClose }: { row: LedgerRowWithLink | null; onC
           </dl>
 
           {compare ? (
-            <TxnContextStrip key={row.txn_id} txnId={row.txn_id!} type={row.type} merchantId={row.merchant_id} merchant={row.merchant_name} amount={Number(row.amount)} date={row.entry_date} currency={app.currency} />
+            <TxnContextStrip key={`ctx-${row.txn_id}`} txnId={row.txn_id!} type={row.type} merchantId={row.merchant_id} merchant={row.merchant_name} amount={Number(row.amount)} date={row.entry_date} currency={app.currency} />
           ) : null}
 
-          {row.receipt_id && row.txn_id ? <TransactionReceipt key={row.txn_id} receiptId={row.receipt_id} txnId={row.txn_id} currency={app.currency} onUnlinked={onClose} /> : null}
+          {row.receipt_id && row.txn_id ? <TransactionReceipt key={`receipt-${row.txn_id}`} receiptId={row.receipt_id} txnId={row.txn_id} currency={app.currency} onUnlinked={onClose} /> : null}
 
           <div className="flex gap-2">
             {/* an installment row belongs to a plan: deleting it removes the whole plan and its schedule */}

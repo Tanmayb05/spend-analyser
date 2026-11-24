@@ -202,7 +202,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <InfoTitle as="h2" info={info} className="card-title" panelClassName="max-w-md">Transaction calendar</InfoTitle>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex max-w-full items-center gap-2">
           <PeriodPicker view="month" month={month} year={Number(month.slice(0, 4))} today={today} monthOnly />
           <ScopeControl scope={scope} />
         </div>

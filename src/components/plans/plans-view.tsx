@@ -108,7 +108,7 @@ export async function PlansView() {
             </Card>
             <div className="min-w-0">
               <CardHeader title="Active" />
-              {active.length ? <PlanGroup plans={active} className="grid gap-3" /> : <p className="py-6 text-center text-sm text-muted">No active plans</p>}
+              {active.length ? <PlanGroup plans={active} className="grid grid-cols-1 gap-3" /> : <p className="py-6 text-center text-sm text-muted">No active plans</p>}
             </div>
           </section>
 
@@ -117,7 +117,7 @@ export async function PlansView() {
               <summary className="card-title cursor-pointer list-none">
                 Finished <span className="text-sm font-normal text-muted">· {finished.length} {finished.length === 1 ? "plan" : "plans"} · tap to show</span>
               </summary>
-              <PlanGroup plans={finished} className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3" />
+              <PlanGroup plans={finished} className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" />
             </details>
           ) : null}
         </>

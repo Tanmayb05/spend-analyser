@@ -120,11 +120,11 @@ function Body({ p, onClose }: { p: PlanView; onClose: () => void }) {
                 )}
               />
               <span className="w-7 shrink-0 text-muted">{h.seq}</span>
-              <span className="min-w-0 flex-1 truncate">
-                {formatDay(h.due)}
-                {h.state === "next" ? <span className="text-muted"> · {relativeDays(h.due, app.today)}</span> : null}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{formatDay(h.due)}</span>
+                {h.state === "next" ? <span className="block truncate text-xs text-muted">{relativeDays(h.due, app.today)}</span> : null}
               </span>
-              <span className="text-xs text-muted">{STATE_LABEL[h.state]}</span>
+              <span className="text-xs text-muted max-sm:sr-only">{STATE_LABEL[h.state]}</span>
               <span className="money w-24 shrink-0 text-right">{formatMoney(h.amount, app.currency)}</span>
             </div>
           ))}

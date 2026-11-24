@@ -153,7 +153,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
       <SummaryCard
         header={
           <>
-            <h2 className="card-title min-w-0">Financial summary</h2>
+            <h2 className="card-title min-w-0 max-[380px]:text-base">Financial summary</h2>
             {/* same picker + same ?m= param as the calendar card, so the two always show the same month */}
             <PeriodPicker view="month" month={month} year={Number(month.slice(0, 4))} today={today} monthOnly />
           </>

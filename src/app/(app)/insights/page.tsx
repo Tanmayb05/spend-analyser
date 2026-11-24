@@ -158,8 +158,10 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
         {tab === "ai" ? (
           <div className="inline-flex rounded-control border border-border bg-surface-2 p-1">
             {(["month", "quarter", "year"] as const).map((sc) => (
-              <Link key={sc} href={link({ scope: sc })} className={cn("rounded-[calc(var(--radius-control)-4px)] px-3.5 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast)", scopeName === sc ? "bg-surface-3 text-text ring-1 ring-inset ring-text/10" : "text-muted hover:text-text")}>
-                {sc === "month" ? "This month" : sc === "quarter" ? "3 months" : "12 months"}
+              <Link key={sc} href={link({ scope: sc })} className={cn("rounded-[calc(var(--radius-control)-4px)] px-3.5 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast) max-sm:px-2 max-sm:text-xs", scopeName === sc ? "bg-surface-3 text-text ring-1 ring-inset ring-text/10" : "text-muted hover:text-text")}>
+                <span className="max-sm:hidden">{sc === "month" ? "This month" : sc === "quarter" ? "3 months" : "12 months"}</span>
+                <span className="sm:hidden" aria-hidden>{sc === "month" ? "Month" : sc === "quarter" ? "3 mo" : "12 mo"}</span>
+                <span className="sr-only sm:hidden">{sc === "month" ? "This month" : sc === "quarter" ? "3 months" : "12 months"}</span>
               </Link>
             ))}
           </div>

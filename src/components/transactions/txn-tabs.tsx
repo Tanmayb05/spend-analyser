@@ -10,6 +10,7 @@ export function TxnTabs({ tab }: { tab: TxnTab }) {
   useBackNavScroll(); // mounted on every tab, so Back restores scroll across tabs and filters
   return (
     <Segmented<TxnTab>
+      compact
       ariaLabel="Transactions view"
       value={tab}
       // `pk` is a retired plan-kind filter; drop it so old links don't linger in the URL

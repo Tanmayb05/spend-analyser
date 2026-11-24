@@ -67,11 +67,11 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
           <NotificationBell variant="header" />
         </header>
 
-        <main className="mx-auto w-full max-w-400 px-4 pb-28 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
+        <main className="mx-auto w-full max-w-400 px-4 pb-32 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-2 pt-2 lg:hidden" aria-label="Main">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-2 pt-1 lg:hidden" aria-label="Main">
         <div className="mx-auto grid max-w-md grid-cols-5 items-center">
           {NAV.filter((n) => (MOBILE_PRIMARY as readonly string[]).includes(n.href)).slice(0, 2).map((n) => (
             <MobileTab key={n.href} {...n} active={isActive(pathname, n.href)} />
@@ -80,17 +80,17 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
             <button
               type="button"
               onClick={() => openTxnSheet()}
-              className="grid h-11 w-11 place-items-center rounded-control bg-accent text-accent-fg"
+              className="grid h-12 w-12 place-items-center rounded-control bg-accent text-accent-fg"
               aria-label="Add transaction"
             >
-              <Plus size={20} />
+              <Plus size={22} />
             </button>
           </div>
           {NAV.filter((n) => n.href === "/trips").map((n) => (
             <MobileTab key={n.href} {...n} active={isActive(pathname, n.href)} />
           ))}
-          <button type="button" onClick={() => setMoreOpen(true)} className="flex flex-col items-center gap-1 py-1 text-xs text-muted">
-            <Menu size={18} />
+          <button type="button" onClick={() => setMoreOpen(true)} className="flex h-16 flex-col items-center justify-center gap-1 text-xs text-muted">
+            <Menu size={20} />
             More
           </button>
         </div>
@@ -120,8 +120,8 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
 
 function MobileTab({ href, label, icon: Icon, active }: { href: string; label: string; icon: typeof Plus; active: boolean }) {
   return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-1 text-xs", active ? "text-text" : "text-muted")}>
-      <Icon size={18} />
+    <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex h-16 flex-col items-center justify-center gap-1 text-xs", active ? "text-text" : "text-muted")}>
+      <Icon size={20} />
       {label}
     </Link>
   );
