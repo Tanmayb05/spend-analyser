@@ -12,7 +12,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { getAiUsage } from "@/lib/ai/usage";
 import { buildAnalysisInput } from "@/lib/ai/aggregates";
 import { formatMoney } from "@/lib/money";
-import { addMonths, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
+import { addMonths, formatMonth, isValidMonthParam, monthEnd, monthStart } from "@/lib/dates";
 import { budgetTotals, budgetsForMonth } from "@/lib/analytics/budgets";
 import { lastMonths, monthlySeries } from "@/lib/analytics/summary";
 import { ruleInsights } from "@/lib/analytics/insights";
@@ -22,6 +22,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { InsightTabs } from "@/components/insights/insight-tabs";
 import { INSIGHT_INTRO, parseInsightTab } from "@/components/insights/tabs";
 import { CategoryMovers } from "@/components/insights/category-movers";
+import { BudgetGauges } from "@/components/insights/budget-gauges";
 import { HabitStats, MerchantsCard, RecurringCard, RhythmCard } from "@/components/insights/habit-cards";
 import { categoryColor } from "@/components/charts/colors";
 import { PeriodPicker } from "@/components/transactions/period-picker";
@@ -113,15 +114,6 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
     color: categoryColor(ref.categories.find((x) => x.id === c.categoryId)),
     href: txnHref({ cat: c.categoryId }),
   }));
-  const overBudget = movers.filter((c) => c.status === "over").length;
-  const biggestRise = movers.filter((c) => c.change != null && c.spent - c.base >= 20).sort((a, b) => b.spent - b.base - (a.spent - a.base))[0];
-  const moverTakeaway = movers.length
-    ? [
-        overBudget ? `${overBudget === 1 ? "1 category is" : `${overBudget} categories are`} over budget.` : "No category is over budget.",
-        biggestRise ? `${catName(biggestRise.categoryId)} rose the most, ${formatMoney(biggestRise.spent - biggestRise.base, currency, { whole: true })} above ${vs === "avg" ? "its usual level" : vs === "prev" ? "last month" : compareLabel(month, vs)}.` : "",
-      ].filter(Boolean).join(" ")
-    : undefined;
-
   const baseLabel = compareLabel(month, vs);
   const cmp = tab === "categories" ? compareTotals(rows, month, ref.today, vs) : null;
   const diff = (c: number | null, goodWhenDown: boolean) => {
@@ -197,13 +189,12 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
                 { label: vs === "avg" ? "3-month average spend" : `Spent ${baseLabel}`, value: formatMoney(cmp.spent.base, currency, { whole: true }) },
               ]}
             />
+            <BudgetGauges items={moverViews} currency={currency} subtitle={`How much of each monthly budget is used in ${formatMonth(month)}`} />
             <CategoryMovers
               items={moverViews}
               currency={currency}
               info={HELP.categoryMovers}
-              takeaway={moverTakeaway}
               baseLabel={baseLabel}
-              subtitle={vs === "avg" ? "This month against the average of the 3 months before" : vs === "prev" ? "This month against the month before" : `This month against ${baseLabel}`}
             />
           </>
         ) : null}

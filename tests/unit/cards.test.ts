@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balanceAt, billedAt, closingOnOrBefore, dayIn, dueFor, overallUtilization, summarizeCard, utilBand, type CardConfig } from "@/lib/cards";
+import { balanceAt, billedAt, closingOnOrBefore, dayIn, dueFor, overallUtilization, recentlyUsed, summarizeCard, utilBand, type CardConfig } from "@/lib/cards";
 
 const card = (over: Partial<CardConfig> = {}): CardConfig => ({
   id: "c1",
@@ -93,5 +93,17 @@ describe("utilization", () => {
     const a = summarizeCard(card(), [{ id: "a", date: "2026-11-01", amount: 500 }], [], "2026-11-18");
     const b = summarizeCard(card({ id: "c2", credit_limit: null }), [{ id: "a", date: "2026-11-01", amount: 900 }], [], "2026-11-18");
     expect(overallUtilization([a, b])).toEqual({ outstanding: 500, limit: 1000, utilization: 0.5 });
+  });
+});
+
+describe("recentlyUsed", () => {
+  const c = (name: string, lastUsed: string | null) => ({ name, lastUsed });
+  it("sorts newest first and keeps only n", () => {
+    const r = recentlyUsed([c("a", "2026-01-01"), c("b", "2026-03-01"), c("c", "2026-02-01")], 2);
+    expect(r.map((x) => x.name)).toEqual(["b", "c"]);
+  });
+  it("puts never-used cards last, by name", () => {
+    const r = recentlyUsed([c("z", null), c("a", null), c("m", "2026-01-01")], 5);
+    expect(r.map((x) => x.name)).toEqual(["m", "a", "z"]);
   });
 });

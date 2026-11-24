@@ -44,10 +44,10 @@ export function CardTile({ data, payments, settings, look, currency, today }: { 
   if (data.cycle) rows.push(["Next statement", formatDay(data.cycle.closing), false]);
 
   return (
-    <Card className="min-w-0">
+    <Card id={`card-${data.card.id}`} className="min-w-0 scroll-mt-24">
       <div className="flex flex-col gap-card-lg sm:flex-row">
         <div className="w-full shrink-0 sm:w-72">
-          <CardFace look={look} name={data.card.name} limit={data.card.credit_limit ? formatMoney(data.card.credit_limit, currency, { whole: true }) : null} onEdit={() => setSheet("edit")} />
+          <CardFace utilization={data.utilization} look={look} name={data.card.name} limit={data.card.credit_limit ? formatMoney(data.card.credit_limit, currency, { whole: true }) : null} onEdit={() => setSheet("edit")} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-end justify-between gap-3">

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { NoWheelNumber } from "@/components/shell/no-wheel-number";
 import { parseTheme, THEME_COLOR } from "@/lib/theme";
 import "./globals.css";
 
@@ -44,6 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full">
         {children}
+        <NoWheelNumber />
         <Toaster theme={theme} position="top-center" richColors closeButton />
       </body>
     </html>

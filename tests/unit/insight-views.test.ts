@@ -118,6 +118,35 @@ describe("forecast", () => {
     expect(f.safePerDay).toBeCloseTo((1500 - 830 - 80) / 16, 1);
     expect(f.status).toBe("ok"); // 1070 / 1500 = 71%
   });
+  it("blends the pace with the last 3 months and gives a range", () => {
+    // Jul 31 days: 310 core (10/day), Aug 31 days: 620 (20/day), Sep 30 days: 900 (30/day) -> median 20/day
+    const hist = [row({ entry_date: "2026-07-10", amount: 310 }), row({ entry_date: "2026-08-10", amount: 620 }), row({ entry_date: "2026-09-10", amount: 900 })];
+    const f = forecastMonth([...hist, row({ entry_date: "2026-10-02", amount: 150 })], "2026-10-01", TODAY, 0)!; // this month 150 / 15 = 10/day
+    expect(f).toMatchObject({ thisPace: 10, histPace: 20, histMonths: 3, early: false });
+    const blend = (h: number) => (15 * 10 + 10 * h) / 25;
+    expect(f.pace).toBeCloseTo(blend(20), 2); // 14
+    expect(f.projected).toBeCloseTo(150 + blend(20) * 16, 1);
+    expect(f.low).toBeCloseTo(150 + blend(10) * 16, 1);
+    expect(f.high).toBeCloseTo(150 + blend(30) * 16, 1);
+    expect(f.low).toBeLessThan(f.projected);
+    expect(f.high).toBeGreaterThan(f.projected);
+  });
+  it("uses the history on day 1 instead of calling it too early; one month gives no spread", () => {
+    const f = forecastMonth([row({ entry_date: "2026-09-10", amount: 300 })], "2026-10-01", "2026-10-01", 0)!;
+    expect(f).toMatchObject({ histMonths: 1, early: false });
+    expect(f.low).toBe(f.projected);
+    expect(f.high).toBe(f.projected);
+  });
+  it("skips months with no data and ignores income and plan rows in the history", () => {
+    const f = forecastMonth(
+      [row({ entry_date: "2026-08-10", amount: 310 }), row({ entry_date: "2026-09-05", amount: 9000, type: "income", category_id: "income", is_core: false }), row({ entry_date: "2026-08-12", amount: 400, plan_kind: "emi" })],
+      "2026-10-01",
+      TODAY,
+      0,
+    )!;
+    expect(f.histMonths).toBe(1); // Sep has only income, Jul nothing
+    expect(f.histPace).toBe(10);
+  });
   it("flags the first days as too early, and a missing budget", () => {
     const f = forecastMonth([row({ entry_date: "2026-10-01", amount: 50 })], "2026-10-01", "2026-10-02", 0)!;
     expect(f).toMatchObject({ early: true, safePerDay: null, status: "none" });

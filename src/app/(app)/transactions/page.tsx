@@ -6,6 +6,7 @@ import { FilterBar } from "@/components/transactions/filter-bar";
 import { TxnList } from "@/components/transactions/txn-list";
 import { Breakdown } from "@/components/transactions/breakdown";
 import { IncomeKpiStrip, PeriodKpiStrip } from "@/components/transactions/period-kpis";
+import { YearHeatmap } from "@/components/dashboard/year-heatmap";
 import { SpendDonut } from "@/components/dashboard/spend-donut";
 import { TxnTabs } from "@/components/transactions/txn-tabs";
 import { TabIntro, parseTxnTab } from "@/components/transactions/tab-intro";
@@ -235,6 +236,10 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
                 <Card>
                   <EmptyState title="Nothing matches" body="Try another year or clear some filters." />
                 </Card>
+              )}
+              {/* the 12 months up to the end of this year (or today, whichever is earlier), with the filters applied; posted spending only */}
+              {incomeView || !periodRows.length ? null : (
+                <YearHeatmap info={HELP.yearHeatmap} rows={filtered} end={[yearEnd(year), today].sort()[0]} currency={currency} weekStart={ref.profile.week_start} />
               )}
             </>
           )}

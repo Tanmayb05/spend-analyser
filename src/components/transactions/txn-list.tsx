@@ -10,6 +10,7 @@ import { TxnDetail } from "./txn-detail";
 import { useBackSheet } from "@/hooks/use-back-nav";
 import { useAppData } from "@/components/app-data";
 import { formatDay } from "@/lib/dates";
+import { tintKey } from "@/lib/tint";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { TxnSort } from "@/lib/analytics/filters";
@@ -44,7 +45,7 @@ export function dayNote(rows: LedgerRow[], currency: string): string {
 }
 
 /** Day-grouped list with select mode + bulk delete (with undo). Scheduled rows sit in their own "Upcoming" group. */
-export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: LedgerRow[]; upcoming?: LedgerRow[]; sort?: TxnSort }) {
+export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows: LedgerRow[]; upcoming?: LedgerRow[]; sort?: TxnSort; /** tile colour per tintKey, to override the category colours */ tints?: Record<string, string> }) {
   const app = useAppData();
   const router = useRouter();
   const [selecting, setSelecting] = useState(false);
@@ -129,7 +130,7 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
           <div className="-mx-2 divide-y divide-border border-t border-border">
             {g.rows.map((r, i) => {
               const k = `${r.txn_id ?? r.trip_id}-${r.installment_seq ?? 0}-${i}`;
-              if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={detail.show} />;
+              if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={detail.show} tint={tints?.[tintKey(r)]} />;
               const on = r.txn_id ? picked.has(r.txn_id) : false;
               return (
                 <div key={k} className={cn("flex items-center gap-1 rounded-control", on && "bg-surface-3 ring-1 ring-inset ring-accent")}>
@@ -137,7 +138,7 @@ export function TxnList({ rows, upcoming = [], sort = "newest" }: { rows: Ledger
                     {on ? <CheckSquare size={18} className="text-accent" /> : <Square size={18} />}
                   </button>
                   <div className="min-w-0 flex-1" onClickCapture={(e) => { e.stopPropagation(); e.preventDefault(); toggle(r.txn_id); }}>
-                    <LedgerItem row={r} showDate={g.showDate} />
+                    <LedgerItem row={r} showDate={g.showDate} tint={tints?.[tintKey(r)]} />
                   </div>
                 </div>
               );

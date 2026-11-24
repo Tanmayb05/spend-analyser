@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { categoryColor } from "@/components/charts/colors";
 import { formatMoney } from "@/lib/money";
 import { formatDay } from "@/lib/dates";
+import { monogram } from "@/lib/monogram";
 import { cn } from "@/lib/utils";
 import type { LedgerRow } from "@/lib/data/types";
 
 export type LedgerRowWithLink = LedgerRow & { external_url?: string | null; notes?: string | null };
 
 /** One ledger row. Tapping opens the parent transaction for editing. */
-export function LedgerItem({ row, showDate = true, right, showKind = false, onOpen }: { row: LedgerRowWithLink; showDate?: boolean; /** Open a detail view instead of the edit form. */ onOpen?: (row: LedgerRowWithLink) => void; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
+export function LedgerItem({ row, showDate = true, right, showKind = false, onOpen, tint }: { row: LedgerRowWithLink; /** Colour for the tile instead of the category's (the trip page matches its spending breakdown). */ tint?: string; showDate?: boolean; /** Open a detail view instead of the edit form. */ onOpen?: (row: LedgerRowWithLink) => void; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
   const app = useAppData();
   const cat = app.maps.category.get(row.category_id);
   const sub = row.subcategory_id ? app.maps.subcategory.get(row.subcategory_id) : null;
@@ -35,8 +36,13 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
         className="absolute inset-0 z-0 rounded-control disabled:cursor-default focus-visible:outline-offset-0"
         aria-label={row.txn_id ? `Edit ${title}` : undefined}
       />
-      <span className="pointer-events-none relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-inset bg-surface-3">
-        <span className="h-3 w-3 rounded-sm" style={{ background: categoryColor(cat) }} />
+      {/* merchant monogram on a tile tinted with the category colour */}
+      <span
+        aria-hidden
+        className="pointer-events-none relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-inset text-xs font-medium text-text"
+        style={{ background: `color-mix(in srgb, ${tint ?? categoryColor(cat)} 24%, var(--surface-3))` }}
+      >
+        {monogram(row.merchant_name || title)}
       </span>
       <span className="pointer-events-none relative z-10 min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{title}</span>

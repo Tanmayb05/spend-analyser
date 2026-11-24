@@ -5,7 +5,11 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatStrip } from "@/components/cards/stat-strip";
 import { TripHeaderActions } from "@/components/trips/trip-actions";
+import { LuggageTag } from "@/components/trips/luggage-tag";
+import { TripBreakdown } from "@/components/trips/trip-breakdown";
+import { CompanionStack } from "@/components/trips/companion-stack";
 import { MODE_COPY } from "@/lib/trip-modes";
+import { tintKey } from "@/lib/tint";
 import { TxnList } from "@/components/transactions/txn-list";
 import { tripPartColors } from "@/components/charts/colors";
 import { getReferenceData } from "@/lib/data/reference";
@@ -45,6 +49,10 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
   // each part gets its own color: Flights / Stay / Food are fixed, the rest rotate (not the parent category's single color)
   const colors = tripPartColors(mergedParts.map((p) => p.label));
   const merged = mergedParts.map((p) => ({ ...p, color: colors.get(p.label)! }));
+  // entries wear the colour of the breakdown part they belong to: same key and label rules as `parts` above
+  const partLabel = (key: string) =>
+    key.startsWith("cat:") ? (ref.categories.find((x) => x.id === key.slice(4))?.name ?? "Other") : (ref.subcategories.find((x) => x.id === key)?.name ?? "Other");
+  const tints = Object.fromEntries(rows.map((r) => [tintKey(r), colors.get(partLabel(tintKey(r))) ?? "var(--c-other)"]));
 
   return (
     <>
@@ -53,7 +61,12 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
         <div>
           <h1 className="text-2xl font-medium">{trip.name}</h1>
           <p className="mt-1 text-sm text-muted">{start ? `${formatDay(start)}${end && end !== start ? ` – ${formatDay(end)}` : ""}` : "No dates yet"}</p>
-          {trip.companions ? <p className="mt-1 text-sm text-muted">With {trip.companions}</p> : null}
+          {trip.companions ? (
+            <div className="mt-2 flex items-center gap-3">
+              <CompanionStack companions={trip.companions} />
+              <p className="min-w-0 text-sm text-muted">With {trip.companions}</p>
+            </div>
+          ) : null}
         </div>
         <TripHeaderActions trip={trip} />
       </div>
@@ -80,33 +93,19 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
             ) : null}
             <p className="mt-3 text-xs text-faint">Change it with Edit</p>
           </Card>
-          <Card>
+          <LuggageTag>
             <CardHeader title="Where did the trip money go?" info={HELP.tripBreakdown} />
             {merged.length ? (
               <>
-                <div className="flex h-2 gap-px overflow-hidden rounded-inset">
-                  {merged.map((p) => (
-                    <div key={p.label} style={{ width: `${(p.value / total) * 100}%`, background: p.color }} title={p.label} />
-                  ))}
-                </div>
-                <ul className="mt-4 space-y-2 text-sm">
-                  {merged.map((p) => (
-                    <li key={p.label} className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} />
-                      <span className="flex-1">{p.label}</span>
-                      <span className="num text-muted">{formatPercent(p.value / total)}</span>
-                      <span className="money w-20 text-right">{formatMoney(p.value, currency, { whole: true })}</span>
-                    </li>
-                  ))}
-                </ul>
+                <TripBreakdown parts={merged.map((p) => ({ label: p.label, color: p.color, share: p.value / total, percent: formatPercent(p.value / total), amount: formatMoney(p.value, currency, { whole: true }) }))} />
               </>
             ) : (
               <p className="text-sm text-muted">No expenses yet</p>
             )}
-          </Card>
+          </LuggageTag>
         </div>
         <Card className="min-w-0">
-          {rows.length ? <TxnList rows={rows} /> : <p className="py-10 text-center text-sm text-muted">No expenses tagged with this trip yet</p>}
+          {rows.length ? <TxnList rows={rows} tints={tints} /> : <p className="py-10 text-center text-sm text-muted">No expenses tagged with this trip yet</p>}
         </Card>
       </section>
     </>

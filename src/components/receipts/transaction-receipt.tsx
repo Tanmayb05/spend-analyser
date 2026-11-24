@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { barcodeBars } from "@/lib/barcode";
+import { formatDay } from "@/lib/dates";
 import { unlinkReceiptAction } from "@/app/(app)/receipts/actions";
 
 type Receipt = {
@@ -26,6 +28,34 @@ type Receipt = {
 };
 type Item = { id: string; line_no: number; raw_name: string; normalized_name: string | null; quantity: number | null; total_price: number | null };
 type Page = { page_no: number; storage_path: string };
+
+/** Torn paper edge: a row of triangles in the paper colour with a hairline along the teeth. `flip` draws it for the bottom edge. */
+function ZigEdge({ flip }: { flip?: boolean }) {
+  const w = 12;
+  const h = 6;
+  return (
+    <svg aria-hidden width="100%" height={h} className={cn("block text-surface-2", flip && "rotate-180")}>
+      <defs>
+        <pattern id={flip ? "zig-b" : "zig-t"} width={w} height={h} patternUnits="userSpaceOnUse">
+          <polygon points={`0,${h} ${w / 2},0 ${w},${h}`} fill="currentColor" />
+          <polyline points={`0,${h} ${w / 2},0.5 ${w},${h}`} fill="none" stroke="var(--border)" strokeWidth="1" />
+        </pattern>
+      </defs>
+      <rect width="100%" height={h} fill={`url(#${flip ? "zig-b" : "zig-t"})`} />
+    </svg>
+  );
+}
+
+/** A line of the paper: label, dotted leader, then the figure. */
+function Line({ label, value, strong }: { label: React.ReactNode; value: string; strong?: boolean }) {
+  return (
+    <div className={cn("flex items-baseline gap-2", strong && "font-medium")}>
+      <span className="min-w-0 truncate">{label}</span>
+      <span aria-hidden className="mb-1 min-w-4 flex-1 border-b border-dotted border-text/25" />
+      <span className="money shrink-0">{value}</span>
+    </div>
+  );
+}
 
 /** Receipt details for a transaction, read live from the receipt tables (nothing is copied into the transaction). */
 export function TransactionReceipt({ receiptId, txnId, currency, onUnlinked }: { receiptId: string; txnId: string; currency: string; onUnlinked: () => void }) {
@@ -83,26 +113,53 @@ export function TransactionReceipt({ receiptId, txnId, currency, onUnlinked }: {
       </button>
       {open ? (
         <div className="space-y-3 border-t border-border px-3 py-3">
-          <p className="text-xs text-muted">
-            {r.subtotal != null ? `Subtotal ${formatMoney(r.subtotal, cur)}` : ""}
-            {r.fees ? ` · fees ${formatMoney(r.fees, cur)}` : ""}
-            {r.tax ? ` · tax ${formatMoney(r.tax, cur)}` : ""}
-            {r.total != null ? ` · total ${formatMoney(r.total, cur)}` : ""}
-            {r.tip ? ` · tip ${formatMoney(r.tip, cur)}` : ""}
-          </p>
-          {items.length ? (
-            <ul className="max-h-56 divide-y divide-border overflow-y-auto rounded-inset border border-border">
-              {items.map((i) => (
-                <li key={i.id} className="flex items-baseline justify-between gap-3 px-3 py-2 text-sm">
-                  <span className="min-w-0 truncate">
-                    {i.normalized_name || i.raw_name}
-                    {i.quantity && i.quantity !== 1 ? <span className="text-faint"> × {i.quantity}</span> : null}
-                  </span>
-                  <span className="money shrink-0">{i.total_price != null ? i.total_price.toFixed(2) : ""}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {/* the receipt as thermal paper */}
+          <div className="mx-auto w-full max-w-sm">
+            <ZigEdge />
+            <div className="bg-surface-2 px-5 py-3 font-mono text-xs text-text">
+              <div className="text-center">
+                <p className="text-sm font-medium">{r.merchant_name ?? "Unknown merchant"}</p>
+                <p className="mt-1 text-muted">
+                  {r.purchased_at ? formatDay(r.purchased_at) : "No date"}
+                  {r.label ? ` · ${r.label}` : ""}
+                </p>
+              </div>
+              <hr className="my-3 border-t border-dashed border-text/25" />
+              {items.length ? (
+                <ul className="max-h-56 space-y-1.5 overflow-y-auto">
+                  {items.map((i) => (
+                    <li key={i.id}>
+                      <Line
+                        label={
+                          <>
+                            {i.quantity && i.quantity !== 1 ? <span className="text-muted">{i.quantity} × </span> : null}
+                            {i.normalized_name || i.raw_name}
+                          </>
+                        }
+                        value={i.total_price != null ? i.total_price.toFixed(2) : ""}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-center text-muted">No line items</p>
+              )}
+              <hr className="my-3 border-t border-dashed border-text/25" />
+              <div className="space-y-1.5">
+                {r.subtotal != null ? <Line label="Subtotal" value={formatMoney(r.subtotal, cur)} /> : null}
+                {r.fees ? <Line label="Fees" value={formatMoney(r.fees, cur)} /> : null}
+                {r.tax ? <Line label="Tax" value={formatMoney(r.tax, cur)} /> : null}
+                {r.tip ? <Line label="Tip" value={formatMoney(r.tip, cur)} /> : null}
+                {r.total != null ? <Line strong label="Total" value={formatMoney(r.total, cur)} /> : null}
+              </div>
+              {r.card_last4 ? <p className="mt-3 text-muted">{r.card_brand ?? "Card"} ending {r.card_last4}</p> : null}
+              {others ? <p className="mt-1 text-muted">Shared with {others} other transaction{others === 1 ? "" : "s"}</p> : null}
+              <svg aria-hidden viewBox="0 0 160 24" preserveAspectRatio="none" className="mt-4 h-8 w-full text-text/70">
+                {barcodeBars(receiptId, 28).map((b) => (b.x + b.w <= 160 ? <rect key={b.x} x={b.x} y="0" width={b.w} height="24" fill="currentColor" /> : null))}
+              </svg>
+            </div>
+            <ZigEdge flip />
+          </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {urls.map((u, i) =>
               u ? (

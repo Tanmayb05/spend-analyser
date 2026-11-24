@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { PeriodPicker } from "@/components/transactions/period-picker";
 import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { SpendDonut, type AttentionItem } from "@/components/dashboard/spend-donut";
 import { AddFirst } from "@/components/dashboard/add-first";
+import { WalletCard } from "@/components/cards/wallet-card";
 import { HELP } from "@/lib/help";
 import { getReferenceData } from "@/lib/data/reference";
 import { getLedger } from "@/lib/data/ledger";
@@ -219,6 +221,9 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
               <p className="py-10 text-center text-sm text-muted">No spending this month</p>
             )}
           </Card>
+          <Suspense fallback={null}>
+            <WalletCard />
+          </Suspense>
         </div>
       </section>
 

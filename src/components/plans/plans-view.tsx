@@ -2,12 +2,13 @@ import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { ACCENT } from "@/components/charts/colors";
-import { PlanRow, type PlanView } from "@/components/plans/plan-row";
+import { PlanTicket, type PlanView } from "@/components/plans/plan-ticket";
 import { StatStrip } from "@/components/cards/stat-strip";
 import { AddPlanButton } from "@/components/plans/add-plan-button";
 import { getReferenceData } from "@/lib/data/reference";
 import { requireUser } from "@/lib/supabase/server";
 import { addMonths, formatMonth, monthStart } from "@/lib/dates";
+import { punchesFor } from "@/lib/plan-punches";
 import { formatMoney } from "@/lib/money";
 import { round2 } from "@/lib/utils";
 import { HELP } from "@/lib/help";
@@ -55,6 +56,7 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
         perMonth: Number(inst[0]?.amount_base ?? 0),
         nextDue: inst.find((i) => i.due_date > today)?.due_date ?? null,
         lastDue: inst.at(-1)?.due_date ?? null,
+        punches: punchesFor(inst, today),
       };
     });
 
@@ -103,21 +105,19 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
                   : `Nothing from your ${noun} lands in the next 12 months.`}
               </Insight>
             </Card>
-            <Card className="min-w-0">
+            <div className="min-w-0">
               <CardHeader title="Active" />
-              {active.length ? active.map((p) => <PlanRow key={p.txnId} p={p} />) : <p className="py-6 text-center text-sm text-muted">No active {noun}</p>}
-            </Card>
+              {active.length ? <div className="grid gap-3">{active.map((p) => <PlanTicket key={p.txnId} p={p} />)}</div> : <p className="py-6 text-center text-sm text-muted">No active {noun}</p>}
+            </div>
           </section>
 
           {finished.length ? (
-            <Card className="mt-4">
-              <details>
-                <summary className="card-title cursor-pointer list-none">
-                  Finished <span className="text-sm font-normal text-muted">· {finished.length} {finished.length === 1 ? noun.slice(0, -1) : noun} · tap to show</span>
-                </summary>
-                <div className="mt-3">{finished.map((p) => <PlanRow key={p.txnId} p={p} />)}</div>
-              </details>
-            </Card>
+            <details className="mt-5">
+              <summary className="card-title cursor-pointer list-none">
+                Finished <span className="text-sm font-normal text-muted">· {finished.length} {finished.length === 1 ? noun.slice(0, -1) : noun} · tap to show</span>
+              </summary>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{finished.map((p) => <PlanTicket key={p.txnId} p={p} />)}</div>
+            </details>
           ) : null}
         </>
       ) : (

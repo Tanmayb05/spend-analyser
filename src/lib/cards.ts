@@ -201,3 +201,10 @@ export function overallUtilization(cards: CardSummary[]): { outstanding: number;
   const outstanding = round2(withLimit.reduce((a, c) => a + Math.max(0, c.outstanding), 0));
   return { outstanding, limit, utilization: limit ? outstanding / limit : null };
 }
+
+/** The `n` most recently used cards, newest first. Cards never used sort last, by name. */
+export function recentlyUsed<T extends { name: string; lastUsed: string | null }>(cards: T[], n: number): T[] {
+  return [...cards]
+    .sort((a, b) => (a.lastUsed && b.lastUsed ? b.lastUsed.localeCompare(a.lastUsed) : a.lastUsed ? -1 : b.lastUsed ? 1 : 0) || a.name.localeCompare(b.name))
+    .slice(0, n);
+}

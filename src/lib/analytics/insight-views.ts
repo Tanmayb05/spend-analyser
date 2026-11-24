@@ -64,7 +64,12 @@ export type CategoryMover = {
   change: number | null;
   budget: number;
   status: BudgetStatus;
+  /** spend in each of the last 6 months, oldest first, this month last */
+  history: number[];
 };
+
+/** Months shown in each category's mini history. */
+const HISTORY_MONTHS = 6;
 
 /** Every expense category with spend this month or in the baseline, biggest this month first. */
 export function categoryMovers(rows: LedgerRow[], month: ISODate, today: ISODate, budgets: Map<string, ResolvedBudget>, vs: CompareBase = "avg"): CategoryMover[] {
@@ -72,6 +77,7 @@ export function categoryMovers(rows: LedgerRow[], month: ISODate, today: ISODate
   const now = byCategory(rows, m, today);
   const months = baseMonths(m, vs);
   const prior = months.map((x) => byCategory(rows, x, today));
+  const trail = Array.from({ length: HISTORY_MONTHS }, (_, i) => (i === HISTORY_MONTHS - 1 ? now : byCategory(rows, addMonths(m, i - (HISTORY_MONTHS - 1)), today)));
   const ids = new Set([...now.map((c) => c.categoryId), ...prior.flat().map((c) => c.categoryId)]);
   const out: CategoryMover[] = [];
   for (const id of ids) {
@@ -79,7 +85,7 @@ export function categoryMovers(rows: LedgerRow[], month: ISODate, today: ISODate
     const base = round2(prior.reduce((a, list) => a + (list.find((x) => x.categoryId === id)?.spent ?? 0), 0) / months.length);
     if (spent <= 0 && base <= 0) continue;
     const budget = budgets.get(id)?.amount ?? 0;
-    out.push({ categoryId: id, spent, base, change: base > 0 ? (spent - base) / base : null, budget, status: budget > 0 ? budgetStatus(spent, budget) : "none" });
+    out.push({ categoryId: id, spent, base, change: base > 0 ? (spent - base) / base : null, budget, status: budget > 0 ? budgetStatus(spent, budget) : "none", history: trail.map((list) => list.find((x) => x.categoryId === id)?.spent ?? 0) });
   }
   return out.sort((a, b) => b.spent - a.spent || b.base - a.base);
 }
@@ -94,10 +100,19 @@ export type Forecast = {
   posted: number;
   /** future-dated entries already booked for the rest of the month (EMIs, scheduled expenses) */
   scheduledLeft: number;
-  /** everyday (core) spend per day so far, left out of plans and scheduled entries */
+  /** everyday (core) spend per day used for the days still to come: this month's pace blended with the recent months' */
   pace: number;
+  /** this month's own everyday pace so far, left out of plans and scheduled entries */
+  thisPace: number;
+  /** usual everyday spend per day over the recent months (median); null when there is no history */
+  histPace: number | null;
+  /** how many of the 3 months before this one had data and fed histPace */
+  histMonths: number;
   /** posted + scheduled + pace for the days still to come */
   projected: number;
+  /** likely range for the month end, from how different the recent months were; equal to projected when there is no spread to show */
+  low: number;
+  high: number;
   /** total monthly budget, 0 when none is set */
   budget: number;
   /** what is left per remaining day to finish on budget; negative when already past it; null without a budget or days left */
@@ -113,6 +128,21 @@ export type Forecast = {
 };
 
 const MIN_DAYS = 3;
+/** Recent months folded into the pace, and how many days of history one real day of this month outweighs (shrinkage weight). */
+export const HIST_MONTHS = 3;
+export const HIST_WEIGHT_DAYS = 10;
+
+/** Everyday spend per day in one month, or null when that month has no spending rows (not enough data to count). */
+function corePerDay(rows: LedgerRow[], month: ISODate): number | null {
+  const m = monthStart(month);
+  const inMonth = rows.filter((r) => r.month === m && r.type !== "income" && !r.is_scheduled);
+  if (!inMonth.length) return null;
+  const core = inMonth.filter((r) => !r.plan_kind && r.is_core).reduce((a, r) => a + Number(r.spend), 0);
+  return core / daysInMonth(m);
+}
+
+/** This month's pace pulled toward a usual pace: mostly history early in the month, mostly this month later on. */
+export const blendPace = (thisPace: number, hist: number, day: number): number => (day * thisPace + HIST_WEIGHT_DAYS * hist) / (day + HIST_WEIGHT_DAYS);
 
 /** Cumulative posted spend by day: index 0 is day 1. Stops at `through` (a day number). */
 export function cumulativeSpend(rows: LedgerRow[], month: ISODate, through: number): number[] {
@@ -140,23 +170,37 @@ export function forecastMonth(rows: LedgerRow[], month: ISODate, today: ISODate,
   const posted = round2(inMonth.filter((r) => !r.is_scheduled).reduce((a, r) => a + Number(r.spend), 0));
   const scheduledLeft = round2(inMonth.filter((r) => r.is_scheduled).reduce((a, r) => a + Number(r.spend), 0));
   const core = inMonth.filter((r) => !r.is_scheduled && !r.plan_kind && r.is_core).reduce((a, r) => a + Number(r.spend), 0);
-  const pace = round2(core / day);
+  const thisPace = core / day;
   const daysLeft = days - day;
-  const projected = round2(posted + scheduledLeft + pace * daysLeft);
   const prev = addMonths(m, -1);
+  const hist = Array.from({ length: HIST_MONTHS }, (_, i) => i + 1).map((k) => corePerDay(rows, addMonths(m, -k))).filter((v): v is number => v != null);
+  const histPace = hist.length ? median(hist) : null;
+  const pace = histPace == null ? thisPace : blendPace(thisPace, histPace, day);
+  const base = posted + scheduledLeft;
+  const at = (p: number) => round2(base + p * daysLeft);
+  const projected = at(pace);
+  // range: the projection if the rest of the month ran like the quietest, and like the busiest, of the recent months
+  const ends = hist.length > 1 ? hist.map((h) => at(blendPace(thisPace, h, day))) : [projected];
+  const low = Math.min(projected, ...ends);
+  const high = Math.max(projected, ...ends);
   const room = budgetTotal - posted - scheduledLeft;
   return {
     day,
     days,
     posted,
     scheduledLeft,
-    pace,
+    pace: round2(pace),
+    thisPace: round2(thisPace),
+    histPace: histPace == null ? null : round2(histPace),
+    histMonths: hist.length,
     projected,
+    low,
+    high,
     budget: budgetTotal,
     safePerDay: budgetTotal > 0 && daysLeft > 0 ? round2(room / daysLeft) : null,
     daysLeft,
     status: budgetTotal > 0 ? budgetStatus(projected, budgetTotal) : "none",
-    early: day < MIN_DAYS,
+    early: hist.length === 0 && day < MIN_DAYS,
     cumulative: cumulativeSpend(rows, m, day),
     lastMonth: cumulativeSpend(rows, prev, daysInMonth(prev)),
   };

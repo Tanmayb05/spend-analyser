@@ -12,7 +12,7 @@ type TxnRow = {
   spread_plans: { kind: "spread" | "emi"; installments: { due_date: string; amount_base: number }[] } | null;
 };
 
-export type CardData = { summary: CardSummary; payments: CardPayment[]; last4s: string[] };
+export type CardData = { summary: CardSummary; payments: CardPayment[]; last4s: string[]; /** date of the latest charge on this card, for "recently used" */ lastUsed: string | null };
 
 /** Every payment method marked as a credit card, with its balance, statement and payment history. */
 export async function getCardData(): Promise<CardData[]> {
@@ -67,6 +67,7 @@ export async function getCardData(): Promise<CardData[]> {
     const payments: CardPayment[] = (pays ?? [])
       .filter((p) => p.payment_method_id === c.id)
       .map((p) => ({ id: p.id, date: p.date, amount: Number(p.amount), note: p.note }));
-    return { summary: summarizeCard(config, charges, payments, ref.today), payments, last4s: (nums ?? []).filter((n) => n.payment_method_id === c.id).map((n) => n.last4) };
+    const lastUsed = charges.reduce<string | null>((m, ch) => (m === null || ch.date > m ? ch.date : m), null);
+    return { summary: summarizeCard(config, charges, payments, ref.today), payments, lastUsed, last4s: (nums ?? []).filter((n) => n.payment_method_id === c.id).map((n) => n.last4) };
   });
 }

@@ -47,6 +47,9 @@ export const HELP = {
         <b>Not counted</b> (default): tracked here only. <b>One lump sum</b>: the trip total counts once, in a category and
         month you choose, and can be spread over months. <b>Each expense</b>: every trip expense counts in its own category.
       </p>
+      <p>
+        Trips that have ended show as stamps under “Visited”. Press and drag a stamp up or down to spin it like a fridge magnet; a harder flick spins it longer. On a phone, hold it for a moment first so swiping still scrolls the page. Tap or click to open the trip.
+      </p>
     </>
   ),
   tripMode: (
@@ -56,7 +59,7 @@ export const HELP = {
       category, as if it were normal spending.
     </p>
   ),
-  tripBreakdown: <p>The trip&apos;s spending split by type (flights, hotel, food…), biggest first.</p>,
+  tripBreakdown: <p>The trip&apos;s spending split by type (flights, hotel, food…), biggest first. Hover a bar segment or a row to highlight it.</p>,
   plans: (
     <>
       <p>
@@ -191,16 +194,21 @@ export const HELP = {
   forecast: (
     <>
       <p>
-        A projection for the current month: what you have spent so far, plus entries already booked for later (EMIs, scheduled expenses), plus your everyday (core) spending continued at its pace so far for the days that remain.
+        A projection for the current month: what you have spent so far, plus entries already booked for later (EMIs, scheduled expenses), plus your everyday (core) spending for the days that remain. That daily pace blends this month so far with the median of your last 3 months: early in the month it leans on your history, later it leans on this month. A shaded “likely range” at the month end shows the projection if the rest of the month ran like your quietest and your busiest recent month.
       </p>
       <p>
-        One-off spending outside the everyday categories is not extrapolated. It needs at least 3 days of data before it shows a number. The grey line is last month&apos;s running total for comparison, and “Left per day on budget” is what remains of the total budget after spent and booked, divided by the days left.
+        One-off spending outside the everyday categories is not extrapolated. With no earlier months to learn from, it needs at least 3 days of data before it shows a number. The chart reads like a route from day 1 to the last day: the solid line is what you have spent, the dot is today, the dashed blue line is where this pace ends the month, and the dotted grey line is an even pace to your budget (or to last month&apos;s total when no budget is set). The label above it says how far under or over that even pace you are. “Left per day on budget” is what remains of the total budget after spent and booked, divided by the days left.
       </p>
     </>
   ),
+  yearHeatmap: (
+    <p>
+      One square per day for the 12 months up to the end of the year you are viewing (or up to today, for the current year), each column a week. Darker means more spent that day, in four steps set by your own spending days: the darkest quarter of your spending days is the darkest step. Days with nothing spent stay grey. Refunds net against the day, and scheduled (future) entries and income are left out. It follows the filters above (category, merchant, everyday only and so on). Hover or focus a square for its amount.
+    </p>
+  ),
   categoryMovers: (
     <p>
-      Pick what to compare with: the 3-month average, last month, or the same month last year. Each category&apos;s spend this month sits next to that baseline. A category more than 20% above the baseline shows in amber, more than 20% below in green. The Spent, Income and Saved figures on top use the same baseline. The bar shows how much of the budget is used (amber from 80%, red when over). Tap a row to see its transactions.
+      Pick what to compare with: the 3-month average (“usual”), last month, or the same month last year. The first card says in one sentence whether you are spending more or less, and shows this month&apos;s total as a dark bar over the comparison in grey. “Spending more on” and “Spending less on” list the categories that changed most: the coloured bar is this month, the grey bar under it is the comparison, and the figure is the difference. A percent only appears when the comparison is at least 20, and “new” means nothing was spent there before. Changes under 10, or under 5%, go in “About the same”. Budgets have their own gauges above. Tap a row to see its transactions.
     </p>
   ),
   merchantsInsight: (
