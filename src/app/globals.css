@@ -42,11 +42,14 @@
   --bad: light-dark(#bc3434, #ec6f6d);
 
   /* text on a photo (trip cards): flat scrim, same idea as the dialog scrim; fixed white in both themes */
-  --scrim: rgb(0 0 0 / 0.65);
+  --scrim: rgb(0 0 0 / 0.7);
   --on-photo: #ffffff;
-  --on-photo-muted: rgb(255 255 255 / 0.92);
-  --on-photo-chip: rgb(255 255 255 / 0.2);
-  --on-photo-track: rgb(255 255 255 / 0.28);
+  --on-photo-muted: rgb(255 255 255 / 0.95);
+  --on-photo-chip: rgb(0 0 0 / 0.4);
+  --on-photo-track: rgb(255 255 255 / 0.3);
+  --on-photo-border: rgb(255 255 255 / 0.35);
+  /* tight dark shadow keeps letter edges crisp over busy detail (palms, bridges); not a glow */
+  --on-photo-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 8px rgb(0 0 0 / 0.35);
 
   /* transaction kinds. Plans and EMIs share the accent (no separate purple); trips stay a quiet orange. */
   --trip: light-dark(#e8590c, #ff8a3d);
@@ -105,6 +108,7 @@
   --color-on-photo-muted: var(--on-photo-muted);
   --color-on-photo-chip: var(--on-photo-chip);
   --color-on-photo-track: var(--on-photo-track);
+  --color-on-photo-border: var(--on-photo-border);
   --color-trip: var(--trip);
   --color-plan: var(--plan);
   --color-expense: var(--expense);
@@ -224,6 +228,10 @@ body {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
+}
+
+@utility on-photo-text {
+  text-shadow: var(--on-photo-shadow);
 }
 
 /* Sentence-case label above a figure or a column. Replaces `uppercase tracking-wide`. Set the colour (text-muted / text-faint) at the call site. */

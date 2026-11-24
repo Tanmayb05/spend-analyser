@@ -53,6 +53,7 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
         <div>
           <h1 className="text-2xl font-medium">{trip.name}</h1>
           <p className="mt-1 text-sm text-muted">{start ? `${formatDay(start)}${end && end !== start ? ` – ${formatDay(end)}` : ""}` : "No dates yet"}</p>
+          {trip.companions ? <p className="mt-1 text-sm text-muted">With {trip.companions}</p> : null}
         </div>
         <TripHeaderActions trip={trip} />
       </div>

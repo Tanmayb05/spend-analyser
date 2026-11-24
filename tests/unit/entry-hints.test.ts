@@ -40,6 +40,17 @@ describe("buildEntryHints", () => {
     expect(h.lastByMerchant.m1).toEqual({ category_id: "food", subcategory_id: "s1", payment_method_id: "visa", paid_by_id: "me" });
     expect(h.topMerchants).toEqual(["m2", "m1"]);
   });
+  it("lists categories and merchants by most recent use, each once", () => {
+    const h = buildEntryHints([
+      row({ category_id: "gas", merchant_id: "shell" }),
+      row({ category_id: "food", merchant_id: "kroger" }),
+      row({ category_id: "gas", merchant_id: "shell" }),
+      row({ category_id: "pay", type: "income" }),
+    ]);
+    expect(h.recentCategories.expense).toEqual(["gas", "food"]);
+    expect(h.recentCategories.income).toEqual(["pay"]);
+    expect(h.recentMerchants).toEqual(["shell", "kroger"]);
+  });
   it("ignores rows without a merchant for merchant hints", () => {
     const h = buildEntryHints([row({})]);
     expect(h.topMerchants).toEqual([]);

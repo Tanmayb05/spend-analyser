@@ -43,6 +43,7 @@ export function TripForm({ trip, onDone }: { trip?: Trip; onDone?: (id?: string)
   const [v, setV] = useState({
     name: trip?.name ?? "",
     destination: trip?.destination ?? "",
+    companions: trip?.companions ?? "",
     start_date: trip?.start_date ?? "",
     end_date: trip?.end_date ?? "",
     budget: trip?.budget != null ? String(trip.budget) : "",
@@ -64,6 +65,7 @@ export function TripForm({ trip, onDone }: { trip?: Trip; onDone?: (id?: string)
           id: trip?.id,
           name: v.name,
           destination: v.destination || null,
+          companions: v.companions.trim() || null,
           start_date: v.start_date || null,
           end_date: v.end_date || null,
           budget: v.budget ? Number(v.budget) : null,
@@ -87,6 +89,9 @@ export function TripForm({ trip, onDone }: { trip?: Trip; onDone?: (id?: string)
       <Field label="Destination (optional)" htmlFor="td" hint="Used to find the card photo. Defaults to the trip name">
         <Input id="td" value={v.destination} onChange={(e) => setV({ ...v, destination: e.target.value })} placeholder="e.g. Disneyland, California" />
       </Field>
+      <Field label="People (optional)" htmlFor="tp" hint="Who you went with. Shown on the trip card">
+        <Input id="tp" value={v.companions} maxLength={200} onChange={(e) => setV({ ...v, companions: e.target.value })} placeholder="e.g. Priya, Sam, Mom" />
+      </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Start" htmlFor="ts">
           <Input id="ts" type="date" value={v.start_date} onChange={(e) => setV({ ...v, start_date: e.target.value })} />
@@ -99,7 +104,7 @@ export function TripForm({ trip, onDone }: { trip?: Trip; onDone?: (id?: string)
         <Input id="tb" type="number" inputMode="decimal" min={0} value={v.budget} onChange={(e) => setV({ ...v, budget: e.target.value })} />
       </Field>
       <div>
-        <p className="mb-2 text-sm text-muted">Count in monthly spending?</p>
+        <p className="mb-2 text-sm font-medium text-text">Count in monthly spending?</p>
         <ModePicker value={v.include_mode} onChange={(m) => setV({ ...v, include_mode: m })} />
       </div>
       {v.include_mode === "lump_sum" ? (
@@ -213,7 +218,7 @@ function CoverControls({ trip }: { trip: Trip }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted">Card photo <span className="text-faint">· changes here save right away</span></p>
+      <p className="text-sm font-medium text-text">Card photo <span className="font-normal text-faint">· changes here save right away</span></p>
       <div className="relative h-40 overflow-hidden rounded-inset border border-border bg-surface-2">
         {previewSrc ? (
           // eslint-disable-next-line @next/next/no-img-element -- hotlinked stock photo / signed URL

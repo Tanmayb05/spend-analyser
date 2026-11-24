@@ -14,6 +14,7 @@ const tripSchema = z
     id: z.string().uuid().optional(),
     name: z.string().trim().min(1, "Name the trip").max(80),
     destination: z.string().trim().max(120).nullable().optional(),
+    companions: z.string().trim().max(200).nullable().optional(),
     start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
     budget: z.number().min(0).nullable(),
@@ -33,7 +34,7 @@ export async function saveTrip(input: TripInput): Promise<Result> {
   if (!v.success) return { ok: false, error: v.error.issues[0].message };
   const { supabase } = await requireUser();
   const { id, ...rest } = v.data;
-  const data = { ...rest, destination: rest.destination || null };
+  const data = { ...rest, destination: rest.destination || null, companions: rest.companions || null };
   const before = id ? (await supabase.from("trips").select("name, destination, cover_path").eq("id", id).single()).data : null;
   const res = id ? await supabase.from("trips").update(data).eq("id", id).select("id").single() : await supabase.from("trips").insert(data).select("id").single();
   if (res.error) return { ok: false, error: res.error.message.includes("duplicate") ? "A trip with that name exists." : res.error.message };

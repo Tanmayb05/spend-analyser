@@ -53,7 +53,7 @@ export function Segmented<T extends string>({
       {box ? (
         <span
           aria-hidden
-          className={cn("pointer-events-none absolute inset-y-1 left-0 rounded-(--seg-radius) bg-surface-3 ring-1 ring-inset ring-text/10", animate && "transition-[transform,width] duration-(--dur-base)")}
+          className={cn("pointer-events-none absolute inset-y-1 left-0 rounded-(--seg-radius) bg-accent/15 ring-1 ring-inset ring-accent", animate && "transition-[transform,width] duration-(--dur-base)")}
           style={{ transform: `translateX(${box.left}px)`, width: box.width }}
         />
       ) : null}
@@ -67,7 +67,7 @@ export function Segmented<T extends string>({
           className={cn(
             "relative z-10 rounded-(--seg-radius) px-3 font-medium transition-colors",
             size === "sm" ? "h-8 text-xs" : "h-9 text-sm",
-            value === o.value ? (box ? "text-text" : "bg-surface-3 text-text") : "text-muted hover:text-text",
+            value === o.value ? (box ? "text-text" : "bg-accent/15 text-text ring-1 ring-inset ring-accent") : "text-muted hover:text-text",
           )}
         >
           {o.label}

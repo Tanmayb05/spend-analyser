@@ -290,16 +290,17 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
     });
   }
 
+  // Recently used first (what you entered last is most likely what you enter next); frequent ones and then the rest fill any gap.
   const quickCats = useMemo(() => {
-    const ranked = app.entryHints.topCategories[kind].map((id) => categories.find((c) => c.id === id)).filter((c): c is (typeof categories)[number] => Boolean(c));
-    const pool = ranked.length >= 3 ? ranked : [...ranked, ...categories.filter((c) => !ranked.includes(c))];
+    const byId = (ids: string[]) => ids.map((id) => categories.find((c) => c.id === id)).filter((c): c is (typeof categories)[number] => Boolean(c));
+    const pool = [...new Set([...byId(app.entryHints.recentCategories[kind]), ...byId(app.entryHints.topCategories[kind]), ...categories])];
     const top = pool.slice(0, 6);
     const sel = categories.find((c) => c.id === v.category_id);
     return sel && !top.includes(sel) ? [...top.slice(0, 5), sel] : top;
   }, [app.entryHints, categories, kind, v.category_id]);
   const { merchants, entryHints } = app;
   const quickMerchants = useMemo(
-    () => entryHints.topMerchants.map((id) => merchants.find((m) => m.id === id)).filter((m): m is (typeof merchants)[number] => Boolean(m)).slice(0, 5),
+    () => entryHints.recentMerchants.map((id) => merchants.find((m) => m.id === id)).filter((m): m is (typeof merchants)[number] => Boolean(m)).slice(0, 5),
     [entryHints, merchants],
   );
   const yesterday = useMemo(() => {
@@ -336,7 +337,7 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
       {/* Amount */}
       <div>
         <div className="flex items-stretch gap-2">
-          <Select aria-label="Currency" value={v.currency} onChange={(e) => set("currency", e.target.value)} className="w-28 text-sm">
+          <Select aria-label="Currency" value={v.currency} onChange={(e) => set("currency", e.target.value)} className="h-16 w-28 text-lg font-medium">
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -380,8 +381,8 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
 
       {/* Category: the one choice every entry needs, so the usual ones are a tap away */}
       <div className="space-y-2">
-        <p className="text-sm text-muted">Category</p>
-        <div role="group" aria-label="Frequent categories" className="flex flex-wrap gap-2">
+        <p className="text-sm font-medium text-text">Category <span className="font-normal text-faint">· recent first</span></p>
+        <div role="group" aria-label="Recent categories" className="flex flex-wrap gap-2">
           {quickCats.map((c) => (
             <Chip key={c.id} selected={v.category_id === c.id} onClick={() => setV((s) => ({ ...s, category_id: c.id, subcategory_id: "" }))}>
               {c.name}
@@ -406,7 +407,7 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
 
       {subcategories.length ? (
         <div className="space-y-2">
-          <p className="text-sm text-muted">Subcategory (optional)</p>
+          <p className="text-sm font-medium text-text">Subcategory (optional)</p>
           <div role="group" aria-label="Subcategories" className="flex flex-wrap gap-2">
             {subcategories.map((sc) => (
               <Chip key={sc.id} selected={v.subcategory_id === sc.id} onClick={() => set("subcategory_id", v.subcategory_id === sc.id ? "" : sc.id)}>
