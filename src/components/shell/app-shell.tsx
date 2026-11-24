@@ -15,6 +15,7 @@ import { useCloseOverlays } from "@/hooks/use-close-overlays";
 import { NotificationsProvider } from "@/components/notifications/notifications-provider";
 import { NotificationBell } from "@/components/notifications/bell";
 import { NotificationPanel } from "@/components/notifications/notification-panel";
+import { Credits } from "./credits";
 import type { Notice } from "@/lib/notifications/types";
 
 export function AppShell({ children, notices }: { children: ReactNode; notices: Promise<Notice[]> }) {
@@ -55,6 +56,7 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
             <Plus size={18} />
             Add transaction
           </Button>
+          <Credits stacked className="mt-3 px-3" />
         </div>
       </aside>
 
@@ -110,6 +112,7 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
               Sign out
             </button>
           </form>
+          <Credits className="mt-2 border-t border-border px-3 pt-4" />
         </div>
       </Sheet>
       <NotificationPanel />

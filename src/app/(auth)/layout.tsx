@@ -1,4 +1,5 @@
 import { Logo } from "@/components/logo";
+import { Credits } from "@/components/shell/credits";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
@@ -9,6 +10,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <span className="text-lg font-medium">Spend Analyser</span>
         </div>
         <div className="rounded-card border border-border bg-surface p-card-lg sm:p-page-lg">{children}</div>
+        <Credits className="mt-4 justify-center" />
       </div>
     </main>
   );
