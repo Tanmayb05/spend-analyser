@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { InfoTitle } from "@/components/ui/info-title";
-import { LedgerItem } from "@/components/transactions/ledger-item";
+import { LedgerItem, type LedgerRowWithLink } from "@/components/transactions/ledger-item";
+import { TxnDetail } from "@/components/transactions/txn-detail";
+import { useBackSheet } from "@/hooks/use-back-nav";
 import { useAppData } from "@/components/app-data";
 import { useParamHref } from "@/components/dashboard/dashboard-header";
 import { ScopeControl } from "@/components/dashboard/view-controls";
@@ -86,6 +88,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
   const app = useAppData();
   const router = useRouter();
   const href = useParamHref();
+  const detail = useBackSheet<LedgerRowWithLink>(); // Back closes the detail sheet
   const gridRef = useRef<HTMLDivElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
   const swiped = useRef(false);
@@ -317,7 +320,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
             {sel ? (
               <div className="mt-2 divide-y divide-border">
                 {sel.rows.map((r, i) => (
-                  <LedgerItem key={`${r.txn_id}-${r.installment_seq}-${i}`} row={r} showDate={false} showKind />
+                  <LedgerItem key={`${r.txn_id}-${r.installment_seq}-${i}`} row={r} showDate={false} showKind onOpen={detail.show} />
                 ))}
               </div>
             ) : (
@@ -337,6 +340,7 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
           </p>
         )}
       </div>
+      <TxnDetail row={detail.value} onClose={detail.hide} />
     </Card>
   );
 }

@@ -3,6 +3,9 @@ import { Search } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { PriceLine } from "@/components/charts/price-line";
+import { ClickAway } from "@/components/items/click-away";
+import { PriceTag } from "@/components/items/price-tag";
+import { shapePriceTag } from "@/lib/analytics/price-tag";
 import { ReadReceiptButton } from "@/components/insights/read-receipt-button";
 import { InboxList } from "@/components/receipts/inbox-list";
 import { loadInbox } from "@/lib/receipts/inbox";
@@ -52,6 +55,7 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
         times: list.length,
         spent: round2(list.reduce((a, r) => a + Number(r.total_price ?? 0), 0)),
         lastDate: sorted.at(-1)!.purchased_at,
+        merchant: [...sorted].reverse().find((r) => r.merchants?.name)?.merchants?.name ?? null,
         lastPrice: last,
         change: list.length > 1 && first > 0 ? (last - first) / first : null,
       };
@@ -61,6 +65,31 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
 
   const sel = selected ? groups.get(selected) : null;
   const history = sel ? [...sel].sort((a, b) => (a.purchased_at ?? "").localeCompare(b.purchased_at ?? "")) : [];
+
+  /** Props for one shelf tag, formatted here so the component stays plain. */
+  const tagFor = (name: string, list: Row[]) => {
+    const t = shapePriceTag(list.map((r) => ({ date: r.purchased_at, price: unitPrice(r), merchant: r.merchants?.name })));
+    if (!t) return null;
+    const ratio = t.change == null ? 0 : Math.abs(t.change);
+    return {
+      name,
+      price: formatMoney(t.current, currency),
+      direction: t.direction,
+      changeText: t.change == null ? null : formatPercent(ratio, ratio < 0.1 ? 1 : 0),
+      vsText: t.previous != null ? `vs ${formatMoney(t.previous, currency)} last time` : null,
+      history: t.history,
+      footer: [t.lastMerchant, t.lastDate ? formatDay(t.lastDate) : null].filter(Boolean).join(" · ") || "No store or date",
+    };
+  };
+  const selectedTag = sel && selected ? tagFor(selected, sel) : null;
+  /** The six items whose latest price moved most against the purchase before it; unchanged ones are left out. */
+  const shelf = items
+    .map((i) => ({ name: i.name, shape: shapePriceTag(groups.get(i.name)!.map((r) => ({ date: r.purchased_at, price: unitPrice(r), merchant: r.merchants?.name }))) }))
+    .filter((x) => x.shape && x.shape.direction && x.shape.direction !== "flat")
+    .sort((a, b) => Math.abs(b.shape!.change!) - Math.abs(a.shape!.change!))
+    .slice(0, 6)
+    .map((x) => ({ href: `?${new URLSearchParams({ ...(q ? { q } : {}), item: x.name })}`, tag: tagFor(x.name, groups.get(x.name)!) }));
+  const clearHref = q ? `?${new URLSearchParams({ q })}` : "/items";
 
   const priceNote = (() => {
     if (history.length < 2) return "";
@@ -107,13 +136,15 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
         )
       ) : rows.length ? (
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-          <Card className="min-w-0">
+          <ClickAway active={!!selected} href={clearHref} />
+          <Card className="min-w-0" data-keep>
             <form className="relative mb-3">
               <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
               <input name="q" defaultValue={q} placeholder={`Search ${groups.size} items`} aria-label="Search items" className="h-11 w-full rounded-control border border-border bg-surface-2 pl-10 pr-4 text-sm outline-none transition-colors duration-(--dur-fast) focus:border-accent" />
             </form>
-            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-x-3 border-b border-border px-2 pb-2 text-label text-faint sm:grid-cols-[minmax(0,1fr)_6rem_4rem_5.5rem]">
+            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-x-3 border-b border-border px-2 pb-2 text-label text-faint sm:grid-cols-[minmax(0,1fr)_8rem_6rem_4rem_5.5rem]">
               <span>Item</span>
+              <span className="hidden sm:block">Merchant</span>
               <span className="text-right">Last price</span>
               <span className="hidden text-right sm:block">Change</span>
               <span className="hidden text-right sm:block">Spent</span>
@@ -128,14 +159,15 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
                     <Link
                       href={`?${new URLSearchParams({ ...(q ? { q } : {}), item: i.name })}`}
                       scroll={false}
-                      className={cn("grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-x-3 rounded-control px-2 py-3 transition-colors duration-(--dur-fast) hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_6rem_4rem_5.5rem]", selected === i.name && "bg-surface-3 ring-1 ring-inset ring-text/10")}
+                      className={cn("grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-x-3 rounded-control px-2 py-3 transition-colors duration-(--dur-fast) hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_8rem_6rem_4rem_5.5rem]", selected === i.name && "bg-surface-3 ring-1 ring-inset ring-text/10")}
                     >
                       <span className="min-w-0">
                         <span className="block truncate font-medium">{i.name}</span>
                         <span className="block truncate text-xs text-muted">
-                          {i.category ? `${i.category} · ` : ""}bought {i.times}× · last {i.lastDate ? formatDay(i.lastDate) : "?"}
+                          {i.category ? `${i.category} · ` : ""}{i.merchant ? <span className="sm:hidden">{i.merchant} · </span> : null}bought {i.times}× · last {i.lastDate ? formatDay(i.lastDate) : "?"}
                         </span>
                       </span>
+                      <span className="hidden truncate text-sm text-muted sm:block">{i.merchant ?? "–"}</span>
                       <span className="text-right text-sm">
                         <span className="money block">{formatMoney(i.lastPrice, currency)}</span>
                         <span className={cn("num block text-xs sm:hidden", tone)}>{change}</span>
@@ -150,8 +182,9 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
           </Card>
           <div className="space-y-4">
             {sel && history.length ? (
-              <Card>
+              <Card data-keep>
                 <CardHeader title={selected!} subtitle={`${history.length} purchases · ${formatMoney(round2(history.reduce((a, r) => a + Number(r.total_price ?? 0), 0)), currency)} total${priceNote}`} />
+                {selectedTag ? <PriceTag {...selectedTag} className="mb-4" /> : null}
                 {history.length > 1 ? (
                   <PriceLine points={history.filter((h) => h.purchased_at).map((h) => ({ date: h.purchased_at!, price: unitPrice(h), merchant: h.merchants?.name }))} currency={currency} />
                 ) : null}
@@ -172,7 +205,22 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
               </Card>
             ) : (
               <Card>
-                <p className="py-10 text-center text-sm text-muted">Pick an item to see when you bought it and how its price changed.</p>
+                <CardHeader title="On the shelf" subtitle="The items whose price changed most since the purchase before. Pick one to see when you bought it and how its price moved." />
+                {shelf.length ? (
+                  <ul className="grid gap-3 sm:grid-cols-2">
+                    {shelf.map((s) =>
+                      s.tag ? (
+                        <li key={s.tag.name}>
+                          <Link href={s.href} scroll={false} className="block rounded-inset transition-opacity duration-(--dur-fast) hover:opacity-80">
+                            <PriceTag {...s.tag} />
+                          </Link>
+                        </li>
+                      ) : null,
+                    )}
+                  </ul>
+                ) : (
+                  <p className="py-6 text-center text-sm text-muted">No price changes yet. Items bought more than once show up here when the price moves.</p>
+                )}
               </Card>
             )}
           </div>

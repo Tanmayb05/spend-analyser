@@ -21,6 +21,9 @@ export type PlanView = {
   nextDue: string | null;
   lastDue: string | null;
   punches: Punch[];
+  purchaseDate: string;
+  purchaseAmount: number;
+  interest: number;
 };
 
 /** Half-circle cut into the ticket edge at the perforation. Painted in the page colour, clipped to the inside half. */
@@ -40,7 +43,7 @@ function Notch({ edge }: { edge: "top" | "bottom" }) {
  * A plan drawn as a punch card: one hole per installment (filled = paid, ringed = next due, hollow = still ahead),
  * with a stub across a perforated line that shows how many are punched and what is left.
  */
-export function PlanTicket({ p }: { p: PlanView }) {
+export function PlanTicket({ p, onOpen }: { p: PlanView; onOpen: (p: PlanView) => void }) {
   const app = useAppData();
   const cat = app.maps.category.get(p.categoryId);
   const done = p.paidCount >= p.count;
@@ -50,14 +53,14 @@ export function PlanTicket({ p }: { p: PlanView }) {
       <button
         type="button"
         id={`plan-${p.txnId}`}
-        onClick={() => app.openTxnSheet({ id: p.txnId })}
+        onClick={() => onOpen(p)}
         className="flex w-full scroll-mt-24 rounded-card border border-border bg-surface text-left hover:bg-surface-2 target:border-accent"
       >
         <span className="flex min-w-0 flex-1 flex-col p-compact">
           <span className="flex items-center gap-2">
             <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: categoryColor(cat) }} />
             <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
-            <Badge tone="neutral" className="shrink-0">{p.kind === "emi" ? "EMI" : "Spread"}</Badge>
+            <Badge tone="neutral" className="shrink-0">{p.kind === "emi" ? "EMI" : "Paid upfront"}</Badge>
           </span>
           <span role="img" aria-label={`${p.paidCount} of ${p.count} installments paid`} className="mt-3 flex flex-wrap gap-1.5">
             {p.punches.map((h) => (

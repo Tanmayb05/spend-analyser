@@ -30,17 +30,17 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
   const currency = ref.profile.base_currency;
   const today = ref.today;
 
-  // Activity (the ledger), Plans (paid-upfront spreads), EMIs (installment purchases) or Credit cards (balances and bills).
-  // Old `?tab=plans&pk=emi` links resolve to the EMIs tab.
-  const tab = parseTxnTab(sp.tab, sp.pk);
+  // Activity (the ledger), Plans (paid-upfront spreads and EMIs together) or Credit cards (balances and bills).
+  // Old `?tab=emis` links resolve to Plans.
+  const tab = parseTxnTab(sp.tab);
   if (tab !== "activity") {
     return (
       <>
-        <DashboardHeader title="Transactions" info={tab === "cards" ? HELP.cards : tab === "emis" ? HELP.emis : HELP.plans} addTransaction>
+        <DashboardHeader title="Transactions" info={tab === "cards" ? HELP.cards : HELP.plans} addTransaction>
           <TxnTabs tab={tab} />
         </DashboardHeader>
         <TabIntro tab={tab} />
-        {tab === "cards" ? <CardsView /> : <PlansView kind={tab === "emis" ? "emi" : "spread"} />}
+        {tab === "cards" ? <CardsView /> : <PlansView />}
       </>
     );
   }

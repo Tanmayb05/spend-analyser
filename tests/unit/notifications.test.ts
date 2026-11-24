@@ -126,7 +126,7 @@ describe("budget, plans, trips", () => {
       ({ txn_id: "t1", entry_date, installment_seq: 3, installment_count: 12, is_lump: false, type: "expense", amount: 100, merchant_name: "Laptop", plan_kind: "emi", ...extra }) as LedgerRow;
     const n = emiNotices([row("2026-11-20"), row("2026-11-30"), row("2026-11-21", { installment_seq: null as unknown as number })], TODAY, money);
     expect(n).toHaveLength(1);
-    expect(n[0]).toMatchObject({ id: "emi|t1|2026-11-20", href: "/transactions?tab=emis" });
+    expect(n[0]).toMatchObject({ id: "emi|t1|2026-11-20", href: "/transactions?tab=plans" });
   });
   it("trips starting tomorrow or ended in the last 3 days", () => {
     const n = tripNotices(

@@ -186,7 +186,7 @@ export function emiNotices(rows: LedgerRow[], today: ISODate, money: Money): Not
       title: `${r.merchant_name || r.description || (r.plan_kind === "emi" ? "EMI" : "Instalment")} due ${relativeDays(r.entry_date, today)}`,
       detail: `${money(Number(r.amount))} · instalment ${r.installment_seq} of ${r.installment_count}`,
       at: r.entry_date,
-      href: r.plan_kind === "emi" ? "/transactions?tab=emis" : "/transactions?tab=plans",
+      href: "/transactions?tab=plans",
     }));
 }
 

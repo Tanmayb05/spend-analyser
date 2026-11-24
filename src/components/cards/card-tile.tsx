@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Banknote, RotateCw, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useAction } from "@/hooks/use-action";
 import { deleteCardPayment } from "@/app/(app)/transactions/card-actions";
 import { CardSettingsSheet, PaySheet, type CardSettings } from "./card-forms";
 import { CardFace, type CardLook } from "./card-face";
+import { FlipCard } from "./flip-card";
 import { utilBand, type CardPayment, type CardSummary } from "@/lib/cards";
 import { formatDay, formatMonth, relativeDays } from "@/lib/dates";
 import { formatMoney, formatPercent } from "@/lib/money";
@@ -45,65 +46,84 @@ export function CardTile({ data, payments, settings, look, currency, today }: { 
 
   return (
     <Card id={`card-${data.card.id}`} className="min-w-0 scroll-mt-24">
-      <div className="flex flex-col gap-card-lg sm:flex-row">
-        <div className="w-full shrink-0 sm:w-72">
-          <CardFace utilization={data.utilization} look={look} name={data.card.name} limit={data.card.credit_limit ? formatMoney(data.card.credit_limit, currency, { whole: true }) : null} onEdit={() => setSheet("edit")} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-label text-muted">Owed now</p>
-              <p className="num-lg mt-1 text-2xl font-medium">{money(data.outstanding)}</p>
-            </div>
-            {data.utilization !== null && band ? (
-              <div className="text-right">
-                <Badge tone={band.tone}>{band.label}</Badge>
-                <p className="num mt-1 text-sm text-muted">{formatPercent(data.utilization)} used</p>
+      {/* the face fills the card's width; drag or tap it to turn it over for the balance */}
+      <FlipCard
+        className="aspect-[1.586/1] sm:aspect-auto sm:h-72"
+        front={(flip) => (
+          <CardFace
+            fluid
+            utilization={data.utilization}
+            look={look}
+            name={data.card.name}
+            limit={data.card.credit_limit ? formatMoney(data.card.credit_limit, currency, { whole: true }) : null}
+            onEdit={() => setSheet("edit")}
+            extra={
+              <Button size="icon" variant="ghost" className="h-9 w-9 text-bg hover:bg-bg/15" aria-label="Turn card over to see balance" onClick={flip}>
+                <RotateCw size={16} />
+              </Button>
+            }
+          />
+        )}
+        back={(flip) => (
+          <div className="flex h-full flex-col overflow-y-auto rounded-card border border-border bg-surface-2 p-compact">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-label text-muted">Owed now</p>
+                <p className="num-lg mt-1 text-2xl font-medium">{money(data.outstanding)}</p>
               </div>
-            ) : null}
-          </div>
-          {data.utilization !== null ? <UtilMeter value={data.utilization} className="mt-3" /> : null}
-          {rows.length ? (
-            <dl className="mt-4 text-sm">
-              {rows.map(([k, v, isMoney]) => (
-                <div key={k} className="flex items-baseline justify-between gap-3 border-t border-border py-2">
-                  <dt className="text-muted">{k}</dt>
-                  <dd className={isMoney ? "money" : "num"}>{v}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
-        </div>
-      </div>
-
-      {s ? (
-        <div className="mt-card border-t border-border pt-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-sm">
-                Statement {formatDay(s.closing)} · <span className="money">{money(s.amount)}</span>
-              </p>
-              <p className="text-sm text-muted">
-                {s.status === "paid"
-                  ? s.amount > 0 ? <>Paid · <span className="money">{money(s.paid)}</span></> : "Nothing to pay"
-                  : <><span className="money">{money(s.remaining)}</span> left · due {formatDay(s.due)} ({relativeDays(s.due, today)})</>}
-              </p>
-              {s.status !== "paid" && s.minDue > 0 ? (
-                <p className={cn("text-xs", s.paid >= s.minDue ? "text-muted" : s.status === "overdue" ? "text-bad" : "text-muted")}>
-                  {s.paid >= s.minDue ? `Minimum ${money(s.minDue)} covered · pay in full to avoid interest` : `Minimum due ~${money(s.minDue)}${s.paid > 0 ? ` · ${money(s.minDue - s.paid)} more to cover it` : ""}`}
-                </p>
-              ) : null}
+              <div className="flex items-start gap-2">
+                {data.utilization !== null && band ? (
+                  <div className="text-right">
+                    <Badge tone={band.tone}>{band.label}</Badge>
+                    <p className="num mt-1 text-sm text-muted">{formatPercent(data.utilization)} used</p>
+                  </div>
+                ) : null}
+                <Button size="icon" variant="ghost" className="-mr-2 -mt-2 h-9 w-9" aria-label="Turn card back over" onClick={flip}>
+                  <RotateCw size={16} />
+                </Button>
+              </div>
             </div>
-            {s.status === "paid" ? <Badge tone="good">Paid</Badge> : <Badge tone={s.status === "overdue" ? "bad" : "warn"}>{s.status === "overdue" ? "Overdue" : "Due"}</Badge>}
+            {data.utilization !== null ? <UtilMeter value={data.utilization} className="mt-3" /> : null}
+            {rows.length ? (
+              <dl className="mt-3 grid text-sm sm:grid-cols-2 sm:gap-x-card-lg">
+                {rows.map(([k, v, isMoney]) => (
+                  <div key={k} className="flex items-baseline justify-between gap-3 border-t border-border py-1.5">
+                    <dt className="text-muted">{k}</dt>
+                    <dd className={isMoney ? "money" : "num"}>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border pt-3">
+              {s ? (
+                <div className="min-w-0 text-sm">
+                  <p>
+                    Statement {formatDay(s.closing)} · <span className="money">{money(s.amount)}</span>
+                  </p>
+                  <p className="text-muted">
+                    {s.status === "paid"
+                      ? s.amount > 0 ? <>Paid · <span className="money">{money(s.paid)}</span></> : "Nothing to pay"
+                      : <><span className="money">{money(s.remaining)}</span> left · due {formatDay(s.due)} ({relativeDays(s.due, today)})</>}
+                  </p>
+                  {s.status !== "paid" && s.minDue > 0 ? (
+                    <p className={cn("text-xs", s.paid >= s.minDue ? "text-muted" : s.status === "overdue" ? "text-bad" : "text-muted")}>
+                      {s.paid >= s.minDue ? `Minimum ${money(s.minDue)} covered · pay in full to avoid interest` : `Minimum due ~${money(s.minDue)}${s.paid > 0 ? ` · ${money(s.minDue - s.paid)} more to cover it` : ""}`}
+                    </p>
+                  ) : null}
+                </div>
+              ) : !data.card.statement_day ? (
+                <p className="min-w-0 flex-1 text-sm text-muted">Add the statement and due day to see bills and reminders.</p>
+              ) : <span />}
+              <div className="flex shrink-0 items-center gap-2">
+                {s ? (s.status === "paid" ? <Badge tone="good">Paid</Badge> : <Badge tone={s.status === "overdue" ? "bad" : "warn"}>{s.status === "overdue" ? "Overdue" : "Due"}</Badge>) : null}
+                <Button size="sm" variant="accent" onClick={() => setSheet("pay")}>
+                  <Banknote size={16} /> Mark payment
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      ) : !data.card.statement_day ? (
-        <p className="mt-card border-t border-border pt-4 text-sm text-muted">Add the statement and due day to see bills and reminders.</p>
-      ) : null}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button size="sm" variant={s && s.status !== "paid" ? "accent" : "outline"} onClick={() => setSheet("pay")}>Mark payment</Button>
-      </div>
+        )}
+      />
 
       {data.utilization !== null && data.history.length > 1 ? (
         <div className="mt-card border-t border-border pt-4">

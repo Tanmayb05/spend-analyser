@@ -9,7 +9,7 @@ export function AddPlanButton({ kind }: { kind: "spread" | "emi" }) {
   const { openTxnSheet } = useAppData();
   return (
     <Button onClick={() => openTxnSheet({ preset: { spread: "1", plan_kind: kind } })}>
-      <Plus size={18} /> {kind === "emi" ? "Add an EMI purchase" : "Add a big purchase"}
+      <Plus size={18} /> {kind === "emi" ? "Add an EMI" : "Add a spread purchase"}
     </Button>
   );
 }

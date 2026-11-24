@@ -2,7 +2,8 @@ import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { ACCENT } from "@/components/charts/colors";
-import { PlanTicket, type PlanView } from "@/components/plans/plan-ticket";
+import type { PlanView } from "@/components/plans/plan-ticket";
+import { PlanGroup } from "@/components/plans/plan-group";
 import { StatStrip } from "@/components/cards/stat-strip";
 import { AddPlanButton } from "@/components/plans/add-plan-button";
 import { getReferenceData } from "@/lib/data/reference";
@@ -13,29 +14,26 @@ import { formatMoney } from "@/lib/money";
 import { round2 } from "@/lib/utils";
 import { HELP } from "@/lib/help";
 
-export type PlanKind = "spread" | "emi";
-
 type Row = {
   kind: "spread" | "emi";
-  transactions: { id: string; description: string | null; category_id: string; base_amount: number; merchants: { name: string } | null } | null;
+  interest: number | null;
+  transactions: { id: string; date: string; description: string | null; category_id: string; base_amount: number; merchants: { name: string } | null } | null;
   installments: { seq: number; due_date: string; amount_base: number }[];
 };
 
 /**
- * One kind of plan: stats, 12-month commitment chart, active and finished lists.
- * Transactions → Plans shows `spread` (paid upfront, counted monthly); Transactions → EMIs shows `emi` (paid off in installments).
+ * Every plan in one view: stats, 12-month chart, active and finished lists.
+ * Paid-upfront spreads and EMIs share it; each ticket carries a badge for which it is.
  */
-export async function PlansView({ kind }: { kind: PlanKind }) {
+export async function PlansView() {
   const ref = await getReferenceData();
   const { supabase } = await requireUser();
   const { data } = await supabase
     .from("spread_plans")
-    .select("kind, transactions(id, description, category_id, base_amount, merchants(name)), installments(seq, due_date, amount_base)")
+    .select("kind, interest, transactions(id, date, description, category_id, base_amount, merchants(name)), installments(seq, due_date, amount_base)")
     .returns<Row[]>();
   const today = ref.today;
-  const rowsAll = (data ?? []).filter((r) => r.kind === kind);
-  const emi = kind === "emi";
-  const noun = emi ? "EMIs" : "plans";
+  const rowsAll = data ?? [];
   const currency = ref.profile.base_currency;
 
   const plans: PlanView[] = rowsAll
@@ -57,6 +55,9 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
         nextDue: inst.find((i) => i.due_date > today)?.due_date ?? null,
         lastDue: inst.at(-1)?.due_date ?? null,
         punches: punchesFor(inst, today),
+        purchaseDate: t.date,
+        purchaseAmount: Number(t.base_amount),
+        interest: Number(r.interest ?? 0),
       };
     });
 
@@ -81,9 +82,9 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
         <>
           <StatStrip
             stats={[
-              { label: emi ? "Active EMIs" : "Active plans", value: String(active.length) },
-              { label: emi ? "Still to pay" : "Still to count", value: formatMoney(remaining, currency, { whole: true }), money: true },
-              { label: emi ? "Due next month" : "Counts next month", value: formatMoney(nextMonth, currency, { whole: true }), money: true },
+              { label: "Active plans", value: String(active.length) },
+              { label: "Remaining", value: formatMoney(remaining, currency, { whole: true }), money: true },
+              { label: "Next month", value: formatMoney(nextMonth, currency, { whole: true }), money: true },
               { label: "Finished", value: String(finished.length) },
             ]}
           />
@@ -91,50 +92,47 @@ export async function PlansView({ kind }: { kind: PlanKind }) {
           <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_1fr]">
             <Card className="flex min-w-0 flex-col">
               <CardHeader
-                title={emi ? "How much is already committed?" : "How much is still to come?"}
-                subtitle={emi ? "EMI installments due in the next 12 months" : "Monthly parts of your plans over the next 12 months"}
-                info={emi ? HELP.emisCommitted : HELP.plansCommitted}
+                title="How much is still to come?"
+                subtitle="Monthly parts and installments over the next 12 months"
+                info={HELP.plansCommitted}
               />
               {/* flex-1 wrapper: the chart fills the card's spare height instead of overflowing it (TrendBars is h-full) */}
               <div className="min-h-0 flex-1">
-                <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel={emi ? "Committed" : "Counts"} aColor={ACCENT} height={180} />
+                <TrendBars data={outlook} selected={months[0]} currency={currency} aLabel="Lands" aColor={ACCENT} height={180} />
               </div>
               <Insight>
                 {peak && peak.a > 0
                   ? `Heaviest month: ${formatMonth(peak.month)} at ${formatMoney(peak.a, currency, { whole: true })}.${freeBy > 0 ? ` From ${formatMonth(months[freeBy])} nothing is committed yet.` : ""}`
-                  : `Nothing from your ${noun} lands in the next 12 months.`}
+                  : "Nothing from your plans lands in the next 12 months."}
               </Insight>
             </Card>
             <div className="min-w-0">
               <CardHeader title="Active" />
-              {active.length ? <div className="grid gap-3">{active.map((p) => <PlanTicket key={p.txnId} p={p} />)}</div> : <p className="py-6 text-center text-sm text-muted">No active {noun}</p>}
+              {active.length ? <PlanGroup plans={active} className="grid gap-3" /> : <p className="py-6 text-center text-sm text-muted">No active plans</p>}
             </div>
           </section>
 
           {finished.length ? (
             <details className="mt-5">
               <summary className="card-title cursor-pointer list-none">
-                Finished <span className="text-sm font-normal text-muted">· {finished.length} {finished.length === 1 ? noun.slice(0, -1) : noun} · tap to show</span>
+                Finished <span className="text-sm font-normal text-muted">· {finished.length} {finished.length === 1 ? "plan" : "plans"} · tap to show</span>
               </summary>
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{finished.map((p) => <PlanTicket key={p.txnId} p={p} />)}</div>
+              <PlanGroup plans={finished} className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3" />
             </details>
           ) : null}
         </>
       ) : (
         <Card>
-          {emi ? (
-            <EmptyState
-              title="No EMIs yet"
-              body={<>Bought something on installments? Add the purchase, turn on <b className="font-medium text-text">Spread this cost</b> and choose <b className="font-medium text-text">Paying in EMIs</b>. Each installment counts in the month it&apos;s due, and you&apos;ll see what&apos;s left to pay here.</>}
-              action={<AddPlanButton kind="emi" />}
-            />
-          ) : (
-            <EmptyState
-              title="No plans yet"
-              body={<>Paid for something big in one go, like a laptop or a year of insurance? Add it, turn on <b className="font-medium text-text">Spread this cost</b> and keep <b className="font-medium text-text">Paid upfront</b>. It then counts a slice each month instead of all at once.</>}
-              action={<AddPlanButton kind="spread" />}
-            />
-          )}
+          <EmptyState
+            title="No plans yet"
+            body={<>Bought something big? Add it and turn on <b className="font-medium text-text">Spread this cost</b>. Choose <b className="font-medium text-text">Paid upfront</b> to count a slice each month instead of all at once, or <b className="font-medium text-text">Paying in EMIs</b> if you&apos;re paying it off in installments.</>}
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                <AddPlanButton kind="spread" />
+                <AddPlanButton kind="emi" />
+              </div>
+            }
+          />
         </Card>
       )}
     </>

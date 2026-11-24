@@ -63,27 +63,18 @@ export const HELP = {
   plans: (
     <>
       <p>
-        <b>Plans</b> are big purchases you paid for in full but want to count a bit each month, e.g. a $1,200 laptop
-        as $100 a month for 12 months. That keeps one expensive month from skewing your averages and budgets.
+        <b>Plans</b> are big purchases you count over several months instead of all at once, e.g. a $1,200 laptop as
+        $100 a month for 12 months. That keeps one expensive month from skewing your averages and budgets.
       </p>
       <p>
-        To make one, add the expense, turn on <b>Spread this cost</b> and keep <b>Paid upfront</b>. Each month&apos;s part
-        then shows in Activity as “Spread 3/12”.
-      </p>
-      <p>Paying it off over time instead? That&apos;s an EMI, and lives in the EMIs tab.</p>
-    </>
-  ),
-  emis: (
-    <>
-      <p>
-        <b>EMIs</b> are purchases you&apos;re really paying off month by month (card or loan installments). Each installment
-        counts in the month it&apos;s due, so this tab shows what&apos;s still owed and which months are already spoken for.
+        <b>Paid upfront</b> means you already paid in full and only the counting is spread. Each month&apos;s part shows in
+        Activity as “Spread 3/12”.
       </p>
       <p>
-        To add one, add the purchase, turn on <b>Spread this cost</b> and choose <b>Paying in EMIs</b>. Installments show
-        in Activity as “EMI 2/12”.
+        <b>EMI</b> means you&apos;re paying it off month by month (card or loan installments). Each installment counts in the
+        month it&apos;s due and shows in Activity as “EMI 2/12”.
       </p>
-      <p>Paid in full and only want it counted gradually? Use a plan instead (Plans tab).</p>
+      <p>To add one, add the purchase, turn on <b>Spread this cost</b> and pick which kind it is.</p>
     </>
   ),
   cards: (
@@ -110,14 +101,8 @@ export const HELP = {
   ),
   plansCommitted: (
     <p>
-      How much of your plans counts in each of the next 12 months. The money is already spent; this is what will still
-      show up in those months&apos; totals.
-    </p>
-  ),
-  emisCommitted: (
-    <p>
-      EMI installments due in each of the next 12 months. Tall bars are months that are already tight; check here before
-      taking on a new EMI.
+      What your plans put into each of the next 12 months: the monthly slice of paid-upfront purchases plus EMI
+      installments. Tall bars are months that are already tight; check here before taking on a new EMI.
     </p>
   ),
   items: (
@@ -125,6 +110,10 @@ export const HELP = {
       <p>
         Every line item read from your receipts: what you bought, where, when and for how much. Search an item to see its
         purchase history and how its price has changed.
+      </p>
+      <p>
+        Each item has a shelf tag: its latest unit price, how much it moved against the previous purchase (amber up, green down,
+        grey when under 1%), a sparkline of its recent prices and where and when you last bought it.
       </p>
       <p>Items are added when you read a receipt (receipt icon in the ＋ form).</p>
     </>
@@ -201,6 +190,17 @@ export const HELP = {
       </p>
     </>
   ),
+  cashFlow: (
+    <>
+      <p>
+        Read left to right: your income for the month splits into categories, and each category splits into its biggest merchants (two per category; the rest of a category is grouped as “Other” beside it). Thicker bands are bigger amounts, and one scale is used throughout.
+      </p>
+      <p>
+        If you earned more than you spent, the leftover flows into <b>Saved</b>. If you spent more than you earned, the gap is drawn as <b>Beyond income</b> and shared across the categories. Beyond the top 6 categories, the rest are grouped as “Other categories”. Same counting as the summary: smoothed EMIs, refunds netted, scheduled entries left out.
+      </p>
+      <p>Hover or tab to a node, or hover a flow, to light up its whole path and dim the rest. Tap to keep it lit; tap the background to clear it. On a phone the chart scrolls sideways.</p>
+    </>
+  ),
   yearHeatmap: (
     <p>
       One square per day for the 12 months up to the end of the year you are viewing (or up to today, for the current year), each column a week. Darker means more spent that day, in four steps set by your own spending days: the darkest quarter of your spending days is the darkest step. Days with nothing spent stay grey. Refunds net against the day, and scheduled (future) entries and income are left out. It follows the filters above (category, merchant, everyday only and so on). Hover or focus a square for its amount.
@@ -272,7 +272,20 @@ export const HELP = {
     </>
   ),
   payments: <p>Cards, accounts and cash you pay with. Optional on each transaction; filter by them on the Transactions page. Tap the star on one to make it the default: it is pre-selected on every new transaction. Tap the card icon to mark one as a credit card with its limit and billing days.</p>,
-  people: <p>Who paid for an expense, you or someone else. For your information only: no balances or debts are tracked.</p>,
+  people: <p>Who paid for an expense, you or someone else. Settle up below turns that into a balance per person.</p>,
+  settleUp: (
+    <>
+      <p>
+        Built only from <b>Paid by</b>, since transactions have no split. Every expense is treated as your own spend: when
+        someone else paid, you owe them that amount.
+      </p>
+      <p>
+        A refund tagged to a person went back to them, so it takes that much off what you owe. If refunds are bigger than what they paid, they owe you the difference.
+        Income is ignored, and expenses paid by you or with no payer never create a debt.
+      </p>
+      <p>The bar shows what you paid on the left and what they paid on the right. Nothing is recorded as settled; the balance covers all time.</p>
+    </>
+  ),
   merchants: (
     <p>
       Shops and payees, learned automatically as you add transactions. Each one remembers its category, so picking it next

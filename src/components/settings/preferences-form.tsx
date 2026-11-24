@@ -66,106 +66,110 @@ export function PreferencesForm({ profile, txnCount, aiReady }: { profile: Profi
 
   return (
     <form
-      className="space-y-4"
+      className="@container space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
         a.run(() => updatePreferences({ ...v, convert_budgets: currencyChanged && convertBudgets }));
       }}
     >
-      <Card>
-        <CardHeader title="Money" />
-        <div className="space-y-4">
-          <Field label="Default currency" htmlFor="ccy" hint={`Example: ${formatMoney(123456.78, v.base_currency)}. INR uses lakh grouping automatically.`}>
-            <Select id="ccy" value={v.base_currency} onChange={(e) => set("base_currency", e.target.value)}>
-              {currencies.map((c) => (
-                <option key={c.code} value={c.code}>{c.code} · {c.name}</option>
-              ))}
-            </Select>
-          </Field>
-          {currencyChanged && txnCount > 0 ? (
-            <div className="rounded-inset bg-warn/10 p-compact text-sm text-warn">
-              <p>All {txnCount} transactions will be converted to {v.base_currency} using each day&apos;s exchange rate. Original amounts are kept.</p>
-              <label className="mt-3 flex items-center gap-2 text-text">
-                <input type="checkbox" checked={convertBudgets} onChange={(e) => setConvertBudgets(e.target.checked)} className="h-5 w-5 accent-[var(--accent)]" />
-                Also convert budgets at today&apos;s rate
-              </label>
+
+
+
+
+      {/* two columns when the form is wide enough; pairs of similar height sit side by side */}
+      <div className="grid gap-4 @2xl:grid-cols-2">
+        <Card>
+          <CardHeader title="Display" />
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2 text-sm text-muted">Theme</p>
+              <Segmented
+                ariaLabel="Theme"
+                value={v.theme}
+                onChange={(t) => set("theme", t)}
+                options={[
+                  { value: "dark", label: "Dark" },
+                  { value: "light", label: "Light" },
+                  { value: "system", label: "System" },
+                ]}
+              />
             </div>
-          ) : null}
-          <Field label="Spread over (months)" htmlFor="dsm" hint="Pre-filled when you spread a purchase over several months">
-            <Input id="dsm" type="number" min={1} max={120} value={v.default_spread_months} onChange={(e) => set("default_spread_months", Number(e.target.value))} />
-          </Field>
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader title="Adding transactions" />
-        <div>
-          <p className="mb-2 text-sm text-muted">Add transaction opens</p>
-          <Segmented
-            ariaLabel="Add transaction opens"
-            value={v.default_entry_method}
-            onChange={(m) => set("default_entry_method", m)}
-            options={[
-              { value: "ai", label: "Describe it" },
-              { value: "manual", label: "Form" },
-            ]}
-          />
-          <p className="mt-2 text-xs text-faint">
-            {v.default_entry_method === "ai"
-              ? aiReady
-                ? "Type or say what you spent, check the result and save. You can switch to the form from the sheet."
-                : "Describe it needs AI turned on and set up (Settings, AI). Until then Add transaction opens the form."
-              : "A short form: amount, category, then save. You can switch to Describe it from the sheet when AI is on."}
-          </p>
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader title="Dashboard" />
-        <div className="space-y-4">
+            <Field label="Timezone" htmlFor="tz" hint="Decides what counts as 'today' and which payments are still scheduled">
+              <Select id="tz" value={v.timezone} onChange={(e) => set("timezone", e.target.value)}>
+                {extra.map((z) => (
+                  <option key={z} value={z}>{z === deviceZone ? `This device (${cityOf(z)})` : cityOf(z)}</option>
+                ))}
+                {TIMEZONES.map(([id, label]) => (
+                  <option key={id} value={id}>{id === deviceZone ? `${label} · this device` : label}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Money" />
+          <div className="space-y-4">
+            <Field label="Default currency" htmlFor="ccy" hint={`Example: ${formatMoney(123456.78, v.base_currency)}. INR uses lakh grouping automatically.`}>
+              <Select id="ccy" value={v.base_currency} onChange={(e) => set("base_currency", e.target.value)}>
+                {currencies.map((c) => (
+                  <option key={c.code} value={c.code}>{c.code} · {c.name}</option>
+                ))}
+              </Select>
+            </Field>
+            {currencyChanged && txnCount > 0 ? (
+              <div className="rounded-inset bg-warn/10 p-compact text-sm text-warn">
+                <p>All {txnCount} transactions will be converted to {v.base_currency} using each day&apos;s exchange rate. Original amounts are kept.</p>
+                <label className="mt-3 flex items-center gap-2 text-text">
+                  <input type="checkbox" checked={convertBudgets} onChange={(e) => setConvertBudgets(e.target.checked)} className="h-5 w-5 accent-[var(--accent)]" />
+                  Also convert budgets at today&apos;s rate
+                </label>
+              </div>
+            ) : null}
+            <Field label="Spread over (months)" htmlFor="dsm" hint="Pre-filled when you spread a purchase over several months">
+              <Input id="dsm" type="number" min={1} max={120} value={v.default_spread_months} onChange={(e) => set("default_spread_months", Number(e.target.value))} />
+            </Field>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Dashboard" />
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2 text-sm text-muted">Week starts on</p>
+              <Segmented
+                ariaLabel="Week starts on"
+                value={String(v.week_start) as "0" | "1"}
+                onChange={(w) => set("week_start", Number(w))}
+                options={[
+                  { value: "1", label: "Monday" },
+                  { value: "0", label: "Sunday" },
+                ]}
+              />
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Adding transactions" />
           <div>
-            <p className="mb-2 text-sm text-muted">Week starts on</p>
+            <p className="mb-2 text-sm text-muted">Add transaction opens</p>
             <Segmented
-              ariaLabel="Week starts on"
-              value={String(v.week_start) as "0" | "1"}
-              onChange={(w) => set("week_start", Number(w))}
+              ariaLabel="Add transaction opens"
+              value={v.default_entry_method}
+              onChange={(m) => set("default_entry_method", m)}
               options={[
-                { value: "1", label: "Monday" },
-                { value: "0", label: "Sunday" },
+                { value: "ai", label: "Describe it" },
+                { value: "manual", label: "Form" },
               ]}
             />
+            <p className="mt-2 text-xs text-faint">
+              {v.default_entry_method === "ai"
+                ? aiReady
+                  ? "Type or say what you spent, check the result and save. You can switch to the form from the sheet."
+                  : "Describe it needs AI turned on and set up (Settings, AI). Until then Add transaction opens the form."
+                : "A short form: amount, category, then save. You can switch to Describe it from the sheet when AI is on."}
+            </p>
           </div>
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader title="Display" />
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-sm text-muted">Theme</p>
-            <Segmented
-              ariaLabel="Theme"
-              value={v.theme}
-              onChange={(t) => set("theme", t)}
-              options={[
-                { value: "dark", label: "Dark" },
-                { value: "light", label: "Light" },
-                { value: "system", label: "System" },
-              ]}
-            />
-          </div>
-          <Field label="Timezone" htmlFor="tz" hint="Decides what counts as 'today' and which payments are still scheduled">
-            <Select id="tz" value={v.timezone} onChange={(e) => set("timezone", e.target.value)}>
-              {extra.map((z) => (
-                <option key={z} value={z}>{z === deviceZone ? `This device (${cityOf(z)})` : cityOf(z)}</option>
-              ))}
-              {TIMEZONES.map(([id, label]) => (
-                <option key={id} value={id}>{id === deviceZone ? `${label} · this device` : label}</option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       <Button type="submit" size="lg" disabled={a.pending} className="w-full sm:w-auto">
         {a.pending ? (currencyChanged ? "Converting…" : "Saving…") : "Save preferences"}

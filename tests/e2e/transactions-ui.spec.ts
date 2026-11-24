@@ -37,11 +37,9 @@ test("transactions: labeled filters, period picker, Jan–Dec bars, year view, s
   }
   await page.getByRole("button", { name: "Done" }).click();
 
-  // Activity / Plans / EMIs / Cards switch
+  // Activity / Plans / Cards switch
   await page.getByRole("radio", { name: "Plans" }).click();
   await expect(page).toHaveURL(/tab=plans/);
-  await page.getByRole("radio", { name: "EMIs" }).click();
-  await expect(page).toHaveURL(/tab=emis/);
   await page.getByRole("radio", { name: "Activity" }).click();
   await expect(page).not.toHaveURL(/tab=/);
 

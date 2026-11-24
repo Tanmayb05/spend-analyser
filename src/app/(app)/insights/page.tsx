@@ -27,6 +27,8 @@ import { HabitStats, MerchantsCard, RecurringCard, RhythmCard } from "@/componen
 import { categoryColor } from "@/components/charts/colors";
 import { PeriodPicker } from "@/components/transactions/period-picker";
 import { ForecastCard } from "@/components/insights/forecast-card";
+import { CashFlowSankey } from "@/components/insights/cash-flow-sankey";
+import { buildCashFlow } from "@/lib/analytics/sankey";
 import { CompareSwitch } from "@/components/insights/compare-switch";
 import { StatStrip } from "@/components/cards/stat-strip";
 import { categoryMovers, compareLabel, compareTotals, forecastMonth, merchantRows, parseCompareBase, recurringCharges, spendingRhythm } from "@/lib/analytics/insight-views";
@@ -124,6 +126,21 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   };
   const forecast = tab === "overview" ? forecastMonth(rows, month, ref.today, budgetTotals(resolved, ref.categories).total) : null;
 
+  const cashFlow =
+    tab === "overview"
+      ? buildCashFlow(rows, month, ref.today, {
+          categoryInfo: (id) => {
+            const c = ref.categories.find((x) => x.id === id);
+            return { label: c?.name ?? "Uncategorized", color: categoryColor(c) };
+          },
+          format: (n) => formatMoney(n, currency, { whole: true }),
+          formatShare: (r) => formatPercent(r),
+        })
+      : null;
+  const cashFlowSummary = cashFlow
+    ? `${formatMoney(cashFlow.income, currency, { whole: true })} in, ${formatMoney(cashFlow.spent, currency, { whole: true })} out${cashFlow.saved > 0 ? `, ${formatMoney(cashFlow.saved, currency, { whole: true })} saved` : cashFlow.shortfall > 0 ? `, ${formatMoney(cashFlow.shortfall, currency, { whole: true })} beyond income` : ""}. Hover or tap a node or flow to follow it.`
+    : "";
+
   const merchants = tab === "habits" ? merchantRows(rows, month, ref.today, 8).map((m) => ({ ...m, href: txnHref({ merchant: m.merchantId }) })) : [];
   const recurring = tab === "habits" ? recurringCharges(rows, month, ref.today).map((r) => ({ ...r, href: txnHref({ merchant: r.merchantId }) })) : [];
   const rhythm = tab === "habits" ? spendingRhythm(rows, month, ref.today) : null;
@@ -163,6 +180,10 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
                     ? `${overMonths ? "You spent more than you earned" : "You earned more than you spent"} this month.`
                     : "Not enough history yet."}
               </Insight>
+            </Card>
+            <Card>
+              <CardHeader title="Where did the money go?" subtitle={`${formatMonth(month)} · income, categories, merchants`} info={HELP.cashFlow} />
+              {cashFlow && cashFlow.nodes.length ? <CashFlowSankey graph={cashFlow} summary={cashFlowSummary} /> : <p className="py-10 text-center text-sm text-muted">No spending this month</p>}
             </Card>
             <Card>
               <CardHeader title="Quick insights" subtitle="Automatic checks, free and always up to date" info={HELP.quickInsights} />
