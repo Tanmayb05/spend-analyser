@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { thinnedOnPhone } from "@/lib/chart-labels";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/money";
 import { formatMonth } from "@/lib/dates";
@@ -136,7 +137,7 @@ export function TrendBars({
           {/* x labels */}
           <div className="mt-2 flex">
             {data.map((d, i) => (
-              <span key={d.month} className={cn("flex-1 text-center font-mono text-xs", active === -1 || i === active ? "text-text" : "text-faint", data.length >= 12 && i % 2 === 1 && "max-sm:invisible")}>
+              <span key={d.month} className={cn("flex-1 text-center font-mono text-xs", active === -1 || i === active ? "text-text" : "text-faint", thinnedOnPhone(i, data.length) && "max-sm:invisible")}>
                 {formatMonth(d.month, "short")}
               </span>
             ))}

@@ -6,7 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Segmented } from "@/components/ui/segmented";
 import { useParamHref } from "@/components/dashboard/dashboard-header";
-import { addMonths, formatMonth, monthForYear, monthsOfYear } from "@/lib/dates";
+import { addMonths, formatMonth, formatMonthYearShort, monthForYear, monthsOfYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 export type PeriodView = "month" | "year";
@@ -42,7 +42,7 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
   const label = view === "month" ? formatMonth(month) : String(year);
   const noun = view === "month" ? "month" : "year";
   // phones get "Nov 2026" so the picker can sit beside another control
-  const shortLabel = view === "month" ? `${formatMonth(month, "short")} ${month.slice(0, 4)}` : label;
+  const shortLabel = view === "month" ? formatMonthYearShort(month) : label;
 
   useEffect(() => {
     if (!open) return;

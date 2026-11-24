@@ -87,6 +87,11 @@ export function formatMonth(month: ISODate, style: "long" | "short" = "long"): s
   return d.toLocaleDateString("en-US", style === "long" ? { month: "long", year: "numeric" } : { month: "short" });
 }
 
+/** "Sep 2026": the month picker's phone label. */
+export function formatMonthYearShort(month: ISODate): string {
+  return `${formatMonth(month, "short")} ${month.slice(0, 4)}`;
+}
+
 export function formatDay(s: ISODate): string {
   return parseISO(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }

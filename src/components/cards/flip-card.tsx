@@ -2,12 +2,8 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { DRAG_START, MOUSE_TILT, TOUCH_TILT, dragTurn, flipped, isBackUp, leanFor, settleAngle } from "@/lib/flip-card";
 
-const DEG_PER_PX = 0.6;
-const DRAG_START = 6; // px before a press counts as a drag and not a tap
-const FLICK = 25; // degrees of turn that still completes a flip on release
-const MOUSE_TILT = { y: 20, x: 10 }; // most the card leans toward the mouse, in degrees
-const TOUCH_TILT = { y: 14, x: 7 };
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 type Tilt = { y: number; x: number };
@@ -35,17 +31,15 @@ export function FlipCard({
   const [drag, setDrag] = useState<number | null>(null); // live extra turn while a finger or mouse is down
   const [tilt, setTilt] = useState<Tilt>(FLAT); // lean toward the pointer
   const press = useRef<{ x: number; moved: boolean } | null>(null);
-  const backUp = Math.abs(Math.round(angle / 180)) % 2 === 1;
-  const flip = () => setAngle((a) => a + (Math.abs(Math.round(a / 180)) % 2 === 1 ? -180 : 180));
+  const backUp = isBackUp(angle);
+  const flip = () => setAngle(flipped);
 
   /** Lean toward where the pointer is: right of centre pushes the right edge away, above centre pushes the top away. */
   function lean(e: ReactPointerEvent<HTMLDivElement>) {
     if (reducedMotion()) return;
     const max = e.pointerType === "mouse" ? MOUSE_TILT : TOUCH_TILT;
     const r = e.currentTarget.getBoundingClientRect();
-    const fx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    const fy = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
-    setTilt({ y: (fx - 0.5) * 2 * max.y, x: (0.5 - fy) * 2 * max.x });
+    setTilt(leanFor((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, max));
   }
 
   return (
@@ -72,7 +66,7 @@ export function FlipCard({
           p.moved = true;
           e.currentTarget.setPointerCapture(e.pointerId);
         }
-        if (p.moved) setDrag(Math.max(-180, Math.min(180, dx * DEG_PER_PX)));
+        if (p.moved) setDrag(dragTurn(dx));
         else lean(e);
       }}
       onPointerUp={(e) => {
@@ -83,10 +77,7 @@ export function FlipCard({
         else setTilt(FLAT);
         if (!p) return;
         if (!p.moved) return void flip();
-        const turn = drag ?? 0;
-        let target = Math.round((angle + turn) / 180) * 180;
-        if (target === angle && Math.abs(turn) > FLICK) target = angle + 180 * Math.sign(turn);
-        setAngle(target);
+        setAngle(settleAngle(angle, drag ?? 0));
         setDrag(null);
       }}
       onPointerCancel={() => {
