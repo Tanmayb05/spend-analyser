@@ -1,0 +1,157 @@
+Read a receipt
+Back
+
+5 items found. Check and fix anything wrong.
+
+View file
+Merchant
+Date
+Currency
+USD
+INR
+EUR
+GBP
+CAD
+AUD
+SGD
+AED
+JPY
+CNY
+CHF
+AFN
+ALL
+AMD
+ARS
+AZN
+BAM
+BBD
+BDT
+BGN
+BHD
+BMD
+BND
+BOB
+BRL
+BSD
+BTN
+BWP
+BYN
+BZD
+CLP
+COP
+CRC
+CZK
+DKK
+DOP
+DZD
+EGP
+ETB
+FJD
+GEL
+GHS
+GTQ
+HKD
+HNL
+HUF
+IDR
+ILS
+IQD
+IRR
+ISK
+JMD
+JOD
+KES
+KGS
+KHR
+KRW
+KWD
+KZT
+LAK
+LBP
+LKR
+MAD
+MDL
+MGA
+MKD
+MMK
+MNT
+MOP
+MUR
+MVR
+MXN
+MYR
+MZN
+NAD
+NGN
+NIO
+NOK
+NPR
+NZD
+OMR
+PAB
+PEN
+PGK
+PHP
+PKR
+PLN
+PYG
+QAR
+RON
+RSD
+RUB
+RWF
+SAR
+SCR
+SEK
+THB
+TND
+TRY
+TTD
+TWD
+TZS
+UAH
+UGX
+UYU
+UZS
+VES
+VND
+XAF
+XCD
+XOF
+ZAR
+ZMW
+Receipt total
+Label
+
+Only for finding this receipt later
+
+Items $23.80 · tax $1.67
+
+Paid with
+—
+Freedom
+Cash
+Debit Card
+Credit Card
+Bank Transfer
+UPI / Wallet
+Amex Gold
+Apple Pay
+
+Visa ending 1234 isn't saved yet. Remember it for next time?
+
+Add to a card
+New card
+Not now
+
+WHOLE MILK 1GAL · 1 gal
+
+BANANAS 2.1LB @0.59 · 2.1 lb @ $0.59
+
+SOURDOUGH BREAD · 1 ea
+
+PAPER TOWELS 6PK · 1 pk
+
+CHEDDAR CHEESE 8OZ · 1 ea
+
+Continue

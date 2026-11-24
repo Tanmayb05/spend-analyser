@@ -1,0 +1,803 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=block">
+<style>
+  :root {
+    --bg: #161412; --surface: #1e1b18; --surface-2: #26231f; --surface-3: #2f2b26; --border: #38332d;
+    --text: #e8e2d6; --muted: #a9a193; --faint: #948c7e; --accent: #7aa5ff; --good: #4fb97a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .scene { position: absolute; inset: 0; display: none; }
+  .abs { position: absolute; }
+  .display { font-family: "Bricolage Grotesque", Geist, sans-serif; font-weight: 500; letter-spacing: -0.02em; }
+  .mono { font-family: "Geist Mono", monospace; font-variant-numeric: tabular-nums; }
+  .card-img { position: absolute; border-radius: 16px; overflow: hidden; }
+  .card-img > img { display: block; }
+  .mask { position: absolute; background: var(--surface); }
+  .cell { position: absolute; border-radius: 10px; background-repeat: no-repeat; }
+
+  /* scene 1: spreadsheet */
+  #sheet { position: absolute; left: 0; right: 0; top: 0; }
+  .row { display: grid; grid-template-columns: 72px 220px 640px 520px 1fr; height: 48px; border-bottom: 1px solid var(--border); }
+  .row > div { border-right: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; font-size: 20px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+  .row > div:first-child { justify-content: center; color: var(--faint); background: var(--surface); font-size: 16px; }
+  .row > div:last-child { justify-content: flex-end; }
+  .row.head > div { background: var(--surface); color: var(--faint); justify-content: center; font-size: 16px; }
+  #hookband { position: absolute; left: 0; right: 0; top: 420px; height: 240px; background: var(--bg);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+  #hookline { font-size: 92px; }
+
+  .caption { font-size: 72px; line-height: 1.1; }
+  .sub { font-size: 34px; color: var(--muted); }
+  .lockup { display: flex; align-items: center; gap: 20px; }
+  .lockup span { font-size: 40px; }
+</style>
+</head>
+<body>
+
+<!-- 1 hook -->
+<div class="scene" id="s1">
+  <div id="sheet"></div>
+  <div id="hookband"><div id="hookline" class="display">Your money lives in a spreadsheet.</div></div>
+</div>
+
+<!-- 2 reveal -->
+<div class="scene" id="s2">
+  <div class="abs lockup" id="s2lock" style="left:0;right:0;top:150px;justify-content:center"></div>
+  <div class="abs display caption" id="s2cap" style="left:0;right:0;top:270px;text-align:center">Import the spreadsheet. Read the month.</div>
+  <div class="abs" id="s2card" style="left:110px;top:500px;transform-origin:0 0"></div>
+</div>
+
+<!-- 3 calendar -->
+<div class="scene" id="s3">
+  <div class="abs" id="s3card" style="left:110px;top:98px;width:869px;height:680px;transform-origin:0 0"></div>
+  <div class="abs" id="s3text" style="left:1320px;top:390px;width:540px">
+    <div class="display caption" id="s3cap">See when the money left</div>
+    <div class="sub" id="s3sub" style="margin-top:28px">Every day, colour-coded</div>
+  </div>
+</div>
+
+<!-- 4 sankey -->
+<div class="scene" id="s4">
+  <div class="abs display caption" id="s4cap" style="left:110px;top:100px">And where it went</div>
+  <div class="abs" id="s4card" style="left:110px;top:270px;transform-origin:0 0"></div>
+</div>
+
+<!-- 5 pace -->
+<div class="scene" id="s5">
+  <div class="abs display caption" id="s5cap" style="left:164px;top:100px">Know where the month is heading</div>
+  <div class="abs" id="s5card" style="left:164px;top:262px;transform-origin:0 0"></div>
+</div>
+
+<!-- 6 outro -->
+<div class="scene" id="s6">
+  <div class="abs" id="s6logo" style="left:880px;top:250px"></div>
+  <div class="abs display" id="s6name" style="left:0;right:0;top:450px;text-align:center;font-size:104px">Spend Analyser</div>
+  <div class="abs sub" id="s6line" style="left:0;right:0;top:610px;text-align:center;font-size:40px">Open source. Self-host on Vercel + Supabase.</div>
+  <div class="abs mono" id="s6url" style="left:0;right:0;top:720px;text-align:center;font-size:32px;color:var(--accent)">github.com/Tanmayb05/spend-analyser</div>
+</div>
+
+<script>
+const META = {
+ "summary": {
+  "w": 1584,
+  "h": 217,
+  "cells": [
+   {
+    "x": 1,
+    "y": 76,
+    "w": 395.5,
+    "h": 140,
+    "t": "Income\n\n(what is this?)\n\n$6,65"
+   },
+   {
+    "x": 396.5,
+    "y": 76,
+    "w": 395.5,
+    "h": 140,
+    "t": "Total spend\n\n(what is this?)\n\n"
+   },
+   {
+    "x": 792,
+    "y": 76,
+    "w": 395.5,
+    "h": 140,
+    "t": "Everyday spend\n\n(what is this?"
+   },
+   {
+    "x": 1187.5,
+    "y": 76,
+    "w": 395.5,
+    "h": 140,
+    "t": "Net savings\n\n(what is this?)\n\n"
+   }
+  ]
+ },
+ "calendar": {
+  "w": 868.875,
+  "h": 1149,
+  "cells": [
+   {
+    "x": 377.9375,
+    "y": 109,
+    "w": 112.984375,
+    "h": 80,
+    "t": "1 −$1.9K"
+   },
+   {
+    "x": 496.921875,
+    "y": 109,
+    "w": 112.984375,
+    "h": 80,
+    "t": "2 −$134.2"
+   },
+   {
+    "x": 615.90625,
+    "y": 109,
+    "w": 112.984375,
+    "h": 80,
+    "t": "3 −$49"
+   },
+   {
+    "x": 734.890625,
+    "y": 109,
+    "w": 112.96875,
+    "h": 80,
+    "t": "4 −$94.4"
+   },
+   {
+    "x": 21,
+    "y": 195,
+    "w": 112.96875,
+    "h": 80,
+    "t": "5 −$162.2"
+   },
+   {
+    "x": 139.96875,
+    "y": 195,
+    "w": 112.984375,
+    "h": 80,
+    "t": "6 −$25"
+   },
+   {
+    "x": 258.953125,
+    "y": 195,
+    "w": 112.984375,
+    "h": 80,
+    "t": "7 −$13"
+   },
+   {
+    "x": 377.9375,
+    "y": 195,
+    "w": 112.984375,
+    "h": 80,
+    "t": "8 −$143.6"
+   },
+   {
+    "x": 496.921875,
+    "y": 195,
+    "w": 112.984375,
+    "h": 80,
+    "t": "9 −$47.5"
+   },
+   {
+    "x": 615.90625,
+    "y": 195,
+    "w": 112.984375,
+    "h": 80,
+    "t": "10 −$105.4"
+   },
+   {
+    "x": 734.890625,
+    "y": 195,
+    "w": 112.96875,
+    "h": 80,
+    "t": "11 −$91.9"
+   },
+   {
+    "x": 21,
+    "y": 281,
+    "w": 112.96875,
+    "h": 80,
+    "t": "12 −$65"
+   },
+   {
+    "x": 139.96875,
+    "y": 281,
+    "w": 112.984375,
+    "h": 80,
+    "t": "13 −$7.8"
+   },
+   {
+    "x": 258.953125,
+    "y": 281,
+    "w": 112.984375,
+    "h": 80,
+    "t": "14 −$85.4"
+   },
+   {
+    "x": 377.9375,
+    "y": 281,
+    "w": 112.984375,
+    "h": 80,
+    "t": "15 −$219.2"
+   },
+   {
+    "x": 496.921875,
+    "y": 281,
+    "w": 112.984375,
+    "h": 80,
+    "t": "16 −$23.5"
+   },
+   {
+    "x": 615.90625,
+    "y": 281,
+    "w": 112.984375,
+    "h": 80,
+    "t": "17 −$60.7"
+   },
+   {
+    "x": 734.890625,
+    "y": 281,
+    "w": 112.96875,
+    "h": 80,
+    "t": "18 −$20"
+   },
+   {
+    "x": 21,
+    "y": 367,
+    "w": 112.96875,
+    "h": 80,
+    "t": "19 −$81"
+   },
+   {
+    "x": 139.96875,
+    "y": 367,
+    "w": 112.984375,
+    "h": 80,
+    "t": "20 −$28.7"
+   },
+   {
+    "x": 258.953125,
+    "y": 367,
+    "w": 112.984375,
+    "h": 80,
+    "t": "21"
+   },
+   {
+    "x": 377.9375,
+    "y": 367,
+    "w": 112.984375,
+    "h": 80,
+    "t": "22 −$50.4"
+   },
+   {
+    "x": 496.921875,
+    "y": 367,
+    "w": 112.984375,
+    "h": 80,
+    "t": "23"
+   },
+   {
+    "x": 615.90625,
+    "y": 367,
+    "w": 112.984375,
+    "h": 80,
+    "t": "24 −$62.2"
+   },
+   {
+    "x": 734.890625,
+    "y": 367,
+    "w": 112.96875,
+    "h": 80,
+    "t": "25 −$51.9"
+   },
+   {
+    "x": 21,
+    "y": 453,
+    "w": 112.96875,
+    "h": 80,
+    "t": "26 −$185.5"
+   },
+   {
+    "x": 139.96875,
+    "y": 453,
+    "w": 112.984375,
+    "h": 80,
+    "t": "27"
+   },
+   {
+    "x": 258.953125,
+    "y": 453,
+    "w": 112.984375,
+    "h": 80,
+    "t": "28 +$6.7K"
+   },
+   {
+    "x": 377.9375,
+    "y": 453,
+    "w": 112.984375,
+    "h": 80,
+    "t": "29"
+   },
+   {
+    "x": 496.921875,
+    "y": 453,
+    "w": 112.984375,
+    "h": 80,
+    "t": "30"
+   },
+   {
+    "x": 615.90625,
+    "y": 453,
+    "w": 112.984375,
+    "h": 80,
+    "t": "31"
+   }
+  ]
+ },
+ "donut": {
+  "w": 695.109375,
+  "h": 847
+ },
+ "pace": {
+  "w": 1584,
+  "h": 588.75
+ },
+ "sankey": {
+  "w": 1584,
+  "h": 450
+ },
+ "bars": {
+  "w": 1584,
+  "h": 436.75
+ }
+};
+const META3 = {
+ "summary": {
+  "w": 1062,
+  "h": 217,
+  "cells": [
+   {
+    "x": 1,
+    "y": 76,
+    "w": 265,
+    "h": 140,
+    "t": "Income\n\n(what is this?)\n\n$6,65"
+   },
+   {
+    "x": 266,
+    "y": 76,
+    "w": 265,
+    "h": 140,
+    "t": "Total spend\n\n(what is this?)\n\n"
+   },
+   {
+    "x": 531,
+    "y": 76,
+    "w": 265,
+    "h": 140,
+    "t": "Everyday spend\n\n(what is this?"
+   },
+   {
+    "x": 796,
+    "y": 76,
+    "w": 265,
+    "h": 140,
+    "t": "Net savings\n\n(what is this?)\n\n"
+   }
+  ]
+ },
+ "calendar": {
+  "w": 578.875,
+  "h": 1149,
+  "cells": [
+   {
+    "x": 253.65625,
+    "y": 149,
+    "w": 71.546875,
+    "h": 80,
+    "t": "1 −$1.9K"
+   },
+   {
+    "x": 331.203125,
+    "y": 149,
+    "w": 71.5625,
+    "h": 80,
+    "t": "2 −$134.2"
+   },
+   {
+    "x": 408.765625,
+    "y": 149,
+    "w": 71.546875,
+    "h": 80,
+    "t": "3 −$49"
+   },
+   {
+    "x": 486.3125,
+    "y": 149,
+    "w": 71.5625,
+    "h": 80,
+    "t": "4 −$94.4"
+   },
+   {
+    "x": 21,
+    "y": 235,
+    "w": 71.546875,
+    "h": 80,
+    "t": "5 −$162.2"
+   },
+   {
+    "x": 98.546875,
+    "y": 235,
+    "w": 71.546875,
+    "h": 80,
+    "t": "6 −$25"
+   },
+   {
+    "x": 176.09375,
+    "y": 235,
+    "w": 71.5625,
+    "h": 80,
+    "t": "7 −$13"
+   },
+   {
+    "x": 253.65625,
+    "y": 235,
+    "w": 71.546875,
+    "h": 80,
+    "t": "8 −$143.6"
+   },
+   {
+    "x": 331.203125,
+    "y": 235,
+    "w": 71.5625,
+    "h": 80,
+    "t": "9 −$47.5"
+   },
+   {
+    "x": 408.765625,
+    "y": 235,
+    "w": 71.546875,
+    "h": 80,
+    "t": "10 −$105.4"
+   },
+   {
+    "x": 486.3125,
+    "y": 235,
+    "w": 71.5625,
+    "h": 80,
+    "t": "11 −$91.9"
+   },
+   {
+    "x": 21,
+    "y": 321,
+    "w": 71.546875,
+    "h": 80,
+    "t": "12 −$65"
+   },
+   {
+    "x": 98.546875,
+    "y": 321,
+    "w": 71.546875,
+    "h": 80,
+    "t": "13 −$7.8"
+   },
+   {
+    "x": 176.09375,
+    "y": 321,
+    "w": 71.5625,
+    "h": 80,
+    "t": "14 −$85.4"
+   },
+   {
+    "x": 253.65625,
+    "y": 321,
+    "w": 71.546875,
+    "h": 80,
+    "t": "15 −$219.2"
+   },
+   {
+    "x": 331.203125,
+    "y": 321,
+    "w": 71.5625,
+    "h": 80,
+    "t": "16 −$23.5"
+   },
+   {
+    "x": 408.765625,
+    "y": 321,
+    "w": 71.546875,
+    "h": 80,
+    "t": "17 −$60.7"
+   },
+   {
+    "x": 486.3125,
+    "y": 321,
+    "w": 71.5625,
+    "h": 80,
+    "t": "18 −$20"
+   },
+   {
+    "x": 21,
+    "y": 407,
+    "w": 71.546875,
+    "h": 80,
+    "t": "19 −$81"
+   },
+   {
+    "x": 98.546875,
+    "y": 407,
+    "w": 71.546875,
+    "h": 80,
+    "t": "20 −$28.7"
+   },
+   {
+    "x": 176.09375,
+    "y": 407,
+    "w": 71.5625,
+    "h": 80,
+    "t": "21"
+   },
+   {
+    "x": 253.65625,
+    "y": 407,
+    "w": 71.546875,
+    "h": 80,
+    "t": "22 −$50.4"
+   },
+   {
+    "x": 331.203125,
+    "y": 407,
+    "w": 71.5625,
+    "h": 80,
+    "t": "23"
+   },
+   {
+    "x": 408.765625,
+    "y": 407,
+    "w": 71.546875,
+    "h": 80,
+    "t": "24 −$62.2"
+   },
+   {
+    "x": 486.3125,
+    "y": 407,
+    "w": 71.5625,
+    "h": 80,
+    "t": "25 −$51.9"
+   },
+   {
+    "x": 21,
+    "y": 493,
+    "w": 71.546875,
+    "h": 80,
+    "t": "26 −$185.5"
+   },
+   {
+    "x": 98.546875,
+    "y": 493,
+    "w": 71.546875,
+    "h": 80,
+    "t": "27"
+   },
+   {
+    "x": 176.09375,
+    "y": 493,
+    "w": 71.5625,
+    "h": 80,
+    "t": "28 +$6.7K"
+   },
+   {
+    "x": 253.65625,
+    "y": 493,
+    "w": 71.546875,
+    "h": 80,
+    "t": "29"
+   },
+   {
+    "x": 331.203125,
+    "y": 493,
+    "w": 71.5625,
+    "h": 80,
+    "t": "30"
+   },
+   {
+    "x": 408.765625,
+    "y": 493,
+    "w": 71.546875,
+    "h": 80,
+    "t": "31"
+   }
+  ]
+ },
+ "donut": {
+  "w": 463.125,
+  "h": 847
+ },
+ "pace": {
+  "w": 1062,
+  "h": 588.75
+ },
+ "sankey": {
+  "w": 1062,
+  "h": 450
+ },
+ "bars": {
+  "w": 1062,
+  "h": 436.75
+ }
+};
+const A3 = "assets3/";
+const ROWS = ["2026-09-01|Maple Court Apartments|Housing &amp; Utilities|1925.00","2026-09-02|Metro Transit Pass|Transport|75.00","2026-09-03|Iron Works Gym|Health &amp; Fitness|49.00","2026-09-04|Shell|Travel|62.10","2026-09-04|Airbnb Estes Park|Travel|540.00","2026-09-04|Trader Joe's|Groceries|115.34","2026-09-05|RMNP Entrance Pass|Travel|30.00","2026-09-05|Stanley Hotel Cafe|Travel|88.00","2026-09-05|Netflix|Subscriptions|15.49","2026-09-05|Chewy|Pets|75.66","2026-09-06|Café Münch|Dining &amp; Drinks|93.56","2026-09-06|Safeway|Travel|47.60","2026-09-07|Spotify|Subscriptions|12.99","2026-09-07|Chevron|Travel|58.90","2026-09-08|City Power &amp; Water|Housing &amp; Utilities|132.10","2026-09-09|DoorDash|Dining &amp; Drinks|30.04","2026-09-10|Chevron|Transport|54.25","2026-09-11|Whole Foods Market|Groceries|55.58","2026-09-12|Fiberlink|Housing &amp; Utilities|65.00","2026-09-12|Costco Wholesale|Groceries|213.77","2026-09-13|Starbucks|Dining &amp; Drinks|9.16","2026-09-14|Amazon|Shopping|91.82","2026-09-15|IKEA|Shopping|2450.00","2026-09-17|Uber|Transport|33.93","2026-09-18|Claude Pro|Subscriptions|20.00","2026-09-19|Kroger|Groceries|113.03","2026-09-20|AMC Theatres|Entertainment|26.08","2026-09-21|ParkMobile|Transport|12.48","2026-09-22|O'Brien's Pub|Dining &amp; Drinks|49.62","2026-09-22|寿司 Saito|Dining &amp; Drinks|142.00","2026-09-23|H&amp;M|Shopping|124.10","2026-09-25|Chevron|Transport|43.80","2026-09-26|Costco Wholesale|Groceries|231.57","2026-10-01|Maple Court Apartments|Housing &amp; Utilities|1925.00","2026-10-02|Metro Transit Pass|Transport|75.00","2026-10-03|Iron Works Gym|Health &amp; Fitness|49.00","2026-10-04|Kroger|Groceries|94.36","2026-10-05|Netflix|Subscriptions|15.49","2026-10-05|Anthropic API|Subscriptions|37.52","2026-10-06|Café Münch|Dining &amp; Drinks|25.02","2026-10-07|Spotify|Subscriptions|12.99","2026-10-08|City Power &amp; Water|Housing &amp; Utilities|143.59","2026-10-09|DoorDash|Dining &amp; Drinks|47.53","2026-10-10|Target|Groceries|64.32"];
+const A = "assets/";
+
+const logo = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 512 512"><rect width="512" height="512" rx="128" fill="#2f2b26"/><rect x="120" y="260" width="64" height="132" rx="20" fill="#948c7e"/><rect x="224" y="180" width="64" height="212" rx="20" fill="#7aa5ff"/><rect x="328" y="120" width="64" height="272" rx="20" fill="#948c7e"/></svg>`;
+
+// ---------- build DOM ----------
+const sheet = document.getElementById("sheet");
+sheet.insertAdjacentHTML("beforeend", `<div class="row head"><div></div><div>A</div><div>B</div><div>C</div><div>D</div></div>`);
+ROWS.concat(ROWS).forEach((r, i) => {
+  const [d, m, c, a] = r.split("|");
+  sheet.insertAdjacentHTML("beforeend", `<div class="row" data-i="${i}"><div>${i + 2}</div><div class="mono">${d}</div><div>${m}</div><div>${c}</div><div class="mono">${Number(a).toFixed(2)}</div></div>`);
+});
+const sheetRows = [...sheet.querySelectorAll(".row[data-i]")];
+
+document.getElementById("s2lock").innerHTML = logo(64) + `<span class="display">Spend Analyser</span>`;
+document.getElementById("s6logo").innerHTML = logo(160);
+
+// a card from a 2x capture, with cells masked out and re-revealed as separate tiles
+function buildCard(host, name, cells, opts = {}) {
+  const M = opts.m3 ? META3 : META, D = opts.m3 ? A3 : A;
+  const m = M[name];
+  const w = m.w, h = opts.h ?? m.h;
+  const wrap = document.createElement("div");
+  wrap.className = "card-img";
+  wrap.style.width = w + "px"; wrap.style.height = h + "px";
+  wrap.innerHTML = `<img src="${D}${name}.png" style="width:${w}px;height:${m.h}px">`;
+  const tiles = (cells || []).map((c) => {
+    const mk = document.createElement("div");
+    mk.className = "mask";
+    const p = opts.pad ?? 0;
+    Object.assign(mk.style, { left: c.x - p + "px", top: c.y - p + "px", width: c.w + 2 * p + "px", height: c.h + 2 * p + "px", borderRadius: opts.r ?? "12px" });
+    wrap.appendChild(mk);
+    const t = document.createElement("div");
+    t.className = "cell";
+    Object.assign(t.style, {
+      left: c.x + "px", top: c.y + "px", width: c.w + "px", height: c.h + "px", borderRadius: opts.r ?? "10px",
+      backgroundImage: `url(${D}${name}.png)`, backgroundSize: `${w}px ${m.h}px`, backgroundPosition: `${-c.x}px ${-c.y}px`,
+    });
+    wrap.appendChild(t);
+    return t;
+  });
+  host.appendChild(wrap);
+  return { wrap, tiles };
+}
+
+// summary: the four figure cells (inset 1px so the hairline dividers stay)
+const sumCells = META3.summary.cells.slice(0, 4).map((c) => ({ x: c.x + 1, y: c.y + 1, w: c.w - 2, h: c.h - 2 }));
+const sum = buildCard(document.getElementById("s2card"), "summary", sumCells, { r: "0px", m3: true });
+const cal = buildCard(document.getElementById("s3card"), "calendar", META.calendar.cells, { h: 680, pad: 5 });
+
+// sankey: header always, flows wiped left to right
+const sk = META3.sankey;
+document.getElementById("s4card").innerHTML = `
+  <div class="card-img" style="width:${sk.w}px;height:${sk.h}px;background:var(--surface)">
+    <img src="${A3}sankey.png" style="position:absolute;width:${sk.w}px;height:${sk.h}px;clip-path:inset(0 0 ${sk.h - 85}px 0)">
+    <img id="skflow" src="${A3}sankey.png" style="position:absolute;width:${sk.w}px;height:${sk.h}px">
+  </div>`;
+const pc = META3.pace;
+document.getElementById("s5card").innerHTML = `
+  <div class="card-img" style="width:${pc.w}px;height:486px;background:var(--surface)">
+    <img id="pcbase" src="${A3}pace.png" style="position:absolute;width:${pc.w}px;height:${pc.h}px">
+    <img id="pcline" src="${A3}pace.png" style="position:absolute;width:${pc.w}px;height:${pc.h}px">
+  </div>`;
+
+// ---------- timeline ----------
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const ease = (x) => 1 - Math.pow(1 - x, 4);          // close to the app's --ease-ui
+const easeIn = (x) => x * x * x;
+function fade(el, t, a, dur, b, outDur, dy = 24) {
+  const i = ease(seg(t, a, a + dur));
+  const o = b == null ? 0 : easeIn(seg(t, b, b + outDur));
+  el.style.opacity = i * (1 - o);
+  el.style.transform = `translateY(${(1 - i) * dy - o * dy * 0.5}px)`;
+}
+const S = [[0, 3], [3, 7], [7, 11], [11, 15], [15, 18], [18, 21.1]];
+
+window.render = (t) => {
+  S.forEach(([a, b], k) => (document.getElementById("s" + (k + 1)).style.display = t >= a && t < b ? "block" : "none"));
+
+  // 1 hook: rows type in fast and the sheet keeps scrolling
+  if (t < 3) {
+    sheet.style.transform = `translateY(${-t * 110}px)`;
+    sheetRows.forEach((r, i) => {
+      const inn = seg(t, i * 0.045, i * 0.045 + 0.12);
+      const out = seg(t, 2.5 + (i % 22) * 0.012, 2.72 + (i % 22) * 0.012);
+      r.style.opacity = inn * (1 - out);
+    });
+    fade(document.getElementById("hookband"), t, 0.15, 0.35, 2.62, 0.3, 0);
+    fade(document.getElementById("hookline"), t, 0.25, 0.4, 2.38, 0.26, 30);
+  }
+
+  // 2 reveal
+  if (t >= 3 && t < 7) {
+    fade(document.getElementById("s2lock"), t, 3.05, 0.35, 6.65, 0.3);
+    fade(document.getElementById("s2cap"), t, 3.2, 0.4, 6.65, 0.3);
+    { const el = document.getElementById("s2card"); fade(el, t, 3.55, 0.45, 6.7, 0.28, 40); el.style.transform += " scale(1.6)"; }
+    sum.tiles.forEach((el, i) => {
+      const p = ease(seg(t, 4.5 + i * 0.5, 4.5 + i * 0.5 + 0.32));
+      el.style.opacity = p;
+      el.style.transform = `translateY(${(1 - p) * 18}px)`;
+    });
+  }
+
+  // 3 calendar
+  if (t >= 7 && t < 11) {
+    const host = document.getElementById("s3card");
+    const i = ease(seg(t, 7.02, 7.4)), o = easeIn(seg(t, 10.65, 10.95));
+    host.style.opacity = i * (1 - o);
+    host.style.transform = `translateY(${(1 - i) * 40}px) scale(1.3)`;
+    cal.tiles.forEach((el, k) => {
+      const a = 7.45 + k * 0.062;
+      const p = ease(seg(t, a, a + 0.24));
+      el.style.opacity = p;
+      el.style.transform = `scale(${0.86 + 0.14 * p})`;
+    });
+    fade(document.getElementById("s3cap"), t, 7.3, 0.4, 10.6, 0.3);
+    fade(document.getElementById("s3sub"), t, 7.6, 0.4, 10.6, 0.3);
+  }
+
+  // 4 sankey
+  if (t >= 11 && t < 15) {
+    fade(document.getElementById("s4cap"), t, 11.05, 0.4, 14.65, 0.3);
+    const host = document.getElementById("s4card");
+    const i = ease(seg(t, 11.2, 11.6)), o = easeIn(seg(t, 14.7, 14.97));
+    host.style.opacity = i * (1 - o);
+    host.style.transform = `translateY(${(1 - i) * 40}px) scale(${1.6 + 0.02 * seg(t, 11, 15)})`;
+    const w = ease(seg(t, 11.55, 13.1));
+    document.getElementById("skflow").style.clipPath = `inset(85px ${(1 - w) * 100}% 0 0)`;
+  }
+
+  // 5 pace
+  if (t >= 15 && t < 18) {
+    fade(document.getElementById("s5cap"), t, 15.05, 0.4, 17.65, 0.3);
+    const host = document.getElementById("s5card");
+    const i = ease(seg(t, 15.15, 15.55)), o = easeIn(seg(t, 17.7, 17.97));
+    host.style.opacity = i * (1 - o);
+    host.style.transform = `translateY(${(1 - i) * 40}px) scale(1.5)`;
+    // chart band (css y 250..452 of the card) is hidden in the base and wiped in
+    document.getElementById("pcbase").style.clipPath = `polygon(0 0,100% 0,100% 222px,0 222px,0 456px,100% 456px,100% 100%,0 100%)`;
+    const w = ease(seg(t, 15.5, 16.7));
+    document.getElementById("pcline").style.clipPath = `inset(222px ${(1 - w) * 100}% ${pc.h - 456}px 0)`;
+  }
+
+  // 6 outro
+  if (t >= 18) {
+    const l = document.getElementById("s6logo");
+    const p = ease(seg(t, 18.05, 18.45));
+    l.style.opacity = p;
+    l.style.transform = `scale(${0.8 + 0.2 * p})`;
+    fade(document.getElementById("s6name"), t, 18.2, 0.4);
+    fade(document.getElementById("s6line"), t, 18.5, 0.4);
+    fade(document.getElementById("s6url"), t, 18.7, 0.4);
+  }
+};
+
+window.ready = (async () => {
+  await Promise.all(['500 40px "Bricolage Grotesque"', '400 20px "Geist"', '500 20px "Geist"', '400 20px "Geist Mono"'].map((f) => document.fonts.load(f)));
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((im) => (im.complete ? 1 : new Promise((r) => (im.onload = im.onerror = r)))));
+  const bgs = [A3 + "summary", A + "calendar"].map((n) => new Promise((r) => { const i = new Image(); i.onload = r; i.src = n + ".png"; }));
+  await Promise.all(bgs);
+  return document.fonts.check('500 40px "Bricolage Grotesque"') && document.fonts.check('20px "Geist Mono"');
+})();
+</script>
+</body>
+</html>

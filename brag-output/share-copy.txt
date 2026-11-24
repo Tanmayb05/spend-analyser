@@ -1,0 +1,2 @@
+Spend Analyser: type "4.75 Starbucks coffee this morning, 62 Shell gas" and get two categorized entries, snap a receipt and every line item is read, then ask "How much did I spend at Amazon this year?" and get the answer. Trips and credit cards are tracked too.
+Open source (MIT), self-host on Vercel + Supabase: github.com/Tanmayb05/spend-analyser

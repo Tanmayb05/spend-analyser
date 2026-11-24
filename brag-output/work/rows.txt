@@ -1,0 +1,44 @@
+2026-09-01|Maple Court Apartments|Housing & Utilities|1925.00
+2026-09-02|Metro Transit Pass|Transport|75.00
+2026-09-03|Iron Works Gym|Health & Fitness|49.00
+2026-09-04|Shell|Travel|62.10
+2026-09-04|Airbnb Estes Park|Travel|540.00
+2026-09-04|Trader Joe's|Groceries|115.34
+2026-09-05|RMNP Entrance Pass|Travel|30.00
+2026-09-05|Stanley Hotel Cafe|Travel|88.00
+2026-09-05|Netflix|Subscriptions|15.49
+2026-09-05|Chewy|Pets|75.66
+2026-09-06|Café Münch|Dining & Drinks|93.56
+2026-09-06|Safeway|Travel|47.60
+2026-09-07|Spotify|Subscriptions|12.99
+2026-09-07|Chevron|Travel|58.90
+2026-09-08|City Power & Water|Housing & Utilities|132.10
+2026-09-09|DoorDash|Dining & Drinks|30.04
+2026-09-10|Chevron|Transport|54.25
+2026-09-11|Whole Foods Market|Groceries|55.58
+2026-09-12|Fiberlink|Housing & Utilities|65.00
+2026-09-12|Costco Wholesale|Groceries|213.77
+2026-09-13|Starbucks|Dining & Drinks|9.16
+2026-09-14|Amazon|Shopping|91.82
+2026-09-15|IKEA|Shopping|2450.00
+2026-09-17|Uber|Transport|33.93
+2026-09-18|Claude Pro|Subscriptions|20.00
+2026-09-19|Kroger|Groceries|113.03
+2026-09-20|AMC Theatres|Entertainment|26.08
+2026-09-21|ParkMobile|Transport|12.48
+2026-09-22|O'Brien's Pub|Dining & Drinks|49.62
+2026-09-22|寿司 Saito|Dining & Drinks|142.00
+2026-09-23|H&M|Shopping|124.10
+2026-09-25|Chevron|Transport|43.80
+2026-09-26|Costco Wholesale|Groceries|231.57
+2026-10-01|Maple Court Apartments|Housing & Utilities|1925.00
+2026-10-02|Metro Transit Pass|Transport|75.00
+2026-10-03|Iron Works Gym|Health & Fitness|49.00
+2026-10-04|Kroger|Groceries|94.36
+2026-10-05|Netflix|Subscriptions|15.49
+2026-10-05|Anthropic API|Subscriptions|37.52
+2026-10-06|Café Münch|Dining & Drinks|25.02
+2026-10-07|Spotify|Subscriptions|12.99
+2026-10-08|City Power & Water|Housing & Utilities|143.59
+2026-10-09|DoorDash|Dining & Drinks|47.53
+2026-10-10|Target|Groceries|64.32
