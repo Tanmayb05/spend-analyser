@@ -8,7 +8,8 @@ export type SummaryMetric = {
   label: string;
   /** Kept for callers; the card header already names the month, so it is not drawn. */
   qualifier?: string;
-  value: string;
+  /** text, or a <MoneyFlow> for amounts */
+  value: ReactNode;
   tone?: "good" | "bad";
   info?: ReactNode;
   /** Change vs last month as a ratio; `goodWhenUp` says whether an increase is good (income, net) or bad (spend). */

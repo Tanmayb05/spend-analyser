@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, m } from "motion/react";
 import { toast } from "sonner";
 import { CheckSquare, Square, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LedgerItem, type LedgerRowWithLink } from "./ledger-item";
+import { SwipeRow } from "./swipe-row";
 import { TxnDetail } from "./txn-detail";
 import { useBackSheet } from "@/hooks/use-back-nav";
 import { useAppData } from "@/components/app-data";
@@ -36,6 +38,27 @@ export function groupRows(rows: LedgerRow[], sort: TxnSort): { key: string; day:
     .sort(([a], [b]) => (sort === "oldest" ? (a < b ? -1 : 1) : a < b ? 1 : -1))
     .map(([day, list]) => ({ key: day, day, rows: list }));
 }
+
+/**
+ * Keys that stay the same for a row across filter, sort and delete changes (enter/exit animations need them).
+ * Index is only appended for the rare exact duplicate.
+ */
+export function rowKeys(rows: LedgerRow[]): string[] {
+  const seen = new Map<string, number>();
+  return rows.map((r) => {
+    const base = `${r.txn_id ?? r.trip_id}-${r.installment_seq ?? 0}-${r.entry_date}`;
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    return n ? `${base}~${n}` : base;
+  });
+}
+
+const rowMotion = {
+  layout: "position" as const,
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 /** "$420 spent" / "$6,650 received" for a day's rows (spent wins when both). */
 export function dayNote(rows: LedgerRow[], currency: string): string {
@@ -137,7 +160,7 @@ export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows:
   }
 
   return (
-    <div>
+    <div className="relative">
       <div className="mb-3 flex items-center justify-between">
         <p className="num text-sm text-muted">{count} {count === 1 ? "entry" : "entries"}</p>
         {selecting ? (
@@ -151,31 +174,52 @@ export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows:
         ) : null}
       </div>
 
-      {groups.map((g) => (
-        <section key={g.key} aria-label={g.upcoming ? "Upcoming scheduled" : undefined} className={cn("mb-4", g.upcoming && "mt-1 rounded-card border border-dashed border-border p-2")}>
-          <div className="flex items-center justify-between gap-3 px-2 py-2 text-label text-muted">
-            <span className={cn(g.upcoming && "text-warn")}>{g.title}</span>
-            {g.note ? <span className="num">{g.upcoming ? g.note : `· ${g.note}`}</span> : null}
-          </div>
-          <div className="-mx-2 divide-y divide-border border-t border-border">
-            {g.rows.map((r, i) => {
-              const k = `${r.txn_id ?? r.trip_id}-${r.installment_seq ?? 0}-${i}`;
-              if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={detail.show} tint={tints?.[tintKey(r)]} />;
-              const on = r.txn_id ? picked.has(r.txn_id) : false;
-              return (
-                <div key={k} data-txn-id={r.txn_id ?? undefined} className={cn("flex items-center gap-1 rounded-control", on && "bg-surface-3 ring-1 ring-inset ring-accent")}>
-                  <button type="button" data-nav-item disabled={!r.txn_id} onClick={() => toggle(r.txn_id)} className="grid h-11 w-11 shrink-0 place-items-center text-muted" aria-pressed={on} aria-label={`Select ${r.merchant_name || r.description || "entry"}`}>
-                    {on ? <CheckSquare size={18} className="text-accent" /> : <Square size={18} />}
-                  </button>
-                  <div className="min-w-0 flex-1" onClickCapture={(e) => { e.stopPropagation(); e.preventDefault(); toggle(r.txn_id); }}>
-                    <LedgerItem row={r} showDate={g.showDate} tint={tints?.[tintKey(r)]} focusable={false} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+      {/* initial={false}: no entrance on first paint; rows and day groups fade in/out and the rest slide into place */}
+      <AnimatePresence initial={false} mode="popLayout">
+        {groups.map((g) => {
+          const keysForRows = rowKeys(g.rows);
+          return (
+            <m.section
+              key={g.key}
+              {...rowMotion}
+              aria-label={g.upcoming ? "Upcoming scheduled" : undefined}
+              className={cn("mb-4", g.upcoming && "mt-1 rounded-card border border-dashed border-border p-2")}
+            >
+              <div className="flex items-center justify-between gap-3 px-2 py-2 text-label text-muted">
+                <span className={cn(g.upcoming && "text-warn")}>{g.title}</span>
+                {g.note ? <span className="num">{g.upcoming ? g.note : `· ${g.note}`}</span> : null}
+              </div>
+              <div className="relative -mx-2 divide-y divide-border border-t border-border">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {g.rows.map((r, i) => {
+                    const k = keysForRows[i];
+                    if (!selecting) {
+                      return (
+                        <m.div key={k} {...rowMotion}>
+                          <SwipeRow txnId={r.txn_id} label={r.merchant_name || r.description || "transaction"}>
+                            <LedgerItem row={r} showDate={g.showDate} onOpen={detail.show} tint={tints?.[tintKey(r)]} />
+                          </SwipeRow>
+                        </m.div>
+                      );
+                    }
+                    const on = r.txn_id ? picked.has(r.txn_id) : false;
+                    return (
+                      <m.div key={k} {...rowMotion} data-txn-id={r.txn_id ?? undefined} className={cn("flex items-center gap-1 rounded-control", on && "bg-surface-3 ring-1 ring-inset ring-accent")}>
+                        <button type="button" data-nav-item disabled={!r.txn_id} onClick={() => toggle(r.txn_id)} className="grid h-11 w-11 shrink-0 place-items-center text-muted" aria-pressed={on} aria-label={`Select ${r.merchant_name || r.description || "entry"}`}>
+                          {on ? <CheckSquare size={18} className="text-accent" /> : <Square size={18} />}
+                        </button>
+                        <div className="min-w-0 flex-1" onClickCapture={(e) => { e.stopPropagation(); e.preventDefault(); toggle(r.txn_id); }}>
+                          <LedgerItem row={r} showDate={g.showDate} tint={tints?.[tintKey(r)]} focusable={false} />
+                        </div>
+                      </m.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </m.section>
+          );
+        })}
+      </AnimatePresence>
 
       <TxnDetail row={detail.value} onClose={detail.hide} />
 

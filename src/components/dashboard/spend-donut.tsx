@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CircleAlert } from "lucide-react";
 import { formatMoney, formatPercent } from "@/lib/money";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { cn } from "@/lib/utils";
 import type { BudgetStatus } from "@/lib/analytics/budgets";
 
@@ -113,7 +114,7 @@ export function SpendDonut({
           </svg>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="num-lg text-3xl">
-              {money(focus?.value ?? total)}
+              <MoneyFlow value={focus?.value ?? total} currency={currency} whole />
             </span>
             <span className="max-w-[60%] truncate text-xs text-muted">
               {focus

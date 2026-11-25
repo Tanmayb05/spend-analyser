@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty";
 import { CardTile, UtilMeter } from "./card-tile";
 import { StatStrip } from "./stat-strip";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { getReferenceData } from "@/lib/data/reference";
 import { getCardData } from "@/lib/data/cards";
 import { overallUtilization, utilBand } from "@/lib/cards";
@@ -42,8 +43,8 @@ export async function CardsView() {
       <StatStrip
         className="mt-4"
         stats={[
-          { label: "Owed on cards", value: money(owed), money: true },
-          { label: "Total limit", value: all.limit ? money(all.limit) : "—", money: Boolean(all.limit) },
+          { label: "Owed on cards", value: <MoneyFlow value={owed} currency={currency} whole={Math.abs(owed) >= 1000} />, money: true },
+          { label: "Total limit", value: all.limit ? <MoneyFlow value={all.limit} currency={currency} whole={Math.abs(all.limit) >= 1000} /> : "—", money: Boolean(all.limit) },
           { label: "Bills to pay", value: bills.length ? money(bills.reduce((a, b) => a + b.remaining, 0)) : "None", money: bills.length > 0 },
           { label: "Next due", value: nextBill ? formatDay(nextBill.due) : "—" },
         ]}

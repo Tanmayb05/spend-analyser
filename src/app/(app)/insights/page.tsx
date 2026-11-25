@@ -31,6 +31,7 @@ import { CashFlowSankey } from "@/components/insights/cash-flow-sankey";
 import { buildCashFlow } from "@/lib/analytics/sankey";
 import { CompareSwitch } from "@/components/insights/compare-switch";
 import { StatStrip } from "@/components/cards/stat-strip";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { categoryMovers, compareLabel, compareTotals, forecastMonth, merchantRows, parseCompareBase, recurringCharges, spendingRhythm } from "@/lib/analytics/insight-views";
 import { formatPercent } from "@/lib/money";
 import { HELP } from "@/lib/help";
@@ -206,10 +207,10 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
           <>
             <StatStrip
               stats={[
-                { label: "Spent", value: formatMoney(cmp.spent.now, currency, { whole: true }), ...diff(cmp.spent.change, true) },
-                { label: "Income", value: formatMoney(cmp.income.now, currency, { whole: true }), ...diff(cmp.income.change, false) },
-                { label: "Saved", value: formatMoney(cmp.saved.now, currency, { whole: true }), ...diff(cmp.saved.change, false) },
-                { label: vs === "avg" ? "3-month average spend" : `Spent ${baseLabel}`, value: formatMoney(cmp.spent.base, currency, { whole: true }) },
+                { label: "Spent", value: <MoneyFlow value={cmp.spent.now} currency={currency} whole />, ...diff(cmp.spent.change, true) },
+                { label: "Income", value: <MoneyFlow value={cmp.income.now} currency={currency} whole />, ...diff(cmp.income.change, false) },
+                { label: "Saved", value: <MoneyFlow value={cmp.saved.now} currency={currency} whole />, ...diff(cmp.saved.change, false) },
+                { label: vs === "avg" ? "3-month average spend" : `Spent ${baseLabel}`, value: <MoneyFlow value={cmp.spent.base} currency={currency} whole /> },
               ]}
             />
             <BudgetGauges items={moverViews} currency={currency} subtitle={`How much of each monthly budget is used in ${formatMonth(month)}`} />

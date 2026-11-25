@@ -56,7 +56,7 @@ test("add, edit, spread, delete + undo", async ({ page }, info) => {
   await expect(page.getByText("Added")).toBeVisible();
 
   await page.goto(`/?m=${month}`);
-  await expect(page.getByText("$150").first()).toBeVisible(); // 50 + 100 installment (smoothed)
+  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByRole("img", { name: "$150", exact: true }).first()).toBeVisible(); // 50 + 100 installment (smoothed)
 
   // delete + undo
   await page.goto(`/transactions?m=${month}`);

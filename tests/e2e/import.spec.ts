@@ -54,8 +54,8 @@ test.describe("workbook import", () => {
 
     // dashboard shows the September numbers
     await page.goto("/?m=2026-09&mode=cash");
-    await expect(page.getByText("$1,882").first()).toBeVisible();
-    await expect(page.getByText("$901").first()).toBeVisible();
+    await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByRole("img", { name: "$1,882", exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("group", { name: "Income", exact: true }).getByRole("img", { name: "$901", exact: true }).first()).toBeVisible();
     await page.screenshot({ path: "test-results/dashboard-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: "test-results/dashboard-mobile.png", fullPage: true });

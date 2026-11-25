@@ -5,6 +5,7 @@ import { ACCENT } from "@/components/charts/colors";
 import type { PlanView } from "@/components/plans/plan-ticket";
 import { PlanGroup } from "@/components/plans/plan-group";
 import { StatStrip } from "@/components/cards/stat-strip";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { AddPlanButton } from "@/components/plans/add-plan-button";
 import { getReferenceData } from "@/lib/data/reference";
 import { requireUser } from "@/lib/supabase/server";
@@ -83,8 +84,8 @@ export async function PlansView() {
           <StatStrip
             stats={[
               { label: "Active plans", value: String(active.length) },
-              { label: "Remaining", value: formatMoney(remaining, currency, { whole: true }), money: true },
-              { label: "Next month", value: formatMoney(nextMonth, currency, { whole: true }), money: true },
+              { label: "Remaining", value: <MoneyFlow value={remaining} currency={currency} whole />, money: true },
+              { label: "Next month", value: <MoneyFlow value={nextMonth} currency={currency} whole />, money: true },
               { label: "Finished", value: String(finished.length) },
             ]}
           />

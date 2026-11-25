@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Check, ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
 import { Sheet } from "@/components/ui/sheet";
+import { ReorderList } from "@/components/ui/reorder-list";
 import { useAction } from "@/hooks/use-action";
 import { categoryColor } from "@/components/charts/colors";
 import { cn } from "@/lib/utils";
 import {
   deleteCategory,
   deleteSubcategory,
-  reorderCategories,
+  reorder,
   saveCategory,
   saveSubcategory,
   setCategoryArchived,
@@ -25,15 +26,11 @@ const SLOTS = ["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"] as const;
 
 export function CategoriesEditor({ categories, subcategories, uses }: { categories: Category[]; subcategories: Subcategory[]; uses: Record<string, number> }) {
   const [editing, setEditing] = useState<Category | "new-expense" | "new-income" | null>(null);
-  const a = useAction();
 
-  const move = (list: Category[], i: number, dir: -1 | 1) => {
-    const ids = list.map((c) => c.id);
-    const j = i + dir;
-    if (j < 0 || j >= ids.length) return;
-    [ids[i], ids[j]] = [ids[j], ids[i]];
-    const others = categories.filter((c) => !ids.includes(c.id)).map((c) => c.id);
-    a.run(() => reorderCategories(list[0].kind === "expense" ? [...ids, ...others] : [...others, ...ids]));
+  // one sort_order across both kinds: expense categories first, then income
+  const saveOrder = (kind: "expense" | "income", ids: string[]) => {
+    const others = categories.filter((c) => c.kind !== kind).map((c) => c.id);
+    return reorder("categories", kind === "expense" ? [...ids, ...others] : [...others, ...ids]);
   };
 
   const section = (kind: "expense" | "income") => {
@@ -49,28 +46,29 @@ export function CategoriesEditor({ categories, subcategories, uses }: { categori
             </Button>
           }
         />
-        <ul className="divide-y divide-border">
-          {list.map((c, i) => (
-            <li key={c.id} className="flex items-center gap-2 py-2">
-              <div className="flex flex-col">
-                <button type="button" aria-label={`Move ${c.name} up`} disabled={i === 0} onClick={() => move(list, i, -1)} className="text-faint hover:text-text disabled:opacity-20"><ArrowUp size={16} /></button>
-                <button type="button" aria-label={`Move ${c.name} down`} disabled={i === list.length - 1} onClick={() => move(list, i, 1)} className="text-faint hover:text-text disabled:opacity-20"><ArrowDown size={16} /></button>
-              </div>
-              <button type="button" onClick={() => setEditing(c)} className="flex min-w-0 flex-1 items-center gap-3 rounded-control px-2 py-2 text-left transition-colors hover:bg-surface-2">
-                <span className="h-3.5 w-3.5 shrink-0 rounded-[4px]" style={{ background: categoryColor(c) }} />
-                <span className={cn("min-w-0 flex-1", c.archived && "text-faint line-through")}>
-                  <span className="block truncate font-medium">{c.name}</span>
-                  <span className="block truncate text-xs text-muted">
-                    {subcategories.filter((s) => s.category_id === c.id).map((s) => s.name).join(", ") || "No subcategories"}
-                  </span>
+        <ReorderList
+          items={list}
+          getId={(c) => c.id}
+          getLabel={(c) => c.name}
+          onCommit={(ids) => saveOrder(kind, ids)}
+          className="divide-y divide-border"
+          itemClassName="py-2"
+        >
+          {(c) => (
+            <button type="button" onClick={() => setEditing(c)} className="flex min-w-0 flex-1 items-center gap-3 rounded-control px-2 py-2 text-left transition-colors hover:bg-surface-2">
+              <span className="h-3.5 w-3.5 shrink-0 rounded-[4px]" style={{ background: categoryColor(c) }} />
+              <span className={cn("min-w-0 flex-1", c.archived && "text-faint line-through")}>
+                <span className="block truncate font-medium">{c.name}</span>
+                <span className="block truncate text-xs text-muted">
+                  {subcategories.filter((s) => s.category_id === c.id).map((s) => s.name).join(", ") || "No subcategories"}
                 </span>
-                {kind === "expense" ? <Badge tone={c.is_core ? "accent" : "neutral"}>{c.is_core ? "Everyday" : "Fixed"}</Badge> : null}
-                <span className="hidden text-xs text-muted sm:inline">{uses[c.id] ?? 0} uses</span>
-                <ChevronRight size={16} className="text-faint" />
-              </button>
-            </li>
-          ))}
-        </ul>
+              </span>
+              {kind === "expense" ? <Badge tone={c.is_core ? "accent" : "neutral"}>{c.is_core ? "Everyday" : "Fixed"}</Badge> : null}
+              <span className="hidden text-xs text-muted sm:inline">{uses[c.id] ?? 0} uses</span>
+              <ChevronRight size={16} className="text-faint" />
+            </button>
+          )}
+        </ReorderList>
       </Card>
     );
   };
@@ -190,25 +188,29 @@ function CategoryForm({
         <>
           <div>
             <p className="mb-2 text-sm font-medium">Subcategories</p>
-            <ul className="space-y-1">
-              {subcategories.map((s) => (
-                <li key={s.id} className="flex items-center gap-2">
-                  {editSub?.id === s.id ? (
-                    <form className="flex flex-1 gap-1" onSubmit={(e) => { e.preventDefault(); a.run(() => saveSubcategory({ id: s.id, category_id: category.id, name: editSub.name }), () => setEditSub(null)); }}>
-                      <Input autoFocus value={editSub.name} onChange={(e) => setEditSub({ ...editSub, name: e.target.value })} className="h-10" aria-label="Subcategory name" />
-                      <Button type="submit" size="icon" variant="ghost" aria-label="Save"><Check size={16} /></Button>
-                      <Button size="icon" variant="ghost" aria-label="Cancel" onClick={() => setEditSub(null)}><X size={16} /></Button>
-                    </form>
-                  ) : (
-                    <>
-                      <span className="flex-1 rounded-control bg-surface-2 px-3 py-2 text-sm">{s.name}</span>
-                      <Button size="icon" variant="ghost" aria-label={`Rename ${s.name}`} onClick={() => setEditSub({ id: s.id, name: s.name })}><Pencil size={16} /></Button>
-                      <Button size="icon" variant="ghost" className="text-bad" aria-label={`Delete ${s.name}`} onClick={() => a.run(() => deleteSubcategory(s.id))}><Trash2 size={16} /></Button>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <ReorderList
+              items={subcategories}
+              getId={(s) => s.id}
+              getLabel={(s) => s.name}
+              onCommit={(ids) => reorder("subcategories", ids)}
+              className="space-y-1"
+            >
+              {(s) =>
+                editSub?.id === s.id ? (
+                  <form className="flex flex-1 gap-1" onSubmit={(e) => { e.preventDefault(); a.run(() => saveSubcategory({ id: s.id, category_id: category.id, name: editSub.name }), () => setEditSub(null)); }}>
+                    <Input autoFocus value={editSub.name} onChange={(e) => setEditSub({ ...editSub, name: e.target.value })} className="h-10" aria-label="Subcategory name" />
+                    <Button type="submit" size="icon" variant="ghost" aria-label="Save"><Check size={16} /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Cancel" onClick={() => setEditSub(null)}><X size={16} /></Button>
+                  </form>
+                ) : (
+                  <>
+                    <span className="flex-1 rounded-control bg-surface-2 px-3 py-2 text-sm">{s.name}</span>
+                    <Button size="icon" variant="ghost" aria-label={`Rename ${s.name}`} onClick={() => setEditSub({ id: s.id, name: s.name })}><Pencil size={16} /></Button>
+                    <Button size="icon" variant="ghost" className="text-bad" aria-label={`Delete ${s.name}`} onClick={() => a.run(() => deleteSubcategory(s.id))}><Trash2 size={16} /></Button>
+                  </>
+                )
+              }
+            </ReorderList>
             <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); a.run(() => saveSubcategory({ category_id: category.id, name: newSub }), () => setNewSub("")); }}>
               <Input placeholder="New subcategory" value={newSub} onChange={(e) => setNewSub(e.target.value)} className="h-10" aria-label="New subcategory" />
               <Button type="submit" size="sm" disabled={!newSub.trim()}><Plus size={16} /></Button>

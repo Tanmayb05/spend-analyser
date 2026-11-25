@@ -77,6 +77,36 @@
   --c-other: light-dark(#b8ae9b, #6a6358);
   --grid: var(--border);
 
+  /* BKlit charts (components/charts/bklit) read these names; every one maps to an app token, so both themes follow light-dark() */
+  --chart-1: var(--accent);
+  --chart-2: var(--chart-n2);
+  --chart-3: var(--c3);
+  --chart-4: var(--c4);
+  --chart-5: var(--text);
+  --chart-positive: var(--good);
+  --chart-negative: var(--bad);
+  --chart-background: var(--surface);
+  --chart-foreground: var(--text);
+  --chart-foreground-muted: var(--muted);
+  --chart-label: var(--faint);
+  --chart-line-primary: var(--accent);
+  --chart-line-secondary: var(--chart-n2);
+  --chart-crosshair: var(--muted);
+  --chart-grid: var(--grid);
+  --chart-brush-border: var(--border);
+  --chart-tooltip-background: var(--surface-3);
+  --chart-tooltip-foreground: var(--text);
+  --chart-tooltip-muted: var(--muted);
+  --chart-indicator-color: var(--muted);
+  --chart-indicator-secondary-color: var(--surface);
+  --chart-marker-background: var(--surface-2);
+  --chart-marker-border: var(--border);
+  --chart-marker-foreground: var(--text);
+  --chart-marker-badge-background: var(--text);
+  --chart-marker-badge-foreground: var(--surface);
+  --chart-segment-background: color-mix(in oklab, var(--accent) 8%, transparent);
+  --chart-segment-line: var(--border);
+
   /* soft neutral shadow for floating popovers only; fully transparent on dark, where depth comes from surface steps */
   --shadow-color: light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0));
 
@@ -98,6 +128,10 @@
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-faint: var(--faint);
+  --color-chart-label: var(--chart-label);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-good: var(--good);
@@ -247,9 +281,9 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* Bottom sheet / dialog scrim: flat, no blur */
+/* Bottom sheet / dialog scrim: flat, no blur. --sheet-drag (0..1) is set while a phone sheet is pulled down (ui/sheet.tsx). */
 dialog::backdrop {
-  background: rgb(0 0 0 / 0.5);
+  background: rgb(0 0 0 / calc(0.5 * (1 - var(--sheet-drag, 0))));
 }
 
 /* Left drawer (Sheet side="left"): slides up on phones; on desktop slides out from the sidebar, which stays uncovered */

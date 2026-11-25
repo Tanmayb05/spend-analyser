@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export type Stat = { label: string; value: string; /** Kept for callers: display figures are all set tabular (num-lg), mono is for table rows only. */ money?: boolean; /** small line under the figure, e.g. a comparison */ note?: string; noteTone?: "good" | "bad" };
+export type Stat = { label: string; /** text, or a <MoneyFlow> for amounts so they roll when the value changes */ value: ReactNode; /** Kept for callers: display figures are all set tabular (num-lg), mono is for table rows only. */ money?: boolean; /** small line under the figure, e.g. a comparison */ note?: string; noteTone?: "good" | "bad" };
 
 /** One ruled strip of figures: label over figure, hairline between cells. Replaces a row of separate stat cards. */
 export function StatStrip({ stats, className }: { stats: Stat[]; className?: string }) {

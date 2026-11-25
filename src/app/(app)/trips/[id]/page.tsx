@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatStrip } from "@/components/cards/stat-strip";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { TripHeaderActions } from "@/components/trips/trip-actions";
 import { LuggageTag } from "@/components/trips/luggage-tag";
 import { TripBreakdown } from "@/components/trips/trip-breakdown";
@@ -73,8 +74,8 @@ export default async function TripPage({ params }: PageProps<"/trips/[id]">) {
 
       <StatStrip
         stats={[
-          { label: "Total spent", value: formatMoney(total, currency, { whole: true }), money: true },
-          { label: "Per day", value: days ? formatMoney(total / days, currency, { whole: true }) : "–", money: days > 0 },
+          { label: "Total spent", value: <MoneyFlow value={total} currency={currency} whole />, money: true },
+          { label: "Per day", value: days ? <MoneyFlow value={total / days} currency={currency} whole /> : "–", money: days > 0 },
           { label: "Expenses", value: String(s?.count ?? 0) },
           { label: "Budget", value: trip.budget ? `${formatPercent(total / Number(trip.budget))} of ${formatMoney(Number(trip.budget), currency, { whole: true })}` : "Not set" },
         ]}

@@ -7,6 +7,7 @@ import { NetBars } from "@/components/charts/net-bars";
 import { categoryColor } from "@/components/charts/colors";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { SummaryCard } from "@/components/dashboard/summary-card";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { PeriodPicker } from "@/components/transactions/period-picker";
 import { CalendarCard } from "@/components/dashboard/calendar-card";
 import { SpendDonut, type AttentionItem } from "@/components/dashboard/spend-donut";
@@ -167,7 +168,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           {
             label: "Income",
             info: HELP.kpiIncome,
-            value: money(cur.income),
+            value: <MoneyFlow value={cur.income} currency={currency} whole />,
             delta: pctChange(cur.income, prev.income),
             goodWhenUp: true,
             sub: bTotals.incomeTarget > 0 ? `of ${money(bTotals.incomeTarget)} target` : undefined,
@@ -175,7 +176,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           {
             label: "Total spend",
             info: HELP.kpiSpent,
-            value: money(cur.spent),
+            value: <MoneyFlow value={cur.spent} currency={currency} whole />,
             delta: pctChange(cur.spent, prev.spent),
             sub:
               bTotals.total > 0
@@ -185,14 +186,14 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           {
             label: "Everyday spend",
             info: HELP.kpiCore,
-            value: money(cur.core),
+            value: <MoneyFlow value={cur.core} currency={currency} whole />,
             delta: pctChange(cur.core, prev.core),
             sub: bTotals.core > 0 ? `of ${money(bTotals.core)} everyday budget` : "controllable categories",
           },
           {
             label: "Net savings",
             info: HELP.kpiNet,
-            value: formatMoney(cur.net, currency, { whole: true, signed: true }),
+            value: <MoneyFlow value={cur.net} currency={currency} whole signed />,
             tone: cur.net > 0 ? "good" : cur.net < 0 ? "bad" : undefined,
             delta: pctChange(cur.net, prev.net),
             goodWhenUp: true,

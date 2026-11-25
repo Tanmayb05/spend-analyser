@@ -20,6 +20,8 @@ const eslintConfig = defineConfig([
     "src/lib/supabase/database.types.ts",
     "test-results/**",
     "playwright-report/**",
+    // vendored BKlit chart source (shadcn registry copy); typechecked, not linted against our React Compiler rules
+    "src/components/charts/bklit/**",
   ]),
 ]);
 

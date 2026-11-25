@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTitle } from "@/components/ui/info-title";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { HELP } from "@/lib/help";
-import { formatMoney, formatPercent } from "@/lib/money";
+import { formatPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { PeriodKpis } from "@/lib/analytics/period";
 
@@ -43,15 +44,14 @@ export function PeriodKpiStrip({
   /** Chart / insight shown under the totals, inside the same card */
   children?: ReactNode;
 }) {
-  const money = (n: number) => formatMoney(n, currency, { whole: true });
   const noIncome = kpis.income <= 0; // "saved" is meaningless without income (e.g. a month of only planned spend)
   const loss = !noIncome && kpis.saved < 0;
   const noDelta = { value: null, label: "" };
   const items = [
-    { key: "spend", label: "Total spend", value: money(kpis.spend), tone: "", sub: null as string | null, delta: deltas.spend, goodWhenUp: false, hint: undefined as string | undefined },
+    { key: "spend", label: "Total spend", value: <MoneyFlow value={kpis.spend} currency={currency} whole />, tone: "", sub: null as string | null, delta: deltas.spend, goodWhenUp: false, hint: undefined as string | undefined },
     everyday
       ? { key: "income", label: "Total income", value: "—", tone: "text-muted", sub: "Not part of Everyday", delta: noDelta, goodWhenUp: true, hint: "Income is excluded from Everyday view." }
-      : { key: "income", label: "Total income", value: money(kpis.income), tone: "", sub: null, delta: deltas.income, goodWhenUp: true, hint: undefined },
+      : { key: "income", label: "Total income", value: <MoneyFlow value={kpis.income} currency={currency} whole />, tone: "", sub: null, delta: deltas.income, goodWhenUp: true, hint: undefined },
     everyday
       ? { key: "saved", label: "Saved / loss", value: "—", tone: "text-muted", sub: "Needs income", delta: noDelta, goodWhenUp: true, hint: "Saved needs income, which Everyday view leaves out." }
       : noIncome
@@ -59,7 +59,7 @@ export function PeriodKpiStrip({
       : {
           key: "saved",
           label: loss ? "Loss" : "Saved",
-          value: `${loss ? "−" : ""}${money(Math.abs(kpis.saved))}`,
+          value: <MoneyFlow value={kpis.saved} currency={currency} whole />,
           tone: loss ? "text-bad" : kpis.saved > 0 ? "text-good" : "",
           sub: kpis.savingsRate == null ? null : loss ? `${formatPercent(Math.abs(kpis.savingsRate))} over income` : `${formatPercent(kpis.savingsRate)} of income saved`,
           delta: deltas.saved,
@@ -117,11 +117,10 @@ export function IncomeKpiStrip({
   basis?: "Actual" | "Projected";
   children?: ReactNode;
 }) {
-  const money = (n: number) => formatMoney(n, currency, { whole: true });
   const items = [
-    { key: "income", label: "Total income", value: money(income), sub: null as string | null, delta },
-    { key: "avg", label: "Average per month", value: money(avgMonth), sub: monthsCounted ? `over ${monthsCounted === 1 ? "1 month" : `${monthsCounted} months`} this year` : "No income yet this year", delta: { value: null, label: "" } },
-    { key: "peak", label: "Highest month", value: peak ? money(peak.value) : "–", sub: peak?.label ?? null, delta: { value: null, label: "" } },
+    { key: "income", label: "Total income", value: <MoneyFlow value={income} currency={currency} whole />, sub: null as string | null, delta },
+    { key: "avg", label: "Average per month", value: <MoneyFlow value={avgMonth} currency={currency} whole />, sub: monthsCounted ? `over ${monthsCounted === 1 ? "1 month" : `${monthsCounted} months`} this year` : "No income yet this year", delta: { value: null, label: "" } },
+    { key: "peak", label: "Highest month", value: peak ? <MoneyFlow value={peak.value} currency={currency} whole /> : "–", sub: peak?.label ?? null, delta: { value: null, label: "" } },
   ];
   return (
     <Card aria-label={`Income totals for ${period}`}>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { MotionProvider } from "@/components/shell/motion-provider";
 import { NoWheelNumber } from "@/components/shell/no-wheel-number";
 import { parseTheme, THEME_COLOR } from "@/lib/theme";
 import "./globals.css";
@@ -44,9 +45,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full`}
     >
       <body className="min-h-full">
-        {children}
+        {/* the Toaster sits inside MotionProvider: custom toasts (the undo ring) use m.* components */}
+        <MotionProvider>
+          {children}
+          <Toaster theme={theme} position="top-center" richColors closeButton />
+        </MotionProvider>
         <NoWheelNumber />
-        <Toaster theme={theme} position="top-center" richColors closeButton />
       </body>
     </html>
   );

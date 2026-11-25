@@ -133,7 +133,7 @@ test("trip counting modes change monthly totals", async ({ page }, info) => {
 
   await page.goto("/?m=2026-10");
   // excluded trip: nothing counted (the month still shows the calendar, not the new-account empty state)
-  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByText("$0", { exact: true })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByRole("img", { name: "$0", exact: true }).first()).toBeVisible();
   await page.goto("/trips");
   await expect(page.getByText("$300").first()).toBeVisible();
 
@@ -144,7 +144,7 @@ test("trip counting modes change monthly totals", async ({ page }, info) => {
   await page.getByRole("button", { name: "Save trip" }).click();
   await expect(page.getByText("Trip saved")).toBeVisible();
   await page.goto("/?m=2026-10");
-  await expect(page.getByText("$300").first()).toBeVisible();
+  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByRole("img", { name: "$300", exact: true }).first()).toBeVisible();
 });
 
 test("export xlsx round-trips through the importer", async ({ page }, info) => {
@@ -184,12 +184,14 @@ test("changing default currency converts everything", async ({ page }, info) => 
   await expect(page.getByText("Added")).toBeVisible();
 
   await page.goto("/settings/preferences");
+  // a change made before hydration has no handler yet and the conversion note never appears
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Default currency").selectOption("INR");
   await expect(page.getByText(/will be converted to INR/)).toBeVisible();
   await page.getByRole("button", { name: "Save preferences" }).click();
   await expect(page.getByText(/Switched to INR/)).toBeVisible({ timeout: 30_000 });
   await page.goto("/");
   // KPI is in rupees; the original USD amount is kept as the secondary label on the transaction
-  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByText(/^₹[\d,]+$/)).toBeVisible();
+  await expect(page.getByRole("group", { name: "Total spend", exact: true }).getByRole("img", { name: /^₹[\d,]+$/ }).first()).toBeVisible();
   await expect(page.getByText("$100.00").first()).toBeVisible();
 });

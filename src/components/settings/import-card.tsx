@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FileSpreadsheet, Upload } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
+import { FileDrop } from "@/components/vendor/kokonut/file-drop";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
@@ -27,7 +28,6 @@ function groupSkipped(skipped: Skipped[]) {
 
 export function ImportCard({ hasTransactions, currency }: { hasTransactions: boolean; currency: string }) {
   const router = useRouter();
-  const input = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [read, setRead] = useState<ReadResult | null>(null);
   const [options, setOptions] = useState<ImportOptions>({});
@@ -96,12 +96,18 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
   function doImport() {
     if (!report) return;
     start(async () => {
-      const res = await importBundle(report.bundle);
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success(`Imported ${res.transactions} transactions and ${res.plans} installment plans`);
+      // one toast from start to finish: a spinner while the server writes, then the result
+      const run = importBundle(report.bundle).then((r) => {
+        if (!r.ok) throw new Error(r.error);
+        return r;
+      });
+      toast.promise(run, {
+        loading: `Importing ${report.stats.transactions} transactions…`,
+        success: (r) => `Imported ${r.transactions} transactions and ${r.plans} installment plans`,
+        error: (e: Error) => e.message,
+      });
+      const res = await run.catch(() => null);
+      if (!res) return;
       const parked = report.bundle.transactions.filter((t) => t.category === UNCATEGORIZED || t.category === UNCATEGORIZED_INCOME).length;
       setRead(null);
       setFileName(null);
@@ -126,27 +132,14 @@ export function ImportCard({ hasTransactions, currency }: { hasTransactions: boo
     <Card>
       <CardHeader title="Import" subtitle="Your Expense Tracker workbook, or a bank or spreadsheet export (.xlsx, .xls, .csv)" />
       <ImportGuide />
-      <input
-        ref={input}
-        type="file"
-        accept=".xlsx,.xls,.csv,.tsv,.txt"
-        className="sr-only"
-        aria-label="Choose file to import"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = ""; // choosing the same file again should re-read it
-        }}
+      <FileDrop
+        accept={[".xlsx", ".xls", ".csv", ".tsv", ".txt"]}
+        label="Choose file to import"
+        onFile={onFile}
+        icon={fileName ? <FileSpreadsheet size={16} className="text-accent" /> : undefined}
+        title={fileName ?? undefined}
+        hint="Excel or CSV · nothing is saved until you confirm"
       />
-      <button
-        type="button"
-        onClick={() => input.current?.click()}
-        className="flex w-full flex-col items-center gap-2 rounded-card border border-dashed border-border px-6 py-8 text-center transition-colors hover:bg-surface-2"
-      >
-        {fileName ? <FileSpreadsheet className="text-accent" /> : <Upload className="text-muted" />}
-        <span className="font-medium">{fileName ?? "Choose a file"}</span>
-        <span className="text-xs text-muted">Nothing is saved until you confirm</span>
-      </button>
       {hasTransactions && !report ? <p className="mt-3 text-xs text-muted">Importing adds rows to what you have. To start from scratch, use <Link href="/settings/reset" className="text-accent underline-offset-4 hover:underline">Reset or delete</Link>.</p> : null}
       {shownError ? <p role="alert" className="mt-3 rounded-inset bg-bad/10 px-4 py-3 text-sm text-bad">{shownError}</p> : null}
 

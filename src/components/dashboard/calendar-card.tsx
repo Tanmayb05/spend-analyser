@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
+import { AnimatePresence, m, useDragControls, type PanInfo } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { InfoTitle } from "@/components/ui/info-title";
 import { LedgerItem, type LedgerRowWithLink } from "@/components/transactions/ledger-item";
@@ -15,6 +16,7 @@ import { PeriodPicker } from "@/components/transactions/period-picker";
 import type { Scope } from "@/lib/analytics/summary";
 import { addMonths, daysInMonth, formatMonth, parseISO } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
+import { DISMISS } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { LedgerRow } from "@/lib/data/types";
 
@@ -90,8 +92,12 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
   const href = useParamHref();
   const detail = useBackSheet<LedgerRowWithLink>(); // Back closes the detail sheet
   const gridRef = useRef<HTMLDivElement>(null);
-  const swipe = useRef<{ x: number; y: number } | null>(null);
   const swiped = useRef(false);
+  const dragControls = useDragControls();
+  // slide direction for the month change: +1 = later month comes in from the right
+  const [shown, setShown] = useState({ month, dir: 0 });
+  if (shown.month !== month) setShown({ month, dir: month > shown.month ? 1 : -1 });
+  const dir = shown.month !== month ? (month > shown.month ? 1 : -1) : shown.dir;
   const days = daysInMonth(month);
   const thisMonth = `${today.slice(0, 7)}-01`;
 
@@ -176,30 +182,21 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
     setSelected(null);
   }
 
-  // horizontal touch swipe changes month; vertical movement stays a normal page scroll
+  // horizontal touch swipe on the grid changes month (Motion drag, direction-locked so vertical page scroll still works).
+  // Mouse never starts a drag: desktop uses the month picker.
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     swiped.current = false;
-    swipe.current = e.pointerType === "mouse" ? null : { x: e.clientX, y: e.clientY };
+    if (e.pointerType !== "mouse") dragControls.start(e);
   }
-  function onPointerUp(e: PointerEvent<HTMLDivElement>) {
-    const start = swipe.current;
-    swipe.current = null;
-    if (!start) return;
-    const dx = e.clientX - start.x;
-    const dy = e.clientY - start.y;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+  function onDragEnd(_: globalThis.PointerEvent | globalThis.MouseEvent | TouchEvent, info: PanInfo) {
+    const far = Math.abs(info.offset.x) >= 50 || Math.abs(info.velocity.x) > DISMISS.velocity;
+    if (!far || Math.abs(info.offset.x) < Math.abs(info.offset.y)) return;
     swiped.current = true;
-    router.push(href({ m: addMonths(month, dx < 0 ? 1 : -1).slice(0, 7) }), { scroll: false });
+    router.push(href({ m: addMonths(month, info.offset.x < 0 ? 1 : -1).slice(0, 7) }), { scroll: false });
   }
 
   return (
-    <Card
-      className="flex touch-pan-y flex-col"
-      onClickCapture={onCardClick}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-      onPointerCancel={() => (swipe.current = null)}
-    >
+    <Card className="flex flex-col" onClickCapture={onCardClick}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <InfoTitle as="h2" info={info} className="card-title" panelClassName="max-w-md">Transaction calendar</InfoTitle>
         <div className="flex max-w-full items-center gap-2">
@@ -208,7 +205,34 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
         </div>
       </div>
 
-      <div ref={gridRef} onKeyDown={onKeyDown} className="grid grid-cols-7 gap-1 sm:gap-1.5" role="group" aria-label={`Spending by day, ${formatMonth(month)}`}>
+      {/* clip the sideways slide; the 4px gutter keeps the selected-day ring (2px + 1px offset) visible at the edges */}
+      <div className="relative -m-1 overflow-x-clip p-1">
+      <AnimatePresence initial={false} mode="popLayout" custom={dir}>
+      <m.div
+        key={month}
+        ref={gridRef}
+        onKeyDown={onKeyDown}
+        onPointerDown={onPointerDown}
+        drag="x"
+        dragControls={dragControls}
+        dragListener={false}
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.35}
+        onDragEnd={onDragEnd}
+        custom={dir}
+        variants={{
+          enter: (d: number) => ({ x: d * 48, opacity: 0 }),
+          center: { x: 0, opacity: 1 },
+          exit: (d: number) => ({ x: d * -48, opacity: 0 }),
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        className="grid touch-pan-y grid-cols-7 gap-1 sm:gap-1.5"
+        role="group"
+        aria-label={`Spending by day, ${formatMonth(month)}`}
+      >
         {labels.map((l) => (
           <span key={l} className="pb-1 text-center text-xs text-faint">
             <span className="sm:hidden">{l[0]}</span>
@@ -262,6 +286,8 @@ export function CalendarCard({ month, today, rows, currency, weekStart, scope, i
             </button>
           );
         })}
+      </m.div>
+      </AnimatePresence>
       </div>
 
       <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted" aria-label="Legend">

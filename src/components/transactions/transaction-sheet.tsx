@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { showUndoToast } from "@/components/vendor/kokonut/undo-toast";
+import { AmountPad } from "@/components/vendor/kokonut/amount-pad";
+import { AnimatePresence, m } from "motion/react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { ChevronDown, Copy, ExternalLink, Loader2, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -102,6 +106,11 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
   const [dateOpen, setDateOpen] = useState(false);
   const [advanced, setAdvanced] = useState(() => v.spread || v.repeat);
   const amountRef = useRef<HTMLInputElement>(null);
+  // touch devices type the amount on our pad instead of the system keyboard (desktop keeps the plain decimal input)
+  const touch = useMediaQuery("(pointer: coarse)");
+  const padRef = useRef<HTMLDivElement>(null);
+  const [padOpen, setPadOpen] = useState(false);
+  const leavesPad = (e: React.FocusEvent) => !(e.relatedTarget instanceof Node && (padRef.current?.contains(e.relatedTarget) || e.relatedTarget === amountRef.current));
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   const [queue, setQueue] = useState<Record<string, string>[]>(() => initialQueue ?? []);
@@ -259,15 +268,10 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
       if (!res.ok) return void toast.error(res.error);
       app.closeTxnSheet();
       router.refresh();
-      toast("Deleted", {
-        action: {
-          label: "Undo",
-          onClick: async () => {
-            const r = await restoreTransactions(res.data);
-            if (r.ok) router.refresh();
-            else toast.error(r.error);
-          },
-        },
+      showUndoToast("Deleted", async () => {
+        const r = await restoreTransactions(res.data);
+        if (r.ok) router.refresh();
+        else toast.error(r.error);
       });
     });
   }
@@ -344,7 +348,9 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
           </Select>
           <input
             aria-label="Amount"
-            inputMode="decimal"
+            inputMode={touch ? "none" : "decimal"}
+            onFocus={() => touch && setPadOpen(true)}
+            onBlur={(e) => leavesPad(e) && setPadOpen(false)}
             type="number"
             step="0.01"
             min="0"
@@ -360,6 +366,13 @@ function TransactionForm({ editId, preset, initialQueue, onReceipt }: { editId?:
           />
         </div>
         {errors.amount ? <p className="mt-1 text-sm text-bad">{errors.amount}</p> : null}
+        <AnimatePresence initial={false}>
+          {touch && padOpen ? (
+            <m.div key="pad" ref={padRef} className="overflow-hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} onBlur={(e) => leavesPad(e) && setPadOpen(false)}>
+              <AmountPad className="pt-2" value={v.amount} onChange={(x) => set("amount", x)} onDone={() => amountRef.current?.blur()} target={amountRef} />
+            </m.div>
+          ) : null}
+        </AnimatePresence>
         {foreign ? (
           <div className="mt-3 flex items-center gap-2 text-sm text-muted">
             <span>1 {v.currency} =</span>

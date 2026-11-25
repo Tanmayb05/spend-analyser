@@ -5,7 +5,8 @@ import { Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
-import { deleteListItem, setDefaultPaymentMethod } from "@/app/(app)/settings/actions";
+import { deleteListItem, reorder, setDefaultPaymentMethod } from "@/app/(app)/settings/actions";
+import { ReorderList } from "@/components/ui/reorder-list";
 import { type CardSettings } from "@/components/cards/card-forms";
 import { NewPaymentMethodSheet } from "./payment-method-new-sheet";
 import { KIND_LIST, kindMeta } from "@/lib/payment-kinds";
@@ -43,7 +44,7 @@ export function PaymentMethodsEditor({
     const d = details[it.id];
     const isDefault = defaultId === it.id;
     return (
-      <li key={it.id} className="flex items-center gap-3 py-2.5">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <CardBadge kind={d?.kind} filled={c?.is_credit_card} issuer={d?.issuer} nickname={d?.nickname} name={it.name} color={d?.color} />
         <span className={`min-w-0 flex-1 truncate ${it.archived ? "text-faint line-through" : ""}`}>
           {it.name}
@@ -79,15 +80,21 @@ export function PaymentMethodsEditor({
             {confirmId === it.id ? "Confirm" : null}
           </Button>
         </div>
-      </li>
+      </div>
     );
   }
 
-  function section(title: string, list: Item[]) {
+  // sort_order is one sequence across all kinds: rebuild it group by group with this group's new order swapped in
+  const saveOrder = (kind: string, ids: string[]) =>
+    reorder("payment_methods", groups.flatMap((g) => (g.value === kind ? ids : g.list.map((it) => it.id))));
+
+  function section(kind: string, title: string, list: Item[]) {
     return (
       <section key={title} className="mt-5">
         <h3 className="text-label text-muted">{title}</h3>
-        <ul className="divide-y divide-border">{list.map(row)}</ul>
+        <ReorderList items={list} getId={(it) => it.id} getLabel={(it) => it.name} onCommit={(ids) => saveOrder(kind, ids)} className="divide-y divide-border" itemClassName="py-2.5">
+          {row}
+        </ReorderList>
       </section>
     );
   }
@@ -102,7 +109,7 @@ export function PaymentMethodsEditor({
       </div>
       <NewPaymentMethodSheet open={addOpen} onClose={() => setAddOpen(false)} currency={currency} today={today} />
 
-      {groups.map((g) => section(g.plural, g.list))}
+      {groups.map((g) => section(g.value, g.plural, g.list))}
 
       {editing && cards[editing.id] && details[editing.id] ? (
         <PaymentMethodSheet key={editing.id} card={cards[editing.id]} details={details[editing.id]} archived={editing.archived} open onClose={() => setEditId(null)} currency={currency} today={today} />

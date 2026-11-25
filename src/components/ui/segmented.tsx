@@ -1,10 +1,11 @@
 "use client";
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useId, useRef, type CSSProperties, type ReactNode } from "react";
+import { m } from "motion/react";
 import { cn } from "@/lib/utils";
 
 /**
- * Radio group as a segmented control: a raised surface step with a hairline marks the selected option and slides between options
- * (the global reduced-motion rule turns the slide off). Radius is nested: outer control radius minus the 4px padding.
+ * Radio group as a segmented control: an accent-tinted pill marks the selected option and slides between options
+ * (Motion shared layout via layoutId; MotionConfig reducedMotion="user" turns the slide off). Radius is nested: outer control radius minus the 4px padding.
  */
 export function Segmented<T extends string>({
   value,
@@ -28,31 +29,8 @@ export function Segmented<T extends string>({
   shortcutTabs?: boolean;
 }) {
   const root = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState<{ left: number; width: number } | null>(null);
-  const [animate, setAnimate] = useState(false);
-
-  // measure the selected pill; animate only after the first measurement so it doesn't slide in on load
-  useLayoutEffect(() => {
-    const el = root.current?.querySelector<HTMLElement>('[aria-checked="true"]');
-    if (el) setBox({ left: el.offsetLeft, width: el.offsetWidth });
-  }, [value, options.length, size]);
-  // re-measure when the pills resize (responsive padding, font load) so the indicator doesn't go stale
-  useLayoutEffect(() => {
-    const root_ = root.current;
-    if (!root_ || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
-      const el = root_.querySelector<HTMLElement>('[aria-checked="true"]');
-      if (el) setBox((b) => (b && b.left === el.offsetLeft && b.width === el.offsetWidth ? b : { left: el.offsetLeft, width: el.offsetWidth }));
-    });
-    ro.observe(root_);
-    return () => ro.disconnect();
-  }, []);
-  useLayoutEffect(() => {
-    if (box) {
-      const id = requestAnimationFrame(() => setAnimate(true));
-      return () => cancelAnimationFrame(id);
-    }
-  }, [box]);
+  // one shared-layout id per control instance, so two Segmented on a page never swap indicators
+  const indicatorId = `seg-${useId()}`;
 
   return (
     <div
@@ -71,13 +49,6 @@ export function Segmented<T extends string>({
         root.current?.querySelectorAll<HTMLElement>('[role="radio"]')[to]?.focus();
       }}
       style={{ "--seg-radius": "calc(var(--radius-control) - 4px)" } as CSSProperties} className={cn("relative inline-flex max-w-full rounded-control border border-border bg-surface-2 p-1", className)}>
-      {box ? (
-        <span
-          aria-hidden
-          className={cn("pointer-events-none absolute inset-y-1 left-0 rounded-(--seg-radius) bg-accent/15 ring-1 ring-inset ring-accent", animate && "transition-[transform,width] duration-(--dur-base)")}
-          style={{ transform: `translateX(${box.left}px)`, width: box.width }}
-        />
-      ) : null}
       {options.map((o, i) => (
         <button
           key={o.value}
@@ -87,13 +58,20 @@ export function Segmented<T extends string>({
           tabIndex={value === o.value || (i === 0 && !options.some((x) => x.value === value)) ? 0 : -1}
           onClick={() => onChange(o.value)}
           className={cn(
-            "relative z-10 whitespace-nowrap rounded-(--seg-radius) px-3 font-medium transition-colors",
+            "relative whitespace-nowrap rounded-(--seg-radius) px-3 font-medium transition-colors",
             compact && "max-sm:px-1.5 max-sm:text-xs",
             size === "sm" ? "h-8 text-xs" : "h-9 text-sm",
-            value === o.value ? (box ? "text-text" : "bg-accent/15 text-text ring-1 ring-inset ring-accent") : "text-muted hover:text-text",
+            value === o.value ? "text-text" : "text-muted hover:text-text",
           )}
         >
-          {o.label}
+          {value === o.value ? (
+            <m.span
+              aria-hidden
+              layoutId={indicatorId}
+              className="pointer-events-none absolute inset-0 rounded-(--seg-radius) bg-accent/15 ring-1 ring-inset ring-accent"
+            />
+          ) : null}
+          <span className="relative">{o.label}</span>
         </button>
       ))}
     </div>

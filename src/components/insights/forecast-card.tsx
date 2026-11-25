@@ -1,5 +1,6 @@
 import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { StatStrip } from "@/components/cards/stat-strip";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { ACCENT, NEUTRAL } from "@/components/charts/colors";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -38,17 +39,17 @@ export function ForecastCard({ f, currency, info }: { f: Forecast; currency: str
         : `On this pace you finish near ${money(f.projected)}. Set budgets in Settings to see how that compares.`;
 
   const stats = [
-    { label: "Spent so far", value: money(f.posted), note: `day ${f.day} of ${f.days}` },
-    { label: "Already booked", value: money(f.scheduledLeft), note: "EMIs and scheduled entries" },
+    { label: "Spent so far", value: <MoneyFlow value={f.posted} currency={currency} whole />, note: `day ${f.day} of ${f.days}` },
+    { label: "Already booked", value: <MoneyFlow value={f.scheduledLeft} currency={currency} whole />, note: "EMIs and scheduled entries" },
     {
       label: "Projected month end",
-      value: f.early ? "–" : money(f.projected),
+      value: f.early ? "–" : <MoneyFlow value={f.projected} currency={currency} whole />,
       note: f.early ? undefined : hasRange ? `likely ${money(f.low)} to ${money(f.high)}` : f.budget > 0 ? `${f.projected > f.budget ? "over" : "under"} budget` : undefined,
       noteTone: f.early || hasRange || f.budget <= 0 ? undefined : f.projected > f.budget ? ("bad" as const) : ("good" as const),
     },
     {
       label: "Left per day on budget",
-      value: f.safePerDay == null ? "–" : f.safePerDay < 0 ? `−${money(Math.abs(f.safePerDay))}` : money(f.safePerDay),
+      value: f.safePerDay == null ? "–" : <MoneyFlow value={f.safePerDay} currency={currency} whole />,
       note: f.safePerDay != null && f.safePerDay < 0 ? "already past budget" : f.daysLeft ? `${f.daysLeft} days left` : "last day",
       noteTone: f.safePerDay != null && f.safePerDay < 0 ? ("bad" as const) : undefined,
     },

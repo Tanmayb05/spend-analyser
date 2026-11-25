@@ -186,9 +186,17 @@ export async function deleteCategory(id: string, mergeInto: string | null): Prom
   return error ? fail(error) : done("Deleted");
 }
 
-export async function reorderCategories(ids: string[]): Promise<Result> {
+const reorderInput = z.object({
+  table: z.enum(["categories", "subcategories", "payment_methods"]),
+  ids: z.array(uuid).min(1).max(500).refine((ids) => new Set(ids).size === ids.length, "Duplicate ids"),
+});
+
+/** Saves a user-chosen order: sort_order = position (1-based). RLS limits the updates to the user's own rows. */
+export async function reorder(table: "categories" | "subcategories" | "payment_methods", ids: string[]): Promise<Result> {
+  const v = reorderInput.safeParse({ table, ids });
+  if (!v.success) return fail("Couldn't save the new order");
   const { supabase } = await requireUser();
-  const results = await Promise.all(ids.map((id, i) => supabase.from("categories").update({ sort_order: i + 1 }).eq("id", id)));
+  const results = await Promise.all(v.data.ids.map((id, i) => supabase.from(v.data.table).update({ sort_order: i + 1 }).eq("id", id)));
   const err = results.find((r) => r.error)?.error;
   return err ? fail(err) : done();
 }

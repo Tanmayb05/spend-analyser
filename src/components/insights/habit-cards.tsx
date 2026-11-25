@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardHeader, Insight } from "@/components/ui/card";
 import { StatStrip } from "@/components/cards/stat-strip";
+import { MoneyFlow } from "@/components/ui/money-flow";
 import { formatMoney } from "@/lib/money";
 import { formatDay } from "@/lib/dates";
 import { ACCENT, NEUTRAL } from "@/components/charts/colors";
@@ -96,14 +97,13 @@ export function RhythmCard({ rhythm, currency, info }: { rhythm: Rhythm; currenc
 }
 
 export function HabitStats({ rhythm, currency }: { rhythm: Rhythm; currency: string }) {
-  const money = (n: number) => formatMoney(n, currency, { whole: true });
   return (
     <StatStrip
       stats={[
-        { label: "Per day this month", value: money(rhythm.perDay) },
+        { label: "Per day this month", value: <MoneyFlow value={rhythm.perDay} currency={currency} whole /> },
         { label: "Days with no spending", value: rhythm.daysElapsed ? `${rhythm.noSpendDays} of ${rhythm.daysElapsed}` : "–" },
-        { label: "Typical purchase", value: rhythm.count ? money(rhythm.avgTxn) : "–" },
-        { label: "Biggest purchase", value: rhythm.biggest ? money(rhythm.biggest.amount) : "–" },
+        { label: "Typical purchase", value: rhythm.count ? <MoneyFlow value={rhythm.avgTxn} currency={currency} whole /> : "–" },
+        { label: "Biggest purchase", value: rhythm.biggest ? <MoneyFlow value={rhythm.biggest.amount} currency={currency} whole /> : "–" },
       ]}
     />
   );
