@@ -10,6 +10,7 @@ export function InsightTabs({ tab }: { tab: InsightTab }) {
   return (
     <Segmented<InsightTab>
       compact
+      shortcutTabs
       ariaLabel="Insights view"
       value={tab}
       onChange={(v) => go({ tab: v === "overview" ? null : v })}

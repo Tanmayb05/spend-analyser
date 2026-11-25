@@ -53,6 +53,7 @@ export function PlanTicket({ p, onOpen }: { p: PlanView; onOpen: (p: PlanView) =
       <button
         type="button"
         id={`plan-${p.txnId}`}
+        data-nav-item
         onClick={() => onOpen(p)}
         className="flex w-full scroll-mt-24 rounded-card border border-border bg-surface text-left hover:bg-surface-2 target:border-accent"
       >

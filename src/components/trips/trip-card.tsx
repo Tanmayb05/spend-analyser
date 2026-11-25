@@ -52,7 +52,7 @@ export function TripCard({ trip: t, currency, spent, count, days, start, end, co
           <div className="flex items-start justify-between gap-3">
             <p className="min-w-0 truncate text-lg font-medium">
               {/* stretched link: the ::after covers the whole pass, credit links sit above it */}
-              <Link href={`/trips/${t.id}`} data-card-link className="after:absolute after:inset-0 after:rounded-card after:content-['']">{t.name}</Link>
+              <Link href={`/trips/${t.id}`} data-card-link data-nav-item className="after:absolute after:inset-0 after:rounded-card after:content-['']">{t.name}</Link>
             </p>
             {photo ? (
               <span className="inline-flex shrink-0 items-center rounded-full bg-on-photo-chip px-2 py-0.5 text-xs font-medium ring-1 ring-inset ring-white/25">{mode}</span>

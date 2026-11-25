@@ -157,6 +157,7 @@ export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
                 return (
                   <li key={i.name}>
                     <Link
+                      data-nav-item
                       href={`?${new URLSearchParams({ ...(q ? { q } : {}), item: i.name })}`}
                       scroll={false}
                       className={cn("grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-x-3 rounded-control px-2 py-3 transition-colors duration-(--dur-fast) hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_8rem_6rem_4rem_5.5rem]", selected === i.name && "bg-surface-3 ring-1 ring-inset ring-text/10")}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { LogOut, Menu, Plus } from "lucide-react";
+import { Keyboard, LogOut, Menu, Plus, Search } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
@@ -16,6 +16,9 @@ import { NotificationsProvider } from "@/components/notifications/notifications-
 import { NotificationBell } from "@/components/notifications/bell";
 import { NotificationPanel } from "@/components/notifications/notification-panel";
 import { Credits } from "./credits";
+import { ShortcutHint } from "@/components/ui/kbd";
+import { useShortcuts } from "@/components/shortcuts/shortcuts-provider";
+import { GO_TO } from "@/lib/shortcuts/commands";
 import type { Notice } from "@/lib/notifications/types";
 
 export function AppShell({ children, notices }: { children: ReactNode; notices: Promise<Notice[]> }) {
@@ -23,21 +26,36 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
   const pathname = usePathname();
   const { openTxnSheet } = useAppData();
   const [moreOpen, setMoreOpen] = useState(false);
+  const keys = useShortcuts();
+  /** "Trips (G then R)" as a tooltip on nav links that have a shortcut. */
+  const navTitle = (href: string, label: string) => {
+    const id = GO_TO.find((g) => g.href === href)?.id;
+    const hint = id ? keys.hint(id) : null;
+    return hint ? `${label} (${hint})` : undefined;
+  };
 
   return (
     <NotificationsProvider source={notices}>
     <div className="min-h-dvh lg:flex lg:gap-4 lg:p-4">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-pop">
+        Skip to content
+      </a>
       {/* Desktop sidebar: 240 wide, so content starts at 16 + 240 + 16 = --sidebar-offset (17rem) */}
       <aside className="sticky top-4 z-40 hidden h-[calc(100dvh-2rem)] w-60 shrink-0 flex-col rounded-card border border-border bg-surface p-compact lg:flex">
         <Link href="/" aria-label="Spend Analyser, Overview" className="flex h-9 items-center gap-3 px-3">
           <Logo size={24} />
           <span className="text-base font-medium text-text">Spend Analyser</span>
         </Link>
-        <nav className="mt-6 flex flex-col gap-1" aria-label="Main">
+        <button type="button" onClick={keys.openPalette} aria-keyshortcuts={keys.aria("palette.open")} className={cn(SIDE_ROW, SIDE_ROW_IDLE, "mt-6 border border-border")}>
+          <Search size={18} className="shrink-0" />
+          <span className="flex-1 text-left">Search</span>
+          <ShortcutHint id="palette.open" />
+        </button>
+        <nav className="mt-4 flex flex-col gap-1" aria-label="Main">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
             return (
-              <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn(SIDE_ROW, active ? SIDE_ROW_ACTIVE : SIDE_ROW_IDLE)}>
+              <Link key={href} href={href} title={navTitle(href, label)} aria-current={active ? "page" : undefined} className={cn(SIDE_ROW, active ? SIDE_ROW_ACTIVE : SIDE_ROW_IDLE)}>
                 <Icon size={18} className="shrink-0" />
                 {label}
               </Link>
@@ -45,6 +63,11 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
           })}
         </nav>
         <div className="mt-auto flex flex-col gap-1">
+          <button type="button" onClick={keys.openHelp} aria-keyshortcuts={keys.aria("help.open")} className={cn(SIDE_ROW, SIDE_ROW_IDLE)}>
+            <Keyboard size={18} className="shrink-0" />
+            <span className="flex-1 text-left">Shortcuts</span>
+            <ShortcutHint id="help.open" />
+          </button>
           <NotificationBell variant="sidebar" />
           <form action={signOut}>
             <button type="submit" className={cn(SIDE_ROW, SIDE_ROW_IDLE)}>
@@ -52,7 +75,7 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
               Sign out
             </button>
           </form>
-          <Button variant="accent" size="sm" onClick={() => openTxnSheet()} className="mt-2 w-full">
+          <Button variant="accent" size="sm" onClick={() => openTxnSheet()} title={keys.hint("txn.new") ? `Add transaction (${keys.hint("txn.new")})` : undefined} aria-keyshortcuts={keys.aria("txn.new")} className="mt-2 w-full">
             <Plus size={18} />
             Add transaction
           </Button>
@@ -69,7 +92,7 @@ export function AppShell({ children, notices }: { children: ReactNode; notices: 
           <NotificationBell variant="header" />
         </header>
 
-        <main className="mx-auto w-full max-w-400 px-4 pb-32 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
+        <main id="main" tabIndex={-1} className="mx-auto outline-none w-full max-w-400 px-4 pb-32 pt-2 lg:px-2 lg:pb-6 lg:pt-2">{children}</main>
       </div>
 
       {/* Mobile bottom nav */}

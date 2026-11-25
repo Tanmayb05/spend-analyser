@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { DemoVideo, DEMO_VIDEO } from "./demo-video";
+import { ShortcutHint } from "@/components/ui/kbd";
+import { useShortcuts } from "@/components/shortcuts/shortcuts-provider";
 
 /**
  * Shown once, right after sign-up (the confirm link and the instant-session sign-up land on `/?welcome=1`).
@@ -15,6 +17,7 @@ export function WelcomeSheet() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(true);
+  const keys = useShortcuts();
   const close = () => {
     setOpen(false);
     router.replace(pathname, { scroll: false });
@@ -26,6 +29,15 @@ export function WelcomeSheet() {
         A {DEMO_VIDEO.seconds}-second tour of what the app does. You can watch it again any time in Settings → About.
       </p>
       <DemoVideo className="mt-4" />
+      {keys.active("help.open") || keys.active("palette.open") ? (
+        // keyboard users only: hidden on touch screens
+        <p className="mt-4 hidden flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted pointer-fine:flex">
+          Using a keyboard?
+          {keys.active("help.open") ? <>Press <ShortcutHint id="help.open" /> for every shortcut</> : null}
+          {keys.active("help.open") && keys.active("palette.open") ? "and" : null}
+          {keys.active("palette.open") ? <><ShortcutHint id="palette.open" /> to jump to any page</> : null}
+        </p>
+      ) : null}
       <div className="mt-card flex flex-col-reverse gap-2 pb-card sm:flex-row sm:justify-end">
         <Link
           href="/settings/data"

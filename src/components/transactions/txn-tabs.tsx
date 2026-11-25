@@ -11,6 +11,7 @@ export function TxnTabs({ tab }: { tab: TxnTab }) {
   return (
     <Segmented<TxnTab>
       compact
+      shortcutTabs
       ariaLabel="Transactions view"
       value={tab}
       // `pk` is a retired plan-kind filter; drop it so old links don't linger in the URL

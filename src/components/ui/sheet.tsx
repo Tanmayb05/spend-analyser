@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,7 @@ export function Sheet({
   bare?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const d = ref.current;
@@ -54,6 +55,7 @@ export function Sheet({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => {
         if (e.target === ref.current) onClose();
@@ -71,7 +73,7 @@ export function Sheet({
     >
       <div className={cn("flex flex-col", side === "bottom" ? "max-h-[92dvh]" : "h-full")}>
         <div className="flex items-center justify-between gap-3 border-b border-border px-card py-4">
-          <h2 className="text-lg font-medium">{title}</h2>
+          <h2 id={titleId} className="text-lg font-medium">{title}</h2>
           <div className="flex items-center gap-1">
             {actions}
             <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-control transition-colors hover:bg-surface-3">

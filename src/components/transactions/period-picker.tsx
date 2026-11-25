@@ -102,7 +102,7 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
         }}
       />}
       <div ref={root} className="relative flex h-10.5 items-center rounded-control border border-border bg-surface-2 p-1">
-        <Link href={prev} scroll={false} aria-label={`Previous ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3 max-sm:w-6">
+        <Link href={prev} scroll={false} data-shortcut="period-prev" aria-label={`Previous ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3 max-sm:w-6">
           <ChevronLeft size={18} />
         </Link>
         <button
@@ -118,7 +118,7 @@ export function PeriodPicker({ view, month, year, today, monthOnly = false }: { 
           <span className="sm:hidden">{shortLabel}</span>
           <span className="max-sm:hidden">{label}</span>
         </button>
-        <Link href={next} scroll={false} aria-label={`Next ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3 max-sm:w-6">
+        <Link href={next} scroll={false} data-shortcut="period-next" aria-label={`Next ${noun}`} className="grid h-8 w-8 place-items-center rounded-sm transition-colors hover:bg-surface-3 max-sm:w-6">
           <ChevronRight size={18} />
         </Link>
 

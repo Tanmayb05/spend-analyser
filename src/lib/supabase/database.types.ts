@@ -274,13 +274,13 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "ai_enabled": boolean,"base_currency": string,"created_at": string,"dashboard_mode": Database["public"]['Enums']["ledger_mode"],"date_format": string,"default_entry_method": string,"default_payment_method_id": string | null,"default_spread_months": number,"display_name": string | null,"id": string,"locale": string,"theme": string,"timezone": string,"updated_at": string,"week_start": number
+                    "ai_enabled": boolean,"base_currency": string,"character_keys": boolean,"created_at": string,"dashboard_mode": Database["public"]['Enums']["ledger_mode"],"date_format": string,"default_entry_method": string,"default_payment_method_id": string | null,"default_spread_months": number,"display_name": string | null,"id": string,"locale": string,"shortcut_overrides": NonNullable<Json>,"theme": string,"timezone": string,"updated_at": string,"week_start": number
                   }
                   Insert: {
-                    "ai_enabled"?: boolean,"base_currency"?: string,"created_at"?: string,"dashboard_mode"?: Database["public"]['Enums']["ledger_mode"],"date_format"?: string,"default_entry_method"?: string,"default_payment_method_id"?: string | null,"default_spread_months"?: number,"display_name"?: string | null,"id": string,"locale"?: string,"theme"?: string,"timezone"?: string,"updated_at"?: string,"week_start"?: number
+                    "ai_enabled"?: boolean,"base_currency"?: string,"character_keys"?: boolean,"created_at"?: string,"dashboard_mode"?: Database["public"]['Enums']["ledger_mode"],"date_format"?: string,"default_entry_method"?: string,"default_payment_method_id"?: string | null,"default_spread_months"?: number,"display_name"?: string | null,"id": string,"locale"?: string,"shortcut_overrides"?: NonNullable<Json>,"theme"?: string,"timezone"?: string,"updated_at"?: string,"week_start"?: number
                   }
                   Update: {
-                    "ai_enabled"?: boolean,"base_currency"?: string,"created_at"?: string,"dashboard_mode"?: Database["public"]['Enums']["ledger_mode"],"date_format"?: string,"default_entry_method"?: string,"default_payment_method_id"?: string | null,"default_spread_months"?: number,"display_name"?: string | null,"id"?: string,"locale"?: string,"theme"?: string,"timezone"?: string,"updated_at"?: string,"week_start"?: number
+                    "ai_enabled"?: boolean,"base_currency"?: string,"character_keys"?: boolean,"created_at"?: string,"dashboard_mode"?: Database["public"]['Enums']["ledger_mode"],"date_format"?: string,"default_entry_method"?: string,"default_payment_method_id"?: string | null,"default_spread_months"?: number,"display_name"?: string | null,"id"?: string,"locale"?: string,"shortcut_overrides"?: NonNullable<Json>,"theme"?: string,"timezone"?: string,"updated_at"?: string,"week_start"?: number
                   }
                   Relationships: [
                     {

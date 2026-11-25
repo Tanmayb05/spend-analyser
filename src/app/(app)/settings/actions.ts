@@ -11,6 +11,7 @@ import { removeUserReceipts } from "@/lib/receipt-storage";
 import { getRate } from "@/lib/fx";
 import { todayIn } from "@/lib/dates";
 import { emailSchema, passwordSchema } from "@/lib/validation/auth";
+import { parseOverrides, validateOverrides } from "@/lib/shortcuts/commands";
 
 export type Result = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -298,4 +299,23 @@ export async function deleteMerchant(id: string): Promise<Result> {
   const { supabase } = await requireUser();
   const { error } = await supabase.from("merchants").delete().eq("id", id);
   return error ? fail(error) : done("Deleted");
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard shortcuts
+// ---------------------------------------------------------------------------
+/** Saves the user's changed shortcuts (only those that differ from the defaults) and the character-keys switch. */
+export async function updateShortcuts(input: { overrides: Record<string, string>; characterKeys: boolean }): Promise<Result> {
+  const shape = z.object({ overrides: z.record(z.string().max(40), z.string().max(40)), characterKeys: z.boolean() }).safeParse(input);
+  if (!shape.success) return fail("Couldn't read those shortcuts");
+  const overrides = parseOverrides(shape.data.overrides);
+  if (Object.keys(overrides).length !== Object.keys(shape.data.overrides).length) return fail("One of those shortcuts isn't valid");
+  const problem = validateOverrides(overrides);
+  if (problem) return fail(problem);
+  const { supabase, userId } = await requireUser();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ shortcut_overrides: overrides, character_keys: shape.data.characterKeys })
+    .eq("id", userId);
+  return error ? fail(error) : done();
 }

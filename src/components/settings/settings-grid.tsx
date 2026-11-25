@@ -22,6 +22,7 @@ export function SettingsGrid() {
                 <li key={href}>
                   <Link
                     href={href}
+                    data-nav-item
                     onClick={(e) => {
                       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                       const tile = e.currentTarget.querySelector<HTMLElement>("[data-grid-circle]");

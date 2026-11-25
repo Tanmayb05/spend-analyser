@@ -14,7 +14,7 @@ import type { LedgerRow } from "@/lib/data/types";
 export type LedgerRowWithLink = LedgerRow & { external_url?: string | null; notes?: string | null };
 
 /** One ledger row. Tapping opens the parent transaction for editing. */
-export function LedgerItem({ row, showDate = true, right, showKind = false, onOpen, tint }: { row: LedgerRowWithLink; /** Colour for the tile instead of the category's (the trip page matches its spending breakdown). */ tint?: string; showDate?: boolean; /** Open a detail view instead of the edit form. */ onOpen?: (row: LedgerRowWithLink) => void; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
+export function LedgerItem({ row, showDate = true, right, showKind = false, onOpen, tint, focusable = true }: { /** false: mouse-only (select mode, where the row's own toggle takes keyboard focus). */ focusable?: boolean; row: LedgerRowWithLink; /** Colour for the tile instead of the category's (the trip page matches its spending breakdown). */ tint?: string; showDate?: boolean; /** Open a detail view instead of the edit form. */ onOpen?: (row: LedgerRowWithLink) => void; right?: React.ReactNode; /** Tag each row Regular or Trip (calendar day list). */ showKind?: boolean }) {
   const app = useAppData();
   const cat = app.maps.category.get(row.category_id);
   const sub = row.subcategory_id ? app.maps.subcategory.get(row.subcategory_id) : null;
@@ -32,6 +32,8 @@ export function LedgerItem({ row, showDate = true, right, showKind = false, onOp
       <button
         type="button"
         disabled={!row.txn_id}
+        data-nav-item={focusable || undefined}
+        tabIndex={focusable ? undefined : -1}
         onClick={() => row.txn_id && (onOpen ? onOpen(row) : app.openTxnSheet({ id: row.txn_id }))}
         className="absolute inset-0 z-0 rounded-control disabled:cursor-default focus-visible:outline-offset-0"
         aria-label={row.txn_id ? `View ${title}` : undefined}

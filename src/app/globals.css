@@ -208,6 +208,11 @@ body {
     outline-offset: 2px;
   }
 
+  /* Headings get focus after a page change (shortcuts provider) so Tab starts in the content; no ring on them */
+  h1[tabindex="-1"]:focus {
+    outline: none;
+  }
+
   /* One icon stroke across the app (lucide icons) */
   svg.lucide {
     stroke-width: 1.5;

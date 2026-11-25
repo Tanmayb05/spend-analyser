@@ -5,6 +5,8 @@ import { Search, Store, TextCursorInput, X } from "lucide-react";
 import { useAppData } from "@/components/app-data";
 import { buildSuggestIndex, suggest, type SuggestItem } from "@/lib/analytics/suggest";
 import { cn } from "@/lib/utils";
+import { ShortcutHint } from "@/components/ui/kbd";
+import { useShortcuts } from "@/components/shortcuts/shortcuts-provider";
 
 type Go = (patch: Record<string, string | null>, opts?: { replace?: boolean }) => void;
 
@@ -24,6 +26,7 @@ function Highlight({ text, q }: { text: string; q: string }) {
 /** Search input with merchant / description suggestions (in-memory index, no extra queries). */
 export function SearchBox({ value, descriptions, go }: { value: string; descriptions: string[]; go: Go }) {
   const app = useAppData();
+  const keys = useShortcuts();
   const listId = useId();
   const root = useRef<HTMLDivElement>(null);
   const pushed = useRef(value);
@@ -96,10 +99,13 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
         push({ q: q.trim() || null });
       }
     } else if (e.key === "Escape") {
+      e.preventDefault();
       if (showList) {
-        e.preventDefault();
         setOpen(false);
         setActive(-1);
+      } else {
+        // second Esc leaves the field, so single-key shortcuts work again
+        e.currentTarget.blur();
       }
     }
   };
@@ -113,6 +119,8 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
       <input
         role="combobox"
         aria-label="Search"
+        data-shortcut="search"
+        aria-keyshortcuts={keys.aria("search.focus")}
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
@@ -130,6 +138,7 @@ export function SearchBox({ value, descriptions, go }: { value: string; descript
         placeholder="Search"
         className="h-10.5 w-full rounded-control border border-border bg-surface-2 pl-10 pr-10 text-sm outline-none transition-colors placeholder:text-faint focus:border-accent"
       />
+      {!q ? <ShortcutHint id="search.focus" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" /> : null}
       {q ? (
         <button
           type="button"

@@ -237,6 +237,18 @@ export const HELP = {
   // ---- Settings ----------------------------------------------------------------------------
   profile: <p>Your display name and sign-in email. A new email takes effect after you confirm the link we send.</p>,
   security: <p>Change your password, sign out on every device, or find where to delete your account.</p>,
+  shortcuts: (
+    <>
+      <p>
+        Press <b>?</b> anywhere to see every shortcut, or <b>⌘K</b> (<b>Ctrl+K</b> on Windows) to jump to any page or setting.
+      </p>
+      <p>
+        <b>Change</b> a shortcut, then press the new keys. A plain key can be followed by a second one, like G then T. Keys the browser
+        keeps for itself can&apos;t be used, and two shortcuts can&apos;t share keys.
+      </p>
+      <p>Turning single-key shortcuts off helps with speech input or stray key presses. Shortcuts with ⌘, Ctrl or Alt keep working.</p>
+    </>
+  ),
   preferences: (
     <>
       <p>

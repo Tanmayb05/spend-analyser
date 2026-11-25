@@ -55,6 +55,12 @@ export default function AboutPage() {
       href: "/trips",
       cta: "Trips",
     },
+    {
+      title: "Use the keyboard",
+      body: "Every page works without a mouse. Press ? to see the shortcuts, ⌘K (Ctrl+K on Windows) to jump to any page or setting, N to add a transaction, and G then T to open Transactions. Change any of them in Settings.",
+      href: "/settings/shortcuts",
+      cta: "Keyboard shortcuts",
+    },
   ];
 
   return (
@@ -65,7 +71,7 @@ export default function AboutPage() {
       </Card>
 
       <Card>
-        <CardHeader title="How to use it" subtitle="Six steps, roughly in the order you'll need them" />
+        <CardHeader title="How to use it" subtitle="Seven steps, roughly in the order you'll need them" />
         <ol className="divide-y divide-border">
           {steps.map((s, i) => (
             <li key={s.title} className="grid grid-cols-[2rem_1fr] gap-x-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[2rem_1fr_auto] sm:items-start">

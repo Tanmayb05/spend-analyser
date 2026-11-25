@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CheckSquare, Square, Trash2, X } from "lucide-react";
@@ -9,6 +9,8 @@ import { LedgerItem, type LedgerRowWithLink } from "./ledger-item";
 import { TxnDetail } from "./txn-detail";
 import { useBackSheet } from "@/hooks/use-back-nav";
 import { useAppData } from "@/components/app-data";
+import { useShortcut, useShortcuts } from "@/components/shortcuts/shortcuts-provider";
+import { ShortcutHint } from "@/components/ui/kbd";
 import { formatDay } from "@/lib/dates";
 import { tintKey } from "@/lib/tint";
 import { formatMoney } from "@/lib/money";
@@ -74,6 +76,34 @@ export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows:
     });
   }
   const count = rows.length + upcoming.length;
+  const keys = useShortcuts();
+  const stopSelecting = () => {
+    setSelecting(false);
+    setPicked(new Set());
+  };
+
+  // keyboard: x toggles the focused row, ⌘A / Ctrl+A picks every entry, ⌘⌫ / Ctrl+Backspace deletes (with undo), Esc leaves select mode
+  useShortcut("select.toggle", () => {
+    const id = document.activeElement?.closest<HTMLElement>("[data-txn-id]")?.dataset.txnId;
+    if (id) toggle(id);
+  }, selecting);
+  useShortcut("select.all", () => {
+    const all = [...rows, ...upcoming].map((r) => r.txn_id).filter((id): id is string => Boolean(id));
+    setPicked((p) => (p.size === new Set(all).size ? new Set() : new Set(all)));
+  }, selecting);
+  useShortcut("select.delete", () => {
+    if (picked.size && !pending) bulkDelete();
+  }, selecting);
+  useEffect(() => {
+    if (!selecting) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector("dialog[open]")) return;
+      setSelecting(false);
+      setPicked(new Set());
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [selecting]);
 
   const toggle = (id: string | null) => {
     if (!id) return;
@@ -111,12 +141,12 @@ export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows:
       <div className="mb-3 flex items-center justify-between">
         <p className="num text-sm text-muted">{count} {count === 1 ? "entry" : "entries"}</p>
         {selecting ? (
-          <Button variant="ghost" size="sm" onClick={() => { setSelecting(false); setPicked(new Set()); }}>
+          <Button variant="ghost" size="sm" onClick={stopSelecting}>
             Cancel
           </Button>
         ) : count ? (
-          <Button variant="ghost" size="sm" onClick={() => setSelecting(true)}>
-            <CheckSquare size={16} /> Select
+          <Button variant="ghost" size="sm" data-shortcut="select-start" aria-keyshortcuts={keys.aria("select.start")} onClick={() => setSelecting(true)}>
+            <CheckSquare size={16} /> Select <ShortcutHint id="select.start" />
           </Button>
         ) : null}
       </div>
@@ -133,12 +163,12 @@ export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows:
               if (!selecting) return <LedgerItem key={k} row={r} showDate={g.showDate} onOpen={detail.show} tint={tints?.[tintKey(r)]} />;
               const on = r.txn_id ? picked.has(r.txn_id) : false;
               return (
-                <div key={k} className={cn("flex items-center gap-1 rounded-control", on && "bg-surface-3 ring-1 ring-inset ring-accent")}>
-                  <button type="button" disabled={!r.txn_id} onClick={() => toggle(r.txn_id)} className="grid h-11 w-11 shrink-0 place-items-center text-muted" aria-label={on ? "Deselect" : "Select"}>
+                <div key={k} data-txn-id={r.txn_id ?? undefined} className={cn("flex items-center gap-1 rounded-control", on && "bg-surface-3 ring-1 ring-inset ring-accent")}>
+                  <button type="button" data-nav-item disabled={!r.txn_id} onClick={() => toggle(r.txn_id)} className="grid h-11 w-11 shrink-0 place-items-center text-muted" aria-pressed={on} aria-label={`Select ${r.merchant_name || r.description || "entry"}`}>
                     {on ? <CheckSquare size={18} className="text-accent" /> : <Square size={18} />}
                   </button>
                   <div className="min-w-0 flex-1" onClickCapture={(e) => { e.stopPropagation(); e.preventDefault(); toggle(r.txn_id); }}>
-                    <LedgerItem row={r} showDate={g.showDate} tint={tints?.[tintKey(r)]} />
+                    <LedgerItem row={r} showDate={g.showDate} tint={tints?.[tintKey(r)]} focusable={false} />
                   </div>
                 </div>
               );
@@ -151,12 +181,12 @@ export function TxnList({ rows, upcoming = [], sort = "newest", tints }: { rows:
 
       {selecting ? (
         <div role="toolbar" aria-label="Bulk actions" className="sticky bottom-24 z-30 mt-3 flex items-center justify-between gap-3 rounded-card border border-border bg-surface-3 p-3 shadow-pop lg:bottom-4">
-          <span className="text-sm text-muted">{picked.size ? `${picked.size} selected` : "Pick entries to delete"}</span>
+          <span className="text-sm text-muted" aria-live="polite">{picked.size ? `${picked.size} selected` : "Pick entries to delete"}</span>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => { setSelecting(false); setPicked(new Set()); }} aria-label="Cancel selection">
+            <Button variant="ghost" size="sm" onClick={stopSelecting} aria-label="Cancel selection">
               <X size={16} />
             </Button>
-            <Button variant="danger" size="sm" disabled={!picked.size || pending} onClick={bulkDelete}>
+            <Button variant="danger" size="sm" disabled={!picked.size || pending} onClick={bulkDelete} aria-keyshortcuts={keys.aria("select.delete")}>
               <Trash2 size={16} /> Delete {picked.size || ""}
             </Button>
           </div>
